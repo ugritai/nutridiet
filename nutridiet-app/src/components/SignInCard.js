@@ -111,7 +111,6 @@ export default function SignInCard() {
         }
     };
 
-
     return (
         <Card variant="outlined">
             <Box sx={{ display: { xs: 'flex', md: 'none' } }}>
