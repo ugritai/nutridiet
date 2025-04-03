@@ -162,7 +162,7 @@ export default function SignUp(props) {
       if (response.ok) {
         const result = await response.json();
         console.log('Usuario registrado:', result);
-        alert('Registro exitoso');
+        alert('Registro exitoso'); 
       } else {
         const errorData = await response.json();
         console.error('Error al registrar:', errorData);
