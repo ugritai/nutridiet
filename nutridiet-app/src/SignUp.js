@@ -1,10 +1,8 @@
 import * as React from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
-import Checkbox from '@mui/material/Checkbox';
 import CssBaseline from '@mui/material/CssBaseline';
 import Divider from '@mui/material/Divider';
-import FormControlLabel from '@mui/material/FormControlLabel';
 import FormLabel from '@mui/material/FormLabel';
 import FormControl from '@mui/material/FormControl';
 import Link from '@mui/material/Link';
@@ -60,44 +58,119 @@ const SignUpContainer = styled(Stack)(({ theme }) => ({
 }));
 
 export default function SignUp(props) {
-  const [formData, setFormData] = React.useState({
-    name: '',
-    email: '',
-    password: '',
-    phone: '',
-    language: 'English',
-  });
-  const [errors, setErrors] = React.useState({});
+  const [emailError, setEmailError] = React.useState(false);
+  const [emailErrorMessage, setEmailErrorMessage] = React.useState('');
+  const [passwordError, setPasswordError] = React.useState(false);
+  const [passwordErrorMessage, setPasswordErrorMessage] = React.useState('');
+  const [nameError, setNameError] = React.useState(false);
+  const [nameErrorMessage, setNameErrorMessage] = React.useState('');
+  const [phoneError, setPhoneError] = React.useState(false);
+  const [phoneErrorMessage, setPhoneErrorMessage] = React.useState('');
+  const [languageError, setLanguageError] = React.useState(false);
+  const [languageErrorMessage, setLanguageErrorMessage] = React.useState('');
+
+  const [language, setLanguage] = React.useState("Spanish"); // Valor predeterminado "Español"
 
   const validateInputs = () => {
-    let newErrors = {};
-    if (!formData.name) newErrors.name = 'Name is required';
-    if (!formData.email || !/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Invalid email';
-    if (!formData.password || formData.password.length < 6) newErrors.password = 'Password must be at least 6 characters';
-    if (!formData.phone) newErrors.phone = 'Phone is required';
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    const email = document.getElementById('email');
+    const password = document.getElementById('password');
+    const name = document.getElementById('name');
+    const phone = document.getElementById('phone');
+
+    let isValid = true;
+
+    // Validación de email
+    if (!email.value || !/\S+@\S+\.\S+/.test(email.value)) {
+      setEmailError(true);
+      setEmailErrorMessage('Por favor ingrese un correo electrónico válido.');
+      isValid = false;
+    } else {
+      setEmailError(false);
+      setEmailErrorMessage('');
+    }
+
+    // Validación de contraseña
+    if (!password.value || password.value.length < 6) {
+      setPasswordError(true);
+      setPasswordErrorMessage('La contraseña debe tener al menos 6 caracteres.');
+      isValid = false;
+    } else {
+      setPasswordError(false);
+      setPasswordErrorMessage('');
+    }
+
+    // Validación de nombre
+    if (!name.value || name.value.length < 1) {
+      setNameError(true);
+      setNameErrorMessage('El nombre es obligatorio.');
+      isValid = false;
+    } else {
+      setNameError(false);
+      setNameErrorMessage('');
+    }
+
+    // Validación de teléfono (puedes ajustarlo según el formato de número que necesites)
+    const phoneRegex = /^[0-9]{9}$/; // Ajusta el regex según el formato de número que deseas validar
+    if (!phone.value || !phoneRegex.test(phone.value)) {
+      setPhoneError(true);
+      setPhoneErrorMessage('Por favor ingrese un número de teléfono válido (9 dígitos).');
+      isValid = false;
+    } else {
+      setPhoneError(false);
+      setPhoneErrorMessage('');
+    }
+
+    // Validación de idioma
+    if (!language) {
+      setLanguageError(true);
+      setLanguageErrorMessage('Por favor seleccione un idioma.');
+      isValid = false;
+    } else {
+      setLanguageError(false);
+      setLanguageErrorMessage('');
+    }
+
+    return isValid;
   };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    if (!validateInputs()) return;
 
+    // Validación del formulario
+    const valid = validateInputs();
+    if (!valid) return;
+
+    const data = new FormData(event.currentTarget);
+    const user = {
+      name: data.get('name'),
+      email: data.get('email'),
+      password: data.get('password'),
+      phone: data.get('phone'),
+      language: language,
+    };
+
+    // Enviar los datos al servidor FastAPI
     try {
-      const response = await fetch('http://localhost:8000/register_nutritionist', {
+      const response = await fetch('http://localhost:8000/register_nutritionist/', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(user),
       });
-    
-      // Log de la respuesta
-      const responseData = await response.json();
-      console.log(responseData); // Verifica el contenido de la respuesta
-    
-      if (!response.ok) throw new Error('Failed to register');
-      alert('Registration successful!');
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('Usuario registrado:', result);
+        alert('Registro exitoso');
+      } else {
+        const errorData = await response.json();
+        console.error('Error al registrar:', errorData);
+        alert(errorData.detail || 'Hubo un error al registrar');
+      }
     } catch (error) {
-      alert(error.message);
+      console.error('Error en la conexión', error);
+      alert('Error en la conexión al servidor');
     }
   };
 
@@ -112,7 +185,7 @@ export default function SignUp(props) {
             variant="h4"
             sx={{ width: '100%', fontSize: 'clamp(2rem, 10vw, 2.15rem)' }}
           >
-            Sign up
+            Crear cuenta
           </Typography>
           <Box
             component="form"
@@ -120,53 +193,103 @@ export default function SignUp(props) {
             sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}
           >
             <FormControl>
-              <FormLabel>Full name</FormLabel>
-              <TextField name="name" fullWidth value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} error={!!errors.name} helperText={errors.name} />
+              <FormLabel htmlFor="name">Nombre completo</FormLabel>
+              <TextField
+                autoComplete="name"
+                name="name"
+                required
+                fullWidth
+                id="name"
+                placeholder="Jon Snow"
+                error={nameError}
+                helperText={nameErrorMessage}
+                color={nameError ? 'error' : 'primary'}
+              />
             </FormControl>
             <FormControl>
-              <FormLabel>Email</FormLabel>
-              <TextField name="email" fullWidth value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} error={!!errors.email} helperText={errors.email} />
+              <FormLabel htmlFor="email">Correo electrónico</FormLabel>
+              <TextField
+                required
+                fullWidth
+                id="email"
+                placeholder="tu@email.com"
+                name="email"
+                autoComplete="email"
+                variant="outlined"
+                error={emailError}
+                helperText={emailErrorMessage}
+                color={emailError ? 'error' : 'primary'}
+              />
             </FormControl>
             <FormControl>
-              <FormLabel>Password</FormLabel>
-              <TextField name="password" type="password" fullWidth value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} error={!!errors.password} helperText={errors.password} />
+              <FormLabel htmlFor="password">Contraseña</FormLabel>
+              <TextField
+                required
+                fullWidth
+                name="password"
+                placeholder="••••••"
+                type="password"
+                id="password"
+                autoComplete="new-password"
+                variant="outlined"
+                error={passwordError}
+                helperText={passwordErrorMessage}
+                color={passwordError ? 'error' : 'primary'}
+              />
             </FormControl>
             <FormControl>
-              <FormLabel>Phone</FormLabel>
-              <TextField name="phone" fullWidth value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} error={!!errors.phone} helperText={errors.phone} />
+              <FormLabel htmlFor="phone">Número de teléfono</FormLabel>
+              <TextField
+                required
+                fullWidth
+                name="phone"
+                id="phone"
+                placeholder="123 456 789"
+                type="tel"
+                error={phoneError}
+                helperText={phoneErrorMessage}
+                color={phoneError ? 'error' : 'primary'}
+              />
             </FormControl>
             <FormControl>
-              <FormLabel>Language</FormLabel>
-              <TextField select name="language" fullWidth value={formData.language} onChange={(e) => setFormData({ ...formData, language: e.target.value })}>
-                <MenuItem value="English">English</MenuItem>
-                <MenuItem value="Spanish">Spanish</MenuItem>
+              <FormLabel htmlFor="language">Idioma de preferencia</FormLabel>
+              <TextField
+                select
+                required
+                name="language"
+                id="language"
+                fullWidth
+                value={language}
+                onChange={(e) => setLanguage(e.target.value)} // Aquí actualizamos el valor
+                error={languageError}
+                helperText={languageErrorMessage}
+                color={languageError ? 'error' : 'primary'}
+              >
+                <MenuItem value="Spanish">Español</MenuItem>
+                <MenuItem value="English">Inglés</MenuItem>
               </TextField>
             </FormControl>
-            <FormControlLabel
-              control={<Checkbox value="allowExtraEmails" color="primary" />}
-              label="I want to receive updates via email."
-            />
             <Button
               type="submit"
               fullWidth
               variant="contained"
               onClick={validateInputs}
             >
-              Sign up
+              Regístrate
             </Button>
           </Box>
           <Divider>
-            <Typography sx={{ color: 'text.secondary' }}>or</Typography>
+            <Typography sx={{ color: 'text.secondary' }}>o</Typography>
           </Divider>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             <Typography sx={{ textAlign: 'center' }}>
-              Already have an account?{' '}
+              ¿Ya tienes una cuenta?{' '}
               <Link
                 href="/sign-in"
                 variant="body2"
                 sx={{ alignSelf: 'center' }}
               >
-                Sign in
+                Iniciar sesión
               </Link>
             </Typography>
           </Box>

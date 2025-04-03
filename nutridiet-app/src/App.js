@@ -1,6 +1,6 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import SignIn from "./SignIn";
+import SignInSide from "./SignInSide";
 import SignUp from "./SignUp";
 
 function App() {
@@ -11,7 +11,7 @@ function App() {
         <Route path="/" element={<Navigate to="/sign-in" />} />
 
         {/* Definir las rutas de autenticación */}
-        <Route path="/sign-in" element={<SignIn />} />
+        <Route path="/sign-in" element={<SignInSide />} />
         <Route path="/sign-up" element={<SignUp />} />
       </Routes>
     </Router>
