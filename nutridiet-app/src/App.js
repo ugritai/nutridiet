@@ -1,13 +1,20 @@
-// src/App.js
 import React from "react";
-import NutritionistForm from "./NutritionistForm"; // Importa el componente del formulario
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import SignIn from "./SignIn";
+import SignUp from "./SignUp";
 
 function App() {
   return (
-    <div className="App">
-      <h1>Nutritionist Registration</h1>
-      <NutritionistForm /> {/* Usa el formulario en la interfaz */}
-    </div>
+    <Router>
+      <Routes>
+        {/* Redirigir "/" a "/sign-in" automáticamente */}
+        <Route path="/" element={<Navigate to="/sign-in" />} />
+
+        {/* Definir las rutas de autenticación */}
+        <Route path="/sign-in" element={<SignIn />} />
+        <Route path="/sign-up" element={<SignUp />} />
+      </Routes>
+    </Router>
   );
 }
 

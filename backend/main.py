@@ -17,7 +17,7 @@ app.add_middleware(
 )
 
 # Configurar la conexión a MongoDB
-client_host = MongoClient('mongodb://localhost:28018')
+client_host = MongoClient('mongodb://localhost:27017')
 db_host = client_host['nutridiet']  # La base de datos en el anfitrión
 nutritionist_collection = db_host['nutritionist']
 
