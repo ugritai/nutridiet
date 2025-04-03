@@ -45,9 +45,44 @@ class NutritionistResponse(BaseModel):
     class Config:
         orm_mode = True
 
+class LoginRequest(BaseModel):
+    email: EmailStr
+    password: str
+    
 @app.get("/")
 async def read_root():
     return {"message": "Welcome to the Nutritionist API"}
+
+@app.post("/login")
+async def login(login_request: LoginRequest):
+    # 查找用户
+    nutritionist = nutritionist_collection.find_one({"email": login_request.email})
+    if not nutritionist:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid email or password"
+        )
+    
+    # 验证密码（注意修改注册时的密码存储方式）
+    try:
+        # 比较哈希密码
+        password_matches = bcrypt.checkpw(
+            login_request.password.encode('utf-8'),
+            nutritionist['password'].encode('utf-8')
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error al verificar la contraseña"
+        )
+
+    if not password_matches:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Correo electrónico o contraseña inválidos"
+        )
+
+    return {"message": "Inicio de sesión exitoso", "email": nutritionist['email']}
 
 @app.post("/register_nutritionist", status_code=status.HTTP_201_CREATED)
 async def register_nutritionist(nutritionist: Nutritionist):
@@ -56,11 +91,11 @@ async def register_nutritionist(nutritionist: Nutritionist):
     if existing_nutritionist:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email already registered"
+            detail="Correo electrónico ya registrado"
         )
 
     # Encriptar la contraseña
-    hashed_password = bcrypt.hashpw(nutritionist.password.encode('utf-8'), bcrypt.gensalt())
+    hashed_password = bcrypt.hashpw(nutritionist.password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
     # Preparar el documento para insertar
     nutritionist_data = {
