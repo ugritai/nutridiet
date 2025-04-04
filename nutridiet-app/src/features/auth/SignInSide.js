@@ -4,7 +4,7 @@ import Stack from '@mui/material/Stack';
 import AppTheme from '../../assets/shared-theme/AppTheme';
 import ColorModeSelect from '../../assets/shared-theme/ColorModeSelect';
 import SignInCard from './components/SignInCard';
-import Content from '../../components/Content';
+import Content from '../../common/Content';
 
 export default function SignInSide(props) {
   return (
