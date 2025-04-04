@@ -1,10 +1,10 @@
 import * as React from 'react';
 import CssBaseline from '@mui/material/CssBaseline';
 import Stack from '@mui/material/Stack';
-import AppTheme from './shared-theme/AppTheme';
-import ColorModeSelect from './shared-theme/ColorModeSelect';
+import AppTheme from '../../assets/shared-theme/AppTheme';
+import ColorModeSelect from '../../assets/shared-theme/ColorModeSelect';
 import SignInCard from './components/SignInCard';
-import Content from './components/Content';
+import Content from '../../components/Content';
 
 export default function SignInSide(props) {
   return (
