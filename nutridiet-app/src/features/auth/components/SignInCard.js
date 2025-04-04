@@ -103,7 +103,7 @@ export default function SignInCard() {
             const data = await response.json();
             console.log('Inicio de sesión exitoso:', data);
             alert('¡Inicio de sesión con exito!');
-            //window.location.href = '/dashboard'; // 跳转到仪表盘
+            window.location.href = '/dashboard'; // 跳转到仪表盘
 
         } catch (error) {
             console.error('Error en la conexión', error);
