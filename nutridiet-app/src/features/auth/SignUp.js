@@ -11,8 +11,8 @@ import Typography from '@mui/material/Typography';
 import Stack from '@mui/material/Stack';
 import MuiCard from '@mui/material/Card';
 import { styled } from '@mui/material/styles';
-import AppTheme from './shared-theme/AppTheme';
-import ColorModeSelect from './shared-theme/ColorModeSelect';
+import AppTheme from './assets/shared-theme/AppTheme';
+import ColorModeSelect from './assets/shared-theme/ColorModeSelect';
 import MenuItem from '@mui/material/MenuItem';
 
 const Card = styled(MuiCard)(({ theme }) => ({

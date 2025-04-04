@@ -10,7 +10,7 @@ import Link from '@mui/material/Link';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import { styled } from '@mui/material/styles';
-import ForgotPassword from './ForgotPassword';
+import ForgotPassword from '../ForgotPassword';
 
 const Card = styled(MuiCard)(({ theme }) => ({
     display: 'flex',
