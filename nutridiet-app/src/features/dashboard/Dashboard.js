@@ -9,6 +9,7 @@ import Header from './components/Header';
 import MainGrid from './components/MainGrid';
 import SideMenu from './components/SideMenu';
 import AppTheme from '../../assets/shared-theme/AppTheme';
+
 import {
   chartsCustomizations,
   dataGridCustomizations,

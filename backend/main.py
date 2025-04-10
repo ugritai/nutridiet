@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from database.connection import client_host
-from routers import auth, nutritionists
+from routers import auth, nutritionists, recipes
 
 app = FastAPI()
 
@@ -15,9 +15,9 @@ app.add_middleware(
 )
 
 # 添加路由
-app.include_router(auth.router)
+app.include_router(auth.router, prefix="/api/auth")
 app.include_router(nutritionists.router)
-
+app.include_router(recipes.router)
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client_host.close()

@@ -6,33 +6,41 @@ import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import Stack from '@mui/material/Stack';
 import HomeRoundedIcon from '@mui/icons-material/HomeRounded';
-import AnalyticsRoundedIcon from '@mui/icons-material/AnalyticsRounded';
 import PeopleRoundedIcon from '@mui/icons-material/PeopleRounded';
-import AssignmentRoundedIcon from '@mui/icons-material/AssignmentRounded';
+import SearchIcon from '@mui/icons-material/Search';
 import SettingsRoundedIcon from '@mui/icons-material/SettingsRounded';
 import InfoRoundedIcon from '@mui/icons-material/InfoRounded';
 import HelpRoundedIcon from '@mui/icons-material/HelpRounded';
+import DateRangeIcon from '@mui/icons-material/DateRange';
+import { useNavigate } from 'react-router-dom';
 
-const mainListItems = [
-  { text: 'Home', icon: <HomeRoundedIcon /> },
-  { text: 'Analytics', icon: <AnalyticsRoundedIcon /> },
-  { text: 'Clients', icon: <PeopleRoundedIcon /> },
-  { text: 'Tasks', icon: <AssignmentRoundedIcon /> },
-];
-
-const secondaryListItems = [
-  { text: 'Settings', icon: <SettingsRoundedIcon /> },
-  { text: 'About', icon: <InfoRoundedIcon /> },
-  { text: 'Feedback', icon: <HelpRoundedIcon /> },
-];
 
 export default function MenuContent() {
+  const navigate = useNavigate();
+
+  const mainListItems = [
+    { text: 'Inicio', icon: <HomeRoundedIcon />, path: '/inicio' },
+    { text: 'Pacientes', icon: <PeopleRoundedIcon />, path: '/pacientes' },
+    { text: 'Búsqueda de Recetas', icon: <SearchIcon />, path: '/busqueda-recetas' },
+    { text: 'Crear Dieta', icon: <DateRangeIcon />, path: '/crear-dieta' }
+  ];
+
+  const secondaryListItems = [
+    { text: 'Configuración', icon: <SettingsRoundedIcon />, path: '/configuracion' },
+    { text: 'Acerca de', icon: <InfoRoundedIcon />, path: '/acerce' },
+    { text: 'Comentarios', icon: <HelpRoundedIcon />, parh: '/comentarios' },
+  ];
+
+  const handleNavigate = (path) => () => {
+    navigate(path);
+  };
+
   return (
     <Stack sx={{ flexGrow: 1, p: 1, justifyContent: 'space-between' }}>
       <List dense>
         {mainListItems.map((item, index) => (
           <ListItem key={index} disablePadding sx={{ display: 'block' }}>
-            <ListItemButton selected={index === 0}>
+            <ListItemButton onClick={handleNavigate(item.path)}>
               <ListItemIcon>{item.icon}</ListItemIcon>
               <ListItemText primary={item.text} />
             </ListItemButton>
@@ -42,7 +50,7 @@ export default function MenuContent() {
       <List dense>
         {secondaryListItems.map((item, index) => (
           <ListItem key={index} disablePadding sx={{ display: 'block' }}>
-            <ListItemButton>
+            <ListItemButton onClick={handleNavigate(item.path)}>
               <ListItemIcon>{item.icon}</ListItemIcon>
               <ListItemText primary={item.text} />
             </ListItemButton>
