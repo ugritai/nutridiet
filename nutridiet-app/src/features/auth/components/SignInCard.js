@@ -84,7 +84,7 @@ export default function SignInCard() {
         };
 
         try {
-            const response = await fetch('http://localhost:8000/login', {
+            const response = await fetch('http://localhost:8000/api/auth/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -92,22 +92,26 @@ export default function SignInCard() {
                 body: JSON.stringify(user),
             });
 
+            const responseData = await response.json();
+
             if (!response.ok) {
-                const errorData = await response.json();
                 setPasswordError(true);
-                setPasswordErrorMessage(errorData.detail || 'Email o contraseña incorrectos. Por favor revise e inténtelo de nuevo.');
+                setPasswordErrorMessage(responseData.detail || 'Email o contraseña incorrectos. Por favor revise e inténtelo de nuevo.');
                 return;
             }
 
             // 登录成功处理
-            const data = await response.json();
-            console.log('Inicio de sesión exitoso:', data);
-            alert('¡Inicio de sesión con exito!');
-            window.location.href = '/dashboard'; // 跳转到仪表盘
+            // Almacenar datos del usuario
+            localStorage.setItem('userEmail', responseData.email);
+            localStorage.setItem('userName', responseData.name);
+            
+            // Redirección
+            window.location.href = '/inicio';
 
         } catch (error) {
-            console.error('Error en la conexión', error);
-            alert('Error en la conexión al servidor');
+            console.error('Error de conexión:', error);
+            setPasswordError(true);
+            setPasswordErrorMessage('Error de conexión con el servidor');
         }
     };
 

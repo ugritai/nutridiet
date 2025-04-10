@@ -31,7 +31,11 @@ async def login(login_request: LoginRequest):
             detail="Correo electrónico o contraseña inválidos"
         )
 
-    return {"message": "Inicio de sesión exitoso", "email": nutritionist['email']}
+    return {
+        "message": "Inicio de sesión exitoso",
+        "email": nutritionist['email'],
+        "name": nutritionist['name']  # Añadir esta línea
+    }
 
 @router.post("/register_nutritionist", status_code=status.HTTP_201_CREATED)
 async def register_nutritionist(nutritionist: NutritionistCreate):
