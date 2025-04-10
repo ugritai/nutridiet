@@ -47,7 +47,6 @@ export default function SignInCard() {
     const validateInputs = () => {
         const email = document.getElementById('email');
         const password = document.getElementById('password');
-
         let isValid = true;
 
         if (!email.value || !/\S+@\S+\.\S+/.test(email.value)) {
@@ -107,7 +106,6 @@ export default function SignInCard() {
             
             // Redirección
             window.location.href = '/inicio';
-
         } catch (error) {
             console.error('Error de conexión:', error);
             setPasswordError(true);

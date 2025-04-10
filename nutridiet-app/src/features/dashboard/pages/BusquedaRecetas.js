@@ -3,9 +3,8 @@ import { alpha } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
-import AppNavbar from '../components/AppNavbar';
 import Header from '../components/Header';
-import SideMenu from '../components/SideMenu';
+import UserMenu from '../components/SideMenu';
 import AppTheme from '../../../assets/shared-theme/AppTheme';
 import CategorySelect from '../components/CategorySelect';
 import Search from '../components/Search';
@@ -41,8 +40,7 @@ export default function BusquedaRecetas(props) {
     <AppTheme {...props}>
       <CssBaseline enableColorScheme />
       <Box sx={{ display: 'flex' }}>
-        <SideMenu />
-        <AppNavbar />
+        <UserMenu />
         {/* Main content */}
         <Box
           component="main"
