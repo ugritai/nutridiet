@@ -151,7 +151,7 @@ export default function SignUp(props) {
 
     // Enviar los datos al servidor FastAPI
     try {
-      const response = await fetch('http://localhost:8000/register_nutritionist/', {
+      const response = await fetch('http://localhost:8000/api/auth/register_nutritionist/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -163,6 +163,7 @@ export default function SignUp(props) {
         const result = await response.json();
         console.log('Usuario registrado:', result);
         alert('Registro exitoso'); 
+        window.location.href = '/sign-in';
       } else {
         const errorData = await response.json();
         console.error('Error al registrar:', errorData);
