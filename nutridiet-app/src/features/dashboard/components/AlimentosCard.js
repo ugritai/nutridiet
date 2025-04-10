@@ -4,9 +4,9 @@ import CardContent from '@mui/material/CardContent';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import ChevronRightRoundedIcon from '@mui/icons-material/ChevronRightRounded';
-import InsightsRoundedIcon from '@mui/icons-material/InsightsRounded';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
+import LocalDiningIcon from '@mui/icons-material/LocalDining';
 
 export default function HighlightedCard() {
   const theme = useTheme();
@@ -15,17 +15,17 @@ export default function HighlightedCard() {
   return (
     <Card sx={{ height: '100%' }}>
       <CardContent>
-        <InsightsRoundedIcon />
+        <LocalDiningIcon />
         <Typography
           component="h2"
           variant="subtitle2"
           gutterBottom
           sx={{ fontWeight: '600' }}
         >
-          Explore your data
+          Alimentos
         </Typography>
         <Typography sx={{ color: 'text.secondary', mb: '8px' }}>
-          Uncover performance and visitor insights with our data wizardry.
+        Colección de alimentos guardados en base de datos.
         </Typography>
         <Button
           variant="contained"
@@ -34,7 +34,7 @@ export default function HighlightedCard() {
           endIcon={<ChevronRightRoundedIcon />}
           fullWidth={isSmallScreen}
         >
-          Get insights
+          Más detalles
         </Button>
       </CardContent>
     </Card>
