@@ -10,6 +10,8 @@ import ListItemIcon, { listItemIconClasses } from '@mui/material/ListItemIcon';
 import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
 import MoreVertRoundedIcon from '@mui/icons-material/MoreVertRounded';
 import MenuButton from './MenuButton';
+import { useNavigate } from 'react-router-dom';
+
 
 const MenuItem = styled(MuiMenuItem)({
   margin: '2px 0',
@@ -18,6 +20,7 @@ const MenuItem = styled(MuiMenuItem)({
 export default function OptionsMenu() {
   const [anchorEl, setAnchorEl] = React.useState(null);
   const open = Boolean(anchorEl);
+  const navigate = useNavigate();
   const handleClick = (event) => {
     setAnchorEl(event.currentTarget);
   };
@@ -62,7 +65,10 @@ export default function OptionsMenu() {
         <MenuItem
           onClick={() => {
             handleClose();
-            window.location.href = 'http://localhost:3000/sign-in'; // Redirección aquí
+            localStorage.removeItem('userEmail');
+            localStorage.removeItem('userName');
+            sessionStorage.clear();
+            navigate('/sign-in');
           }}
           sx={{
             [`& .${listItemIconClasses.root}`]: {

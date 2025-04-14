@@ -11,6 +11,8 @@ import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import { styled } from '@mui/material/styles';
 import ForgotPassword from '../ForgotPassword';
+import { useNavigate } from 'react-router-dom';
+
 
 const Card = styled(MuiCard)(({ theme }) => ({
     display: 'flex',
@@ -36,6 +38,8 @@ export default function SignInCard() {
     const [passwordError, setPasswordError] = React.useState(false);
     const [passwordErrorMessage, setPasswordErrorMessage] = React.useState('');
     const [open, setOpen] = React.useState(false);
+    const navigate = useNavigate();
+
 
     const handleClickOpen = () => {
         setOpen(true);
@@ -91,21 +95,30 @@ export default function SignInCard() {
                 body: JSON.stringify(user),
             });
 
-            const responseData = await response.json();
+            const responseData = await response.json(); // ✅ 只读一次
+            console.log("Parsed JSON:", responseData);
+            console.log("验证通过，开始发起登录请求");
 
-            if (!response.ok) {
+            if (response.ok) {
+                // Determinar si el usuario ha marcado "Recuérdame"
+                const rememberMe = Boolean(data.get('remember'));
+                
+                if (rememberMe) {
+                    localStorage.setItem('userEmail', responseData.email);
+                    localStorage.setItem('userName', responseData.name);
+                    localStorage.setItem('accessToken', responseData.access_token);
+                    localStorage.setItem('refreshToken', responseData.refresh_token);
+                } else {
+                    sessionStorage.setItem('userEmail', responseData.email);
+                    sessionStorage.setItem('userName', responseData.name);
+                    sessionStorage.setItem('accessToken', responseData.access_token);
+                    sessionStorage.setItem('refreshToken', responseData.refresh_token);
+                }
+                navigate('/inicio');
+            } else {
                 setPasswordError(true);
                 setPasswordErrorMessage(responseData.detail || 'Email o contraseña incorrectos. Por favor revise e inténtelo de nuevo.');
-                return;
             }
-
-            // 登录成功处理
-            // Almacenar datos del usuario
-            localStorage.setItem('userEmail', responseData.email);
-            localStorage.setItem('userName', responseData.name);
-            
-            // Redirección
-            window.location.href = '/inicio';
         } catch (error) {
             console.error('Error de conexión:', error);
             setPasswordError(true);
@@ -176,7 +189,7 @@ export default function SignInCard() {
                     />
                 </FormControl>
                 <FormControlLabel
-                    control={<Checkbox value="remember" color="primary" />}
+                    control={<Checkbox value="remember" color="primary" name="remember"/>}
                     label="Recuérdame"
                 />
                 <ForgotPassword open={open} handleClose={handleClose} />

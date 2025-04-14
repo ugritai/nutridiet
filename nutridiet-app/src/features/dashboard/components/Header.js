@@ -10,8 +10,8 @@ import OptionsMenu from './OptionsMenu';
 
 export default function Header() {
   // Obtener datos del localStorage
-  const userEmail = localStorage.getItem('userEmail');
-  const userName = localStorage.getItem('userName');
+  const userEmail = localStorage.getItem('userEmail') || sessionStorage.getItem('userEmail');
+  const userName = localStorage.getItem('userName') || sessionStorage.getItem('userName');
 
   return (
     <Stack
