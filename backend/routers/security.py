@@ -4,7 +4,7 @@ import os
 
 SECRET_KEY = os.getenv("SECRET_KEY", "supersecreto")
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE = timedelta(minutes=1)
+ACCESS_TOKEN_EXPIRE = timedelta(minutes=15)
 REFRESH_TOKEN_EXPIRE = timedelta(days=7)
 
 def create_jwt_token(data: dict, expires_delta: timedelta):
