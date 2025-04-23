@@ -40,7 +40,6 @@ export default function BusquedaRecetas(props) {
     <AppTheme {...props}>
       <CssBaseline enableColorScheme />
       <Box sx={{ display: 'flex' }}>
-        <UserMenu />
         {/* Main content */}
         <Box
           component="main"
@@ -61,7 +60,6 @@ export default function BusquedaRecetas(props) {
               mt: { xs: 8, md: 0 },
             }}
           >
-            <Header />
             <Search />
             <CategorySelect onCategoryChange={handleCategoryChange} />
             
