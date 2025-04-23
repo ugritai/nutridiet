@@ -18,7 +18,7 @@ export default function Search() {
       <OutlinedInput
         size="small"
         id="search"
-        placeholder="Buscar recetas..."
+        placeholder=""
         sx={{ width: '100%' }} 
         startAdornment={
           <InputAdornment position="start" sx={{ color: 'text.primary' }}>

@@ -26,6 +26,10 @@ export default function NavbarBreadcrumbs() {
     breadcrumbText = 'Búsqueda de Recetas';
   } else if (location.pathname === '/pacientes') {
     breadcrumbText = 'Pacientes';
+  } else if (location.pathname === '/alimentos') {
+    breadcrumbText = 'Alimentos';
+  } else if (location.pathname === '/crear-dieta') {
+    breadcrumbText = 'Planificación de dieta';
   }
 
   return (

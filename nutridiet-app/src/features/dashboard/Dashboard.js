@@ -9,18 +9,18 @@ import MainGrid from './components/MainGrid';
 import UserMenu from './components/SideMenu';
 import AppTheme from '../../assets/shared-theme/AppTheme';
 import AuthHandler from '../auth/AuthHandler';
-import { fetchWithAuth } from '../../api'; // 自动附带 token 的封装
+import { fetchWithAuth } from '../../api'; 
 
-export default function Dashboard(props) {
+export default function Dashboard({ children, ...props }) {
   const [userInfo, setUserInfo] = useState(null);
 
   useEffect(() => {
     const fetchProtectedData = async () => {
       try {
-        const response = await fetchWithAuth('/auth/me'); // 🛡️ 一个受保护的路由
+        const response = await fetchWithAuth('/auth/me'); 
         if (response.ok) {
           const data = await response.json();
-          setUserInfo(data); // 可选：保存用户信息
+          setUserInfo(data); 
           console.log('🔐 Token válido. Usuario:', data);
         } else {
           console.warn('⛔ No autorizado');
@@ -59,7 +59,7 @@ export default function Dashboard(props) {
             }}
           >
             <Header />
-            <MainGrid />
+            {children} 
           </Stack>
         </Box>
       </Box>
