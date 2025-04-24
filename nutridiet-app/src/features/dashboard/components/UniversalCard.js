@@ -38,56 +38,71 @@ const UniversalCard = ({
       }}
     >
       {image ? (
-        <div style={{ position: 'relative', height: 160 }}>
-          <CardMedia
-            component="img"
-            image={image}
-            alt={title}
-            sx={{
-              height: '100%',
-              width: '100%',
-              objectFit: 'cover',
-            }}
-          />
+        <>
+          <div style={{ position: 'relative', height: 160 }}>
+            <CardMedia
+              component="img"
+              image={image}
+              alt={title}
+              sx={{
+                height: '100%',
+                width: '100%',
+                objectFit: 'cover',
+              }}
+            />
+          </div>
+
+          {/* 标题：仅在有图片时显示 */}
           <Typography
-            variant="h6"
+            variant="h5"
             sx={{
-              position: 'absolute',
-              bottom: 8,
-              left: 12,
-              color: '#fff',
-              fontWeight: 700,
-              textShadow: '1px 1px 3px rgba(0,0,0,0.6)',
+              color: 'text.primary',
+              fontWeight: 600,
+              fontSize: '1rem',
+              textAlign: 'left',
+              marginTop: '16px',
             }}
           >
             {title}
           </Typography>
-        </div>
+        </>
+
       ) : (
-        <CardContent sx={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', pt: 2, minHeight: 80 }}>
-          {/* Icon at the top left */}
-          <div style={{
-            position: 'absolute',
-            top: 8,
-            left: 8,
+        <CardContent
+          sx={{
+            position: 'relative',
             display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: 40, // 图标宽度
-            height: 40, // 图标高度
-          }}>
+            flexDirection: 'column',
+            alignItems: 'flex-start',
+            pt: 2,
+            minHeight: 80,
+          }}
+        >
+          {/* 图标 */}
+          <div
+            style={{
+              position: 'absolute',
+              top: 8,
+              left: 8,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: 40,
+              height: 40,
+            }}
+          >
             {icon}
           </div>
 
-          {/* Title below the icon */}
+          {/* 没有图片时的标题 */}
           <Typography
             variant="h6"
             sx={{
               color: 'text.primary',
               fontWeight: 600,
-              fontSize: '1rem', // 调整字体大小
-              textAlign: 'left', // 确保title左对齐
-              marginTop: '48px', // 为了避免 title 距离图标太近
+              fontSize: '1rem',
+              textAlign: 'left',
+              marginTop: '48px',
             }}
           >
             {title}

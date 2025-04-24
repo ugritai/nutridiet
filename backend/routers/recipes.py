@@ -1,6 +1,5 @@
 from fastapi import APIRouter, HTTPException
 from database.connection import recipe_db_host
-from pymongo import MongoClient
 
 router = APIRouter(tags=["Recipes"])
 
@@ -63,3 +62,26 @@ async def get_recipes_by_category(category: str):
         raise HTTPException(status_code=404, detail=f"No se encontraron recetas para la categoría: {category}")
     
     return {"recipes": recipes}
+    
+@router.get("/ingredient_categories")
+async def get_ingredient_categories():
+    collections = ['all_ingredients']
+    categories = set()  # Usamos un set para asegurarnos de que no haya categorías duplicadas
+
+    for collection in collections:
+        # Verificar si la colección existe
+        if collection in recipe_db_host.list_collection_names():
+            try:
+                collection_data = recipe_db_host[collection].distinct("category_esp")
+                categories.update(collection_data)
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=f"Error al acceder a la colección {collection}: {e}")
+        else:
+            raise HTTPException(status_code=404, detail=f"Collection {collection} no encontrada en la base de datos.")
+    
+    if not categories:
+        raise HTTPException(status_code=404, detail="No se encontraron categorías.")
+
+    # Convertimos el set a una lista y ordenamos alfabéticamente
+    sorted_categories = sorted(list(categories))   
+    return {"categories": sorted_categories}
