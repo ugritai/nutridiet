@@ -7,6 +7,7 @@ import InicioPage from "../features/dashboard/pages/InicioPage"
 import BusquedaRecetas from '../features/dashboard/pages/BusquedaRecetas';
 import ProtectedRoute from '../features/auth/ProtectedRoute';
 import Alimentos from '../features/dashboard/pages/AlimentosPage';
+import DetalleAlimentoPage from '../features/dashboard/pages/DetalleAlimentoPage';
 
 function App() {
   return (
@@ -19,7 +20,7 @@ function App() {
         {/* Rutas protegidas*/}
         <Route path="/inicio" element={
           <ProtectedRoute>
-            < InicioPage/>
+            < InicioPage />
           </ProtectedRoute>}
         />
 
@@ -34,6 +35,13 @@ function App() {
             <Alimentos />
           </ProtectedRoute>}
         />
+
+        <Route path="/alimentos/detalle_alimento/:nombre" element={
+          <ProtectedRoute>
+            <DetalleAlimentoPage />
+          </ProtectedRoute>}
+        />
+
       </Routes>
     </Router>
   );
