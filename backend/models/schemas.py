@@ -25,3 +25,8 @@ class NutritionistResponse(NutritionistBase):
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str
+    
+class IngredientCategory(BaseModel):
+    name_esp: str      
+    image_url: str     
+    search_term: str   
