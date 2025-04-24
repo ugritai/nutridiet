@@ -1,15 +1,15 @@
 // Search.jsx
 import React from 'react';
 import PropTypes from 'prop-types';
-import { 
-  Stack, 
-  FormControl, 
-  OutlinedInput, 
-  InputAdornment, 
-  Button, 
-  List, 
-  ListItem, 
-  ListItemText, 
+import {
+  Stack,
+  FormControl,
+  OutlinedInput,
+  InputAdornment,
+  Button,
+  List,
+  ListItem,
+  ListItemText,
   Paper,
   styled
 } from '@mui/material';
@@ -45,6 +45,7 @@ const Search = ({
   buttonText = 'Buscar',
   showButton = true,
   suggestionRenderer,
+  suggestionClick,
   sx
 }) => {
   const handleFormSubmit = (e) => {
@@ -53,8 +54,8 @@ const Search = ({
   };
 
   return (
-    <SearchContainer 
-      direction="row" 
+    <SearchContainer
+      direction="row"
       spacing={2}
       component="form"
       onSubmit={handleFormSubmit}
@@ -80,8 +81,13 @@ const Search = ({
                   button
                   key={index}
                   onClick={() => {
-                    onChange(typeof item === 'string' ? item : item.label);
-                    onSubmit(typeof item === 'string' ? item : item.label);
+                    const text = typeof item === 'string' ? item : item.label;
+                    if (suggestionClick) {
+                      suggestionClick(text); 
+                    } else {
+                      onChange(text);        
+                      onSubmit(text);        
+                    }
                   }}
                 >
                   {suggestionRenderer ? (
@@ -95,15 +101,15 @@ const Search = ({
           </SuggestionsPaper>
         )}
       </FormControl>
-      
+
       {showButton && (
         <Button
           variant="contained"
           type="submit"
-          sx={{ 
+          sx={{
             height: 40,
             minWidth: 100,
-            flexShrink: 0 
+            flexShrink: 0
           }}
         >
           {buttonText}
@@ -122,6 +128,7 @@ Search.propTypes = {
   buttonText: PropTypes.string,
   showButton: PropTypes.bool,
   suggestionRenderer: PropTypes.func,
+  suggestionClick: PropTypes.func,
   sx: PropTypes.object
 };
 
