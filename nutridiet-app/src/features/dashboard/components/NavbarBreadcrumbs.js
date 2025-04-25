@@ -1,10 +1,10 @@
-import * as React from 'react';
+import React from 'react';
 import { styled } from '@mui/material/styles';
 import Typography from '@mui/material/Typography';
 import Breadcrumbs, { breadcrumbsClasses } from '@mui/material/Breadcrumbs';
 import NavigateNextRoundedIcon from '@mui/icons-material/NavigateNextRounded';
-import { useLocation } from 'react-router-dom';
-
+import { Link as RouterLink, useLocation } from 'react-router-dom';
+import Link from '@mui/material/Link';
 
 const StyledBreadcrumbs = styled(Breadcrumbs)(({ theme }) => ({
   margin: theme.spacing(1, 0),
@@ -17,29 +17,74 @@ const StyledBreadcrumbs = styled(Breadcrumbs)(({ theme }) => ({
   },
 }));
 
-export default function NavbarBreadcrumbs() {
-  const location = useLocation(); // Obtener la ruta actual
+const pathNameMap = {
+  'inicio': 'Inicio',
+  'alimentos': 'Alimentos',
+  'detalle_alimento': '',
+  'busqueda-recetas': 'Búsqueda de Recetas',
+  'pacientes': 'Pacientes',
+  'crear-dieta': 'Planificación de dieta',
+  'categorias': 'Categorías',
+};
 
-  // Determinar el nombre de la página dependiendo de la ruta actual
-  let breadcrumbText = 'Inicio';
-  if (location.pathname === '/busqueda-recetas') {
-    breadcrumbText = 'Búsqueda de Recetas';
-  } else if (location.pathname === '/pacientes') {
-    breadcrumbText = 'Pacientes';
-  } else if (location.pathname === '/alimentos') {
-    breadcrumbText = 'Alimentos';
-  } else if (location.pathname === '/crear-dieta') {
-    breadcrumbText = 'Planificación de dieta';
-  }
+export default function NavbarBreadcrumbs() {
+  const location = useLocation();
+  const pathnames = location.pathname.split('/').filter((x) => x);
 
   return (
     <StyledBreadcrumbs
       aria-label="breadcrumb"
       separator={<NavigateNextRoundedIcon fontSize="small" />}
     >
-      <Typography variant="body1" sx={{ color: 'text.primary', fontWeight: 600 }}>
-        {breadcrumbText}
-      </Typography>
+      {/* 始终显示 Inicio，链接到主页 */}
+      <Link
+        component={RouterLink}
+        underline="hover"
+        color="inherit"
+        to="/inicio"
+      >
+        Inicio
+      </Link>
+
+      {pathnames.map((value, index) => {
+        // 跳过 'inicio'，因为我们已经手动加了
+        if (value === 'inicio') return null;
+
+        const to = '/' + pathnames.slice(0, index + 1).join('/');
+        const isLast = index === pathnames.length - 1;
+        let label = pathNameMap[value] || decodeURIComponent(value);
+
+        // 处理 detalle_alimento/:nombre
+        if (pathnames.includes('detalle_alimento')) {
+          if (value === 'detalle_alimento') return null;
+          if (pathnames[index - 1] === 'detalle_alimento') {
+            label = decodeURIComponent(value);
+          }
+        }
+
+        // 处理 categorias/:nombre
+        if (pathnames.includes('categorias')) {
+          if (value !== 'categorias' && pathnames[index - 1] === 'categorias') {
+            label = decodeURIComponent(value);
+          }
+        }
+
+        return isLast ? (
+          <Typography key={to} color="text.primary" sx={{ fontWeight: 600 }}>
+            {label}
+          </Typography>
+        ) : (
+          <Link
+            key={to}
+            component={RouterLink}
+            underline="hover"
+            color="inherit"
+            to={to}
+          >
+            {label}
+          </Link>
+        );
+      })}
     </StyledBreadcrumbs>
   );
 }
