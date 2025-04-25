@@ -11,7 +11,7 @@ export default function AlimentosPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('http://localhost:8000/alimentos/ingredient_categories')
+    fetch('http://localhost:8000/alimentos/all_categories')
       .then(res => res.json())
       .then(data => {
         console.log('Data received:', data);  // 输出返回的数据
@@ -61,7 +61,6 @@ export default function AlimentosPage() {
           ) : (
             <>
               <FoodGrid categories={categories} />
-
             </>
           )}
         </>

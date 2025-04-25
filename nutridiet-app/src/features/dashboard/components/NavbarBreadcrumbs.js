@@ -64,7 +64,8 @@ export default function NavbarBreadcrumbs() {
 
         // 处理 categorias/:nombre
         if (pathnames.includes('categorias')) {
-          if (value !== 'categorias' && pathnames[index - 1] === 'categorias') {
+          if (value === 'categorias') return null;
+          if (pathnames[index - 1] === 'categorias') {
             label = decodeURIComponent(value);
           }
         }

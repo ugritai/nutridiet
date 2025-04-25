@@ -111,7 +111,6 @@ def convert_objectid(data):
                         convert_objectid(item)
     return data
 
-
 @router.get("/detalle_alimento/{nombre}")
 async def get_alimento_detalle(nombre: str):
     
@@ -146,3 +145,27 @@ async def get_alimento_detalle(nombre: str):
         "alimento": jsonable_encoder(result),
         "sugeridos": sugeridos
     }
+    
+@router.get("/por_categoria/{categoria}")
+async def get_alimentos_por_categoria(categoria: str):
+    categoria = unidecode(categoria.lower().strip())
+
+    alimentos_cursor = bedca_collection.find()
+    resultado = []
+
+    async for item in alimentos_cursor:
+        cat = item.get("category_esp", "")
+        if unidecode(cat.lower().strip()) == categoria:
+            resultado.append(item["name_esp"])
+
+    return {"alimentos": resultado}
+
+@router.get("/all_categories")
+async def get_all_categories():
+    try:
+        # 使用 Motor 异步查询 distinct
+        categorias = await bedca_collection.distinct("category_esp")
+        
+        return {"categories": categorias}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al obtener categorías: {e}")
