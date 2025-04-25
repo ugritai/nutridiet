@@ -6,8 +6,7 @@ import Pagination from '@mui/material/Pagination';
 import PaginationItem from '@mui/material/PaginationItem';
 import { useSearchParams, Link } from 'react-router-dom';
 
-
-const CATEGORY_MAPPING = {
+export const CATEGORY_MAPPING = {
   Verduras: [
     "Verduras", "Verduras y Productos Vegetales", "Verduras y productos vegetales"
   ],
@@ -80,79 +79,64 @@ const CARD_CONTENT = {
   },
 };
 
-function mapCategoryToMain(categoria) {
+export function mapCategoryToMain(categoria) {
   for (const [main, aliases] of Object.entries(CATEGORY_MAPPING)) {
-    if (aliases.includes(categoria)) return main;
-  }
-  return null;
-}
-
-export default function FoodGrid({ categories }) {
-  const uniqueMapped = new Set();
-  const otherCategories = [];
-
-  categories.forEach((cat) => {
-    const mapped = mapCategoryToMain(cat);
-    if (mapped) {
-      uniqueMapped.add(mapped);
-    } else {
-      otherCategories.push(cat);
+    if (aliases.some(alias => categoria.toLowerCase().includes(alias.toLowerCase()))) {
+      return main;
     }
-  });
-
-  // 按字母顺序排序
-  const sortedCategories = [...uniqueMapped].sort();
-  const sortedOtherCategories = otherCategories.sort();
-
-  // 合并分类和其他类别
-  const allCategories = [...sortedCategories, ...sortedOtherCategories];
-
-  // 分页状态
+    return categoria;
+  }
+}
+export default function FoodGrid({ categories = [] }) {
   const itemsPerPage = 9;
-  const totalPages = Math.ceil(allCategories.length / itemsPerPage);
+  const totalPages = Math.ceil(categories.length / itemsPerPage);
 
-
-  // 获取 URL 中的 page 参数
   const [searchParams, setSearchParams] = useSearchParams();
   const pageParam = parseInt(searchParams.get('page')) || 1;
-  const [page, setPage] = useState(pageParam - 1); // 逻辑页码从 0 开始
+  const [page, setPage] = useState(pageParam - 1);
 
-  // 每次页码变化时，更新 URL 参数
   useEffect(() => {
-    setSearchParams({ page: page + 1 }); // 显示为 1 开始的页码
+    setSearchParams({ page: page + 1 });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [page, setSearchParams]);
-  
-  // 当前页显示的数据
-  const currentPageItems = allCategories.slice(page * itemsPerPage, (page + 1) * itemsPerPage);
 
-  // 分页按钮
+  const currentPageItems = categories.slice(page * itemsPerPage, (page + 1) * itemsPerPage);
+
   const handlePageChange = (event, value) => {
-    setPage(value - 1); // 将 Material-UI 的 1-based 页码转换为 0-based
+    setPage(value - 1);
+  };
+
+  const getImageForCategory = (category) => {
+    const formattedCategory = category
+        .toLowerCase() // 转为小写
+        .normalize("NFD") // 分解重音符
+        .replace(/[\u0300-\u036f]/g, "") // 去除重音符
+        .replace(/[^\w\s-]/g, '') // 去除其他特殊字符（如括号等）
+        .replace(/\s+/g, '-') // 替换空格为连字符
+        .replace(/-+/g, '-'); // 替换多个连字符为一个
+
+    const imagePath = `/img/alimentos/${formattedCategory}.jpg`; // 生成图片路径
+    console.log(`Category: ${category}, Image Path: ${imagePath}`); // 打印分类和图片路径
+    return imagePath; // 返回对应的图片路径
   };
 
   return (
     <Box sx={{ width: '100%', maxWidth: { sm: '100%', md: '1700px' }, mt: 4 }}>
-      <Grid container spacing={2}
-        columns={12}
-        sx={{ mb: (theme) => theme.spacing(2) }}
-      >
+      <Grid container spacing={2} columns={12} sx={{ mb: (theme) => theme.spacing(2) }}>
         {currentPageItems.map((category, index) => (
           <Grid size={{ xs: 12, sm: 6, lg: 4, md: 4 }} key={category}>
             <UniversalCard
-              title={category}
-              description={CARD_CONTENT[category]?.description || 'Categoría adicional'}
-              image={CARD_CONTENT[category]?.image || '/img/alimentos/default.jpg'}
-              buttonLink={`/resultadosalimentos?tipo=${category}`}
+              title={category} // 直接使用分类名
+              image={getImageForCategory(category)} // 获取分类对应的图片
+              buttonLink={`/alimentos/categorias/${encodeURIComponent(category)}`}
             />
           </Grid>
         ))}
       </Grid>
 
-      {/* 分页按钮 */}
       <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
         <Pagination
-          page={page + 1} // 转换为 1-based 页码
+          page={page + 1}
           count={totalPages}
           onChange={handlePageChange}
           renderItem={(item) => (

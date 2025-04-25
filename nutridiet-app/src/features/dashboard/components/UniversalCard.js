@@ -25,7 +25,7 @@ const UniversalCard = ({
   return (
     <Card
       sx={{
-        height: 'auto', // 高度自适应
+        height: '100%', // 保证高度根据内容自适应
         width: '100%',  // 保证宽度相同
         display: 'flex',
         flexDirection: 'column',
@@ -34,7 +34,8 @@ const UniversalCard = ({
         borderRadius: 3,
         overflow: 'hidden',
         transition: 'transform 0.3s',
-        '&:hover': { transform: 'scale(1.02)' }
+        '&:hover': { transform: 'scale(1.02)' },
+        minHeight: 300, // 设置最小高度，避免卡片过小
       }}
     >
       {image ? (
@@ -66,7 +67,6 @@ const UniversalCard = ({
             {title}
           </Typography>
         </>
-
       ) : (
         <CardContent
           sx={{
@@ -111,19 +111,22 @@ const UniversalCard = ({
       )}
 
       <CardContent sx={{ pt: image ? 1 : 0 }}>
-        <Typography
-          sx={{
-            color: 'text.secondary',
-            mb: 2,
-            minHeight: '3em',
-            display: '-webkit-box',
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: 'vertical',
-            overflow: 'hidden',
-          }}
-        >
-          {description}
-        </Typography>
+        {/* 只有在描述存在时才显示这个区域 */}
+        {description && (
+          <Typography
+            sx={{
+              color: 'text.secondary',
+              mb: 2,
+              minHeight: '3em',
+              display: '-webkit-box',
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical',
+              overflow: 'hidden',
+            }}
+          >
+            {description}
+          </Typography>
+        )}
         <Button
           component={buttonLink ? Link : 'button'}
           to={buttonLink}
@@ -139,8 +142,6 @@ const UniversalCard = ({
         </Button>
       </CardContent>
     </Card>
-
-
   );
 };
 

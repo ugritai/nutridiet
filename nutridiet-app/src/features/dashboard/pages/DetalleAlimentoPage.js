@@ -1,20 +1,22 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link as RouterLink } from 'react-router-dom';
 import {
-  CircularProgress,
-  Typography,
+  Grid,
+  Table,
+  TableBody,
+  TableCell,
+  TableRow,
+  Divider,
   Card,
   CardContent,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemText
+  Typography,
+  CircularProgress
 } from '@mui/material';
 
 import Dashboard from '../Dashboard';
 import Search from '../components/Search';
 import FoodSearch from '../components/FoodSearch';
-
+import { mapCategoryToMain } from '../components/FoodGrid'; // ✅ 正确导入
 
 export default function DetalleAlimentoPage() {
   const {
@@ -31,6 +33,10 @@ export default function DetalleAlimentoPage() {
   const [loading, setLoading] = useState(true);
   const [sugeridos, setSugeridos] = useState([]);
   const [message, setMessage] = useState('');
+  let categoriaGeneral = '';
+  if (alimento) {
+    categoriaGeneral = mapCategoryToMain(alimento.category_esp) || alimento.category_esp;
+  }
 
   useEffect(() => {
     setLoading(true);
@@ -69,52 +75,112 @@ export default function DetalleAlimentoPage() {
         placeholder="Buscar alimentos..."
         suggestionClick={handleSelectSuggestion}
       />
-      <Card sx={{ maxWidth: 600, margin: 'auto', mt: 4 }}>
+      <Card
+        sx={{
+          width: '100%',
+          mx: 'auto',
+          mt: 4,
+          p: { xs: 2, sm: 3 },
+          boxShadow: 3,
+          borderRadius: 2,
+        }}
+      >
         <CardContent>
-          {/* Detalle del alimento */}
           {alimento && (
-            <>
-              <Typography variant="h5">{alimento.name_esp}</Typography>
-              <Typography variant="h6">Categoría: {alimento.category_esp}</Typography>
-              <Typography variant="body1">Energía: {alimento.nutritional_info_100g.energy_kcal} kcal</Typography>
-              <Typography variant="body1">Proteínas: {alimento.nutritional_info_100g.pro} g</Typography>
-              <Typography variant="body1">Grasas Totales: {alimento.nutritional_info_100g.fats.total_fat} g</Typography>
-              <Typography variant="body1">Grasas Saturadas: {alimento.nutritional_info_100g.fats.sat} g</Typography>
-              <Typography variant="body1">Fibra: {alimento.nutritional_info_100g.fiber} g</Typography>
-              <Typography variant="body1">Sodio: {alimento.nutritional_info_100g.sod} mg</Typography>
-              <Typography variant="body1">Colesterol: {alimento.nutritional_info_100g.cholesterol} mg</Typography>
-            </>
+            <Grid container spacing={2}>
+              {/* 图片区域 */}
+              <Grid item xs={12} md={3}>
+                <img
+                  src={alimento.image_url || 'https://via.placeholder.com/150'}
+                  alt={alimento.name_esp}
+                  style={{
+                    width: '100%',
+                    height: 'auto',
+                    borderRadius: '8px',
+                    objectFit: 'cover',
+                  }}
+                />
+              </Grid>
+
+              {/* 信息区域 */}
+              <Grid item xs={12} md={9}>
+                <Typography variant="h5" gutterBottom>
+                  {alimento.name_esp}
+                </Typography>
+                <Typography variant="h6">
+                  Categoría:&nbsp;
+                  <RouterLink
+                    to={`/alimentos/categorias/${encodeURIComponent(categoriaGeneral)}`}
+                    style={{ textDecoration: 'none', color: '#1976d2' }}
+                  >
+                    {categoriaGeneral}
+                  </RouterLink>
+                </Typography>
+
+                <Table size="small" sx={{ mt: 2 }}>
+                  <TableBody>
+                    <TableRow>
+                      <TableCell><strong>Energía</strong></TableCell>
+                      <TableCell>{alimento.nutritional_info_100g.energy_kcal} kcal</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell><strong>Proteínas</strong></TableCell>
+                      <TableCell>{alimento.nutritional_info_100g.pro} g</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell><strong>Grasas Totales</strong></TableCell>
+                      <TableCell>{alimento.nutritional_info_100g.fats.total_fat} g</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell><strong>Grasas Saturadas</strong></TableCell>
+                      <TableCell>{alimento.nutritional_info_100g.fats.sat} g</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell><strong>Fibra</strong></TableCell>
+                      <TableCell>{alimento.nutritional_info_100g.fiber} g</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell><strong>Sodio</strong></TableCell>
+                      <TableCell>{alimento.nutritional_info_100g.sod} mg</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell><strong>Colesterol</strong></TableCell>
+                      <TableCell>{alimento.nutritional_info_100g.cholesterol} mg</TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </Grid>
+            </Grid>
           )}
 
-          {/* Mensaje opcional */}
+          {/* 分割线 */}
+          <Divider sx={{ my: 3 }} />
+
+          {/* 提示信息 */}
           {message && (
-            <Typography variant="body2" color="textSecondary" sx={{ mt: 2 }}>
+            <Typography variant="body2" color="textSecondary">
               {message}
             </Typography>
           )}
 
-          {/* Lista de sugerencias */}
           {sugeridos.length > 0 && (
             <>
               <Typography variant="h6" sx={{ mt: 2 }}>
                 Alimentos relacionados:
               </Typography>
-              <List>
+              <Typography variant="body2">
                 {sugeridos.map((item, index) => {
-                  // Maneja tanto string como objeto { nombre: string }
                   const nombreSugerido = typeof item === 'string' ? item : item.nombre;
                   return (
-                    <ListItem key={nombreSugerido + index} disablePadding>
-                      <ListItemButton
-                        component={Link}
-                        to={`/alimentos/detalle_alimento/${encodeURIComponent(nombreSugerido)}`}
-                      >
-                        <ListItemText primary={nombreSugerido} />
-                      </ListItemButton>
-                    </ListItem>
+                    <span key={index}>
+                      <RouterLink to={`/alimentos/detalle_alimento/${encodeURIComponent(nombreSugerido)}`}>
+                        {nombreSugerido}
+                      </RouterLink>
+                      {index < sugeridos.length - 1 && ', '}
+                    </span>
                   );
                 })}
-              </List>
+              </Typography>
             </>
           )}
         </CardContent>

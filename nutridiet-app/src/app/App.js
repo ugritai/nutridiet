@@ -8,6 +8,7 @@ import BusquedaRecetas from '../features/dashboard/pages/BusquedaRecetas';
 import ProtectedRoute from '../features/auth/ProtectedRoute';
 import Alimentos from '../features/dashboard/pages/AlimentosPage';
 import DetalleAlimentoPage from '../features/dashboard/pages/DetalleAlimentoPage';
+import AlimentosPorCategoriaPage from '../features/dashboard/pages/AlimentosPorCategoriaPage';
 
 function App() {
   return (
@@ -41,6 +42,14 @@ function App() {
             <DetalleAlimentoPage />
           </ProtectedRoute>}
         />
+
+        <Route path="/alimentos/categorias/:categoria" element={
+          <ProtectedRoute>
+            <AlimentosPorCategoriaPage />
+          </ProtectedRoute>
+
+        } />
+
 
       </Routes>
     </Router>
