@@ -3,7 +3,6 @@ import Dashboard from '../Dashboard';
 import FoodGrid from '../components/FoodGrid';
 import Search from '../components/Search';
 import FoodSearch from '../components/FoodSearch';
-import { useNavigate } from 'react-router-dom';
 import { CircularProgress, Typography } from '@mui/material';
 
 export default function AlimentosPage() {
