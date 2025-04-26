@@ -2,7 +2,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from database.connection import client_host
 from routers import auth, nutritionists, recipes, alimentos
+from dotenv import load_dotenv
 
+load_dotenv()
 app = FastAPI()
 
 # CORS配置

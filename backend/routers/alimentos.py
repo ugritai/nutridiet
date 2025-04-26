@@ -8,29 +8,42 @@ from unidecode import unidecode
 from fastapi.encoders import jsonable_encoder
 from bson import ObjectId
 import re
+from dotenv import load_dotenv
 
+load_dotenv()
 
 router = APIRouter(tags=["Ingredients"])
-PIXABAY_API_KEY = os.getenv("PIXABAY_API_KEY")  # 从环境变量获取
-
+@router.get("/pixabay_search")
 async def get_pixabay_image(search_term: str) -> str:
-    """ 从 Pixabay 获取图片 URL """
+    api_key = os.getenv("PIXABAY_API_KEY")
+    if not api_key:
+        raise HTTPException(status_code=500, detail="Pixabay API key not found in environment variables.")
+
+    # 准备请求
+    url = "https://pixabay.com/api/"
+    params = {
+        "key": api_key,
+        "q": search_term,
+        "image_type": "photo",
+        "safesearch": "true",
+        "per_page": 3,  # 最多拿3张，够用了
+    }
+
     try:
-        params = {
-            "key": PIXABAY_API_KEY,
-            "q": search_term,
-            "image_type": "photo",
-            "per_page": 1
-        }
-        response = requests.get("https://pixabay.com/api/", params=params)
+        response = requests.get(url, params=params, timeout=10)
+        response.raise_for_status()
         data = response.json()
-        
-        if data["totalHits"] > 0:
-            return data["hits"][0]["webformatURL"]
-        return ""  # 没有找到返回空字符串
-    except Exception as e:
-        print(f"Pixabay API error: {e}")
-        return ""
+
+        if data.get("totalHits", 0) == 0 or not data.get("hits"):
+            raise HTTPException(status_code=404, detail="No images found for the given search term.")
+
+        # 取第一张图片的 URL（可以根据需要改成列表）
+        first_image_url = data["hits"][1]["webformatURL"]
+        return first_image_url
+
+    except requests.exceptions.RequestException as e:
+        raise HTTPException(status_code=500, detail=f"Pixabay API request failed: {str(e)}")
+    
     
 @router.get("/ingredient_categories")
 async def get_ingredient_categories():
@@ -113,7 +126,6 @@ def convert_objectid(data):
 
 @router.get("/detalle_alimento/{nombre}")
 async def get_alimento_detalle(nombre: str):
-    
     nombre_normalizado = unidecode(nombre.strip().lower())
     
     cursor = bedca_collection.find({}, {"_id": 0})
@@ -124,7 +136,6 @@ async def get_alimento_detalle(nombre: str):
             result = doc
             break
     else:
-        # 如果找不到精确匹配，尝试根据名称提供建议
         sugeridos = await sugerir_alimentos(nombre)
         if sugeridos:
             suggested_names = [alimento["nombre"] for alimento in sugeridos]
@@ -137,14 +148,21 @@ async def get_alimento_detalle(nombre: str):
 
     result = convert_objectid(result)
 
-    # 获取相关的食物建议
     sugeridos = await sugerir_alimentos(nombre)
 
-    # 返回食物详细信息和建议
+    # 增加：找图片
+    try:
+        image_url = await get_pixabay_image(nombre)
+    except Exception:
+        image_url = None
+
+    # 结构不变，只是多一个 image_url
     return {
         "alimento": jsonable_encoder(result),
-        "sugeridos": sugeridos
+        "sugeridos": sugeridos,
+        "image_url": image_url,
     }
+
     
 @router.get("/por_categoria/{categoria}")
 async def get_alimentos_por_categoria(categoria: str):
@@ -157,7 +175,7 @@ async def get_alimentos_por_categoria(categoria: str):
         cat = item.get("category_esp", "")
         if unidecode(cat.lower().strip()) == categoria:
             resultado.append(item["name_esp"])
-
+    resultado.sort()
     return {"alimentos": resultado}
 
 @router.get("/all_categories")

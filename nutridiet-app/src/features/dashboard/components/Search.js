@@ -1,4 +1,3 @@
-// Search.jsx
 import React from 'react';
 import PropTypes from 'prop-types';
 import {
@@ -50,7 +49,9 @@ const Search = ({
 }) => {
   const handleFormSubmit = (e) => {
     e.preventDefault();
-    onSubmit(value);
+    if (value.trim()) {  // Only trigger the search if there's valid input
+      onSubmit(value);
+    }
   };
 
   return (

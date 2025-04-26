@@ -6,9 +6,13 @@ export default function FoodSearch() {
   const [suggestions, setSuggestions] = useState([]);
   const navigate = useNavigate();
 
-  const handleSearch = async (value) => {
+  const handleSearch = async () => {
+    // Check if query is empty, and only navigate if it's not
+    if (!query.trim()) {
+      return; // Prevent navigation if search query is empty
+    }
     setSuggestions([]);
-    navigate(`/alimentos/detalle_alimento/${encodeURIComponent(value)}`);
+    navigate(`/alimentos/detalle_alimento/${encodeURIComponent(query)}`);
   };
 
   const handleSelectSuggestion = (value) => {
