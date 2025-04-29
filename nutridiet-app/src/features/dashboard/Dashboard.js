@@ -8,7 +8,7 @@ import Header from './components/Header';
 import UserMenu from './components/SideMenu';
 import AppTheme from '../../assets/shared-theme/AppTheme';
 import AuthHandler from '../auth/AuthHandler';
-import { fetchWithAuth } from '../../api'; 
+import { fetchWithAuth } from './components/api'; 
 
 export default function Dashboard({ children, ...props }) {
   const [userInfo, setUserInfo] = useState(null);

@@ -12,7 +12,7 @@ import {
   Typography,
   CircularProgress
 } from '@mui/material';
-import { mapCategoryToMain } from './FoodGrid'; // ✅ 正确导入
+import { mapCategoryToMain } from './FoodGrid'; 
 
 export default function FoodDetailCard() {
     const { nombre } = useParams();
@@ -20,7 +20,7 @@ export default function FoodDetailCard() {
     const [loading, setLoading] = useState(true);
     const [sugeridos, setSugeridos] = useState([]);
     const [message, setMessage] = useState('');
-    const [image_url, setImagen_url] = useState('');
+    const [imagen_url, setImagen_url] = useState('');
 
     let categoriaGeneral = '';
     if (alimento) {
@@ -38,7 +38,7 @@ export default function FoodDetailCard() {
                 setAlimento(data.alimento || null);
                 setSugeridos(data.sugeridos || []);
                 setMessage(data.message || '');
-                setImagen_url(data.image_url || '');
+                setImagen_url(data.imagen_url || '');
             })
             .catch(err => console.error("Error:", err))
             .finally(() => setLoading(false));
@@ -66,7 +66,7 @@ export default function FoodDetailCard() {
                         {/* 图片区域 */}
                         <Grid Grid size={{ xs: 12, sm: 6, lg: 3, md: 3 }}>
                             <img
-                                src={image_url}
+                                src={imagen_url}
                                 alt={alimento.name_esp}
                                 style={{
                                     width: '100%',

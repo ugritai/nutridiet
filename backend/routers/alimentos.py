@@ -6,24 +6,35 @@ from database.connection import ingredient_categories_collection, recipe_db_host
 from models.schemas import IngredientCategory
 from unidecode import unidecode
 from fastapi.encoders import jsonable_encoder
+from bs4 import BeautifulSoup
+from urllib.parse import urljoin
+from pathlib import Path
 from bson import ObjectId
 import re
 from dotenv import load_dotenv
 
 load_dotenv()
+IMAGE_DIR = Path("static/images")
+IMAGE_DIR.mkdir(parents=True, exist_ok=True)
+
 
 router = APIRouter(tags=["Ingredients"])
+
 @router.get("/pixabay_search")
 async def get_pixabay_image(search_term: str) -> str:
     api_key = os.getenv("PIXABAY_API_KEY")
     if not api_key:
         raise HTTPException(status_code=500, detail="Pixabay API key not found in environment variables.")
+    
+    words = search_term.strip().split()
+    keyword = " ".join(words[:3]) 
+    print(f"[Unsplash] 使用关键词搜索: '{keyword}'")
 
     # 准备请求
     url = "https://pixabay.com/api/"
     params = {
         "key": api_key,
-        "q": search_term,
+        "q": keyword,
         "image_type": "photo",
         "safesearch": "true",
         "per_page": 3,  # 最多拿3张，够用了
@@ -43,8 +54,101 @@ async def get_pixabay_image(search_term: str) -> str:
 
     except requests.exceptions.RequestException as e:
         raise HTTPException(status_code=500, detail=f"Pixabay API request failed: {str(e)}")
+
+#API
+@router.get("/unsplash_search")
+async def get_unsplash_image_api(search_term: str):
+    access_key = os.getenv("UNSPLASH_ACCESS_KEY")
+    if not access_key:
+        raise HTTPException(status_code=500, detail="Unsplash Access Key not found in environment variables.")
     
+    words = search_term.strip().split()
+    keyword = " ".join(words[:3])
+    print(f"[Unsplash API] 使用关键词搜索: '{keyword}'")
+
+    url = "https://api.unsplash.com/search/photos"
+    params = {
+        "query": keyword,
+        "per_page": 1,
+        "client_id": access_key,
+    }
+
+    try:
+        response = requests.get(url, params=params, timeout=10)
+        response.raise_for_status()
+        data = response.json()
+
+        if not data.get("results"):
+            raise HTTPException(status_code=404, detail="No images found for the given search term.")
+
+        # 获取第一张图片的 URL（使用 regular 或 full）
+        first_image_url = data["results"][0]["urls"]["regular"]
+
+        # 本地保存路径
+        safe_name = "-".join(words[:3]).lower()
+        file_name = f"{safe_name}.jpg"
+        save_path = IMAGE_DIR / file_name
+
+        # 如果文件已存在，直接返回
+        if save_path.exists():
+            return {"image_url": f"/static/images/{file_name}"}
+
+        # 下载图片并保存
+        img_data = requests.get(first_image_url, timeout=10).content
+        with open(save_path, "wb") as f:
+            f.write(img_data)
+
+        print(f"[Saved] Imagen guardada: {save_path}")
+        return {"image_url": f"/static/images/{file_name}"}
+
+    except requests.exceptions.RequestException as e:
+        raise HTTPException(status_code=500, detail=f"Unsplash API request failed: {str(e)}")
     
+#beatifulsoup
+@router.get("/unsplash_search")
+async def get_unsplash_image(search_term: str):
+    words = search_term.strip().split()
+    keyword = "-".join(words[:3])
+    print(f"[Scrape] Buscando imágenes para: {keyword}")
+
+    url = f"https://unsplash.com/es/s/fotos/{keyword}"
+    headers = {
+        "User-Agent": "Mozilla/5.0"
+    }
+
+    try:
+        response = requests.get(url, headers=headers, timeout=10)
+        response.raise_for_status()
+        soup = BeautifulSoup(response.content, 'html.parser')
+
+        img_tag = soup.find("img", {"srcset": True})
+        if not img_tag:
+            raise HTTPException(status_code=404, detail="No se encontró imagen")
+
+        # 获取最高分辨率
+        srcset_entries = img_tag["srcset"].split(",")
+        highest_res_url = srcset_entries[-1].strip().split()[0]
+
+        # 图片保存路径
+        file_name = f"{keyword}.jpg"
+        save_path = IMAGE_DIR / file_name
+
+        # 如果文件已存在就直接返回
+        if save_path.exists():
+            return {"image_url": f"/static/images/{file_name}"}
+
+        # 下载图片
+        img_data = requests.get(highest_res_url, headers=headers, timeout=10).content
+        with open(save_path, "wb") as f:
+            f.write(img_data)
+
+        print(f"[Saved] Imagen guardada: {save_path}")
+
+        return {"image_url": f"/static/images/{file_name}"}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"No se pudo obtener imagen: {e}")
+     
 @router.get("/ingredient_categories")
 async def get_ingredient_categories():
     collections = ['all_ingredients']

@@ -14,6 +14,7 @@ export default function AlimentosPorCategoriaPage() {
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedLetter, setSelectedLetter] = useState('');
+  
   const itemsPerPage = 9;
 
   const {
