@@ -256,7 +256,7 @@ async def get_alimento_detalle(nombre: str):
 
     # 增加：找图片
     try:
-        image_url = await get_pixabay_image(nombre)
+        image_url = await get_unsplash_image_api(nombre)
     except Exception:
         image_url = None
 
