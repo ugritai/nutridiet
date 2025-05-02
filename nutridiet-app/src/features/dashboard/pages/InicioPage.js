@@ -1,5 +1,5 @@
 import Dashboard from '../Dashboard';
-import MainGrid from '../components/MainGrid'; // 你刚刚写的
+import MainGrid from '../components/MainGrid'; 
 
 export default function AlimentosPage() {
   return (

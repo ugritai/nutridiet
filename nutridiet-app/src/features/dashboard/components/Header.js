@@ -7,6 +7,45 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import OptionsMenu from './PerfilOptionsMenu';
 
+function stringToColor(string) {
+  let hash = 0;
+  let i;
+
+  /* eslint-disable no-bitwise */
+  for (i = 0; i < string.length; i += 1) {
+    hash = string.charCodeAt(i) + ((hash << 5) - hash);
+  }
+
+  let color = '#';
+
+  for (i = 0; i < 3; i += 1) {
+    const value = (hash >> (i * 8)) & 0xff;
+    color += `00${value.toString(16)}`.slice(-2);
+  }
+  /* eslint-enable no-bitwise */
+
+  return color;
+}
+
+function stringAvatar(name) {
+  const nameParts = name?.split(' ') || [];
+
+  let initials = '';
+  if (nameParts.length === 1) {
+    initials = nameParts[0][0]?.toUpperCase() || '?';
+  } else if (nameParts.length >= 2) {
+    initials = `${nameParts[0][0]?.toUpperCase() || ''}${nameParts[1][0]?.toUpperCase() || ''}`;
+  } else {
+    initials = '?';
+  }
+
+  return {
+    sx: {
+      bgcolor: stringToColor(name || 'User'),
+    },
+    children: initials,
+  };
+}
 
 export default function Header() {
   // Obtener datos del localStorage
@@ -39,11 +78,8 @@ export default function Header() {
             pr: 2,
           }}
         >
-          <Avatar
-            sizes="small"
-            alt={userName}
-            sx={{ width: 36, height: 36 }}
-          />
+            <Avatar {...stringAvatar(userName)} alt={userName} />
+
           <Box sx={{ mr: 'auto' }}>
             <Typography variant="body2" sx={{ fontWeight: 500, lineHeight: '16px' }}>
               {userName}

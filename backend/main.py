@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from database.connection import client_host
-from routers import auth, nutritionists, recipes, alimentos
+from routers import auth, nutritionists, recipes, alimentos, pacientes
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -21,6 +21,7 @@ app.include_router(auth.router, prefix="/api/auth")
 app.include_router(nutritionists.router)
 app.include_router(recipes.router)
 app.include_router(alimentos.router, prefix="/alimentos")
+app.include_router(pacientes.router, prefix="/pacientes")
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
