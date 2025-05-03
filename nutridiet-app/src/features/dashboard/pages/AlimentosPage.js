@@ -13,7 +13,7 @@ export default function AlimentosPage() {
     fetch('http://localhost:8000/alimentos/all_categories')
       .then(res => res.json())
       .then(data => {
-        console.log('Data received:', data);  // 输出返回的数据
+        console.log('Data received:', data);  
         setCategories(data.categories);
       })
       .catch(err => {

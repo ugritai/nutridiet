@@ -2,7 +2,7 @@
 import os
 import requests
 from fastapi import APIRouter, HTTPException
-from database.connection import ingredient_categories_collection, recipe_db_host, bedca_collection
+from database.connection import ingredient_categories_collection, recipe_db_host, bedca_collection,embeddings_collection
 from models.schemas import IngredientCategory
 from unidecode import unidecode
 from fastapi.encoders import jsonable_encoder
@@ -12,6 +12,9 @@ from pathlib import Path
 from bson import ObjectId
 import re
 from dotenv import load_dotenv
+from sentence_transformers import SentenceTransformer, util
+import numpy as np
+import torch
 
 load_dotenv()
 IMAGE_DIR = Path("static/images")
@@ -176,7 +179,7 @@ async def get_ingredient_categories():
     sorted_categories = sorted(categories)
     return {"categories": sorted_categories}
 
-STOP_WORDS = {"de", "con", "y", "a", "en", "por", "para", "el", "la", "los", "las", "un", "una", "del", "al", "que", "es", "como"}
+STOP_WORDS = {"de", "con", "y", "a", "en", "por", "para", "el", "la", "los", "las", "un", "una", "del", "al", "que", "es", "como", ",", "-"}
 
 def remove_stop_words(nombre: str):
     nombre = re.sub(r'[^\w\s]', '', nombre.lower())
@@ -184,8 +187,58 @@ def remove_stop_words(nombre: str):
     palabras = [palabra for palabra in palabras if palabra not in STOP_WORDS]
     return palabras
 
+
+model = SentenceTransformer('sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2')
+
 @router.get("/sugerir_alimentos/{nombre}")
 async def sugerir_alimentos(nombre: str, limit: int = 10):
+    nombre_normalizado = unidecode(nombre.lower())
+    embedding_input = model.encode(nombre_normalizado)
+    embedding_input = torch.tensor(embedding_input, dtype=torch.float32)
+
+
+    docs = list(embeddings_collection.find({}, {"_id": 0, "name_esp": 1, "categoria": 1, "etiquetas": 1, "embedding": 1}))
+
+    similarities = []
+    for doc in docs:
+        emb = np.array(doc["embedding"])
+        emb = torch.tensor(emb, dtype=torch.float32)
+        sim = util.cos_sim(embedding_input, emb)[0][0].item()
+        similarities.append((sim, doc))
+
+    
+    top = sorted(similarities, key=lambda x: x[0], reverse=True)[:limit]
+
+    if not top:
+        raise HTTPException(status_code=404, detail="No se encontraron sugerencias")
+
+    resultados = [
+        {
+            "nombre": doc["name_esp"],
+            "etiquetas": doc.get("etiquetas", []),
+            "similitud": round(sim, 4)
+        }
+        for sim, doc in top
+        if doc["name_esp"].lower() != nombre_normalizado
+    ]
+    
+    # Si no hay sugerencias después de filtrar el término exacto
+    if not resultados:
+        raise HTTPException(status_code=404, detail="No se encontraron sugerencias distintas al término de búsqueda")
+
+    return resultados
+
+
+STOP_WORDS = {",", "-", " "}
+
+def remove_stop_words(nombre: str):
+    nombre = re.sub(r'[^\w\s]', '', nombre.lower())
+    palabras = nombre.split()
+    palabras = [palabra for palabra in palabras if palabra not in STOP_WORDS]
+    return palabras
+
+@router.get("/buscar_alimentos/{nombre}")
+async def buscar_alimentos(nombre: str, limit: int = 5):
     palabras = remove_stop_words(nombre)
     
     alimentos_sugeridos = set()  # eliminar repetidos
@@ -209,7 +262,7 @@ async def sugerir_alimentos(nombre: str, limit: int = 10):
     alimentos_sugeridos = list(alimentos_sugeridos)
     
     if alimentos_sugeridos:
-        return [{"nombre": nombre} for nombre in alimentos_sugeridos[:limit]]  # 返回最多10个结果
+        return [{"nombre": nombre} for nombre in alimentos_sugeridos[:limit]] 
     else:
         raise HTTPException(status_code=404, detail="Alimento no encontrado")
 
@@ -267,7 +320,7 @@ async def get_alimento_detalle(nombre: str):
         "image_url": image_url,
     }
 
-    
+# Para obetener nombre de alimentos en español de una categorías en concreta del BedCA 
 @router.get("/por_categoria/{categoria}")
 async def get_alimentos_por_categoria(categoria: str):
     categoria = unidecode(categoria.lower().strip())
@@ -282,10 +335,10 @@ async def get_alimentos_por_categoria(categoria: str):
     resultado.sort()
     return {"alimentos": resultado}
 
+# Para obetener todas las categorías de alimentos del BedCA
 @router.get("/all_categories")
 async def get_all_categories():
     try:
-        # 使用 Motor 异步查询 distinct
         categorias = await bedca_collection.distinct("category_esp")
         
         return {"categories": categorias}
