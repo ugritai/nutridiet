@@ -29,7 +29,7 @@ export default function FoodSearch() {
 
     try {
       const response = await fetch(
-        `http://localhost:8000/alimentos/sugerir_alimentos/${value}`
+        `http://localhost:8000/alimentos/buscar_alimentos/${value}`
       );
       if (!response.ok) throw new Error("No encontrado");
       const data = await response.json();

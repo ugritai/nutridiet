@@ -2,7 +2,6 @@ from pydantic import BaseModel, EmailStr, validator, Field
 from typing import List, Optional
 from datetime import date
 
-
 class NutritionistBase(BaseModel):
     name: str
     email: EmailStr
@@ -22,7 +21,7 @@ class NutritionistResponse(NutritionistBase):
     id: Optional[str]
     
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class LoginRequest(BaseModel):
     email: EmailStr

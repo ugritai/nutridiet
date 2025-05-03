@@ -107,6 +107,61 @@ export default function FoodDetailCard() {
     }, [nombre]);
 
     if (loading) return <CircularProgress sx={{ mt: 4 }} />;
+    
+    if (!alimento) {
+        // 如果没有找到 aliento，显示推荐食物
+        return (
+            <Card sx={{
+                maxWidth: 1200,
+                mx: 'auto',
+                mt: 4,
+                boxShadow: 3,
+                borderRadius: 4
+            }}>
+                <CardContent>
+                    <Typography variant="h6" gutterBottom>
+                        No se encontró información para el alimento solicitado.
+                    </Typography>
+
+                    {sugeridos.length > 0 && (
+                        <Box sx={{ mt: 3 }}>
+                            <Divider sx={{ mb: 3 }} />
+                            <Typography variant="h6" gutterBottom>
+                                Alimentos relacionados
+                            </Typography>
+                            <Box sx={{
+                                display: 'flex',
+                                gap: 2,
+                                flexWrap: 'wrap'
+                            }}>
+                                {sugeridos.map((item, index) => {
+                                    const nombreSugerido = typeof item === 'string' ? item : item.nombre;
+                                    return (
+                                        <Chip
+                                            key={index}
+                                            label={nombreSugerido}
+                                            component={RouterLink}
+                                            to={`/alimentos/detalle_alimento/${encodeURIComponent(nombreSugerido)}`}
+                                            clickable
+                                            sx={{
+                                                borderRadius: 1,
+                                                px: 2,
+                                                transition: 'all 0.3s',
+                                                '&:hover': {
+                                                    transform: 'translateY(-2px)',
+                                                    boxShadow: 2
+                                                }
+                                            }}
+                                        />
+                                    );
+                                })}
+                            </Box>
+                        </Box>
+                    )}
+                </CardContent>
+            </Card>
+        );
+    }
 
     return (
         <Card sx={{
