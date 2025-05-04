@@ -12,7 +12,7 @@ export default function DetalleAlimentoPage() {
     handleSearch,
     handleSelectSuggestion,
     handleSuggestions
-  } = FoodSearch();
+  } = FoodSearch({ type: 'alimentos' });
 
   return (
     <Dashboard>

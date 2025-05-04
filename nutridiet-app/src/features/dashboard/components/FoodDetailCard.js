@@ -87,7 +87,7 @@ export default function FoodDetailCard() {
     const { nombre } = useParams();
     const [alimento, setAlimento] = useState(null);
     const [sugeridos, setSugeridos] = useState([]);
-    const [imagen_url, setImagen_url] = useState('');
+    const [image_url, setImage_url] = useState('');
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -98,18 +98,21 @@ export default function FoodDetailCard() {
                 return res.json();
             })
             .then(data => {
+                console.log("API 返回的完整数据:", data); // 1. 打印完整响应
+                console.log("imagen_url 原始值:", data.image_url);
+                console.log("imagen_url 原始值:", data.sugeridos);
                 setAlimento(data.alimento || null);
                 setSugeridos(data.sugeridos || []);
-                setImagen_url(data.imagen_url || '');
+                setImage_url(data.image_url || '');
             })
             .catch(err => console.error("Error:", err))
             .finally(() => setLoading(false));
     }, [nombre]);
 
     if (loading) return <CircularProgress sx={{ mt: 4 }} />;
-    
+
     if (!alimento) {
-        // 如果没有找到 aliento，显示推荐食物
+        // Si no hay alimento mostrar sugerencias 
         return (
             <Card sx={{
                 maxWidth: 1200,
@@ -243,10 +246,10 @@ export default function FoodDetailCard() {
                                     height: 300,
                                     bgcolor: 'background.paper'
                                 }}>
-                                    {imagen_url && (
+                                    {image_url && (
                                         <img
-                                            src={imagen_url}
-                                            alt={alimento.name_esp}
+                                            src={image_url}
+                                            alt={alimento.name_esp} 
                                             style={{
                                                 width: '100%',
                                                 height: '100%',
