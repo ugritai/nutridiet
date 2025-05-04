@@ -1,7 +1,61 @@
 from fastapi import APIRouter, HTTPException
 from database.connection import recipe_db_host
+from utils.food_utils import remove_stop_words
+from unidecode import unidecode
+
 
 router = APIRouter(tags=["Recipes"])
+
+#collections = ['abuela', 'food.com', 'mealrec', 'recipe1m', 'recipenlg', 'recipeQA']
+recetas_collection = ['abuela']
+
+@router.get("/all_categories")
+async def get_all_categories():
+    try:
+        # Crear un conjunto para almacenar categorías únicas
+        categorias = set()
+
+        # Iterar sobre cada colección y obtener las categorías
+        for collection_name in recetas_collection:
+            collection = recipe_db_host[collection_name]
+            # Filtrar documentos por language_ISO: 'ES' y obtener las categorías
+            cursor = collection.find({'language_ISO': 'ES'}, {'category': 1})
+            
+            # Recorrer los documentos y agregar categorías al conjunto
+            async for doc in cursor:
+                if 'category' in doc:
+                    categorias.add(doc['category'])
+
+        return {"categories": list(categorias)}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al obtener categorías: {e}")
+
+@router.get("/buscar_recetas/{nombre}")
+async def buscar_recetas(nombre: str, limit: int = 5):
+    palabras = remove_stop_words(nombre)
+    sugerencias = set()
+
+    for palabra in palabras:
+        for collection_name in recetas_collection:
+            collection = recipe_db_host[collection_name]
+            cursor = collection.find({'language_ISO': 'ES'})
+
+            async for doc in cursor:
+                title = doc.get("title", "")
+                title_sin_tildes = unidecode(title.lower())
+
+                if palabra in title_sin_tildes:
+                    sugerencias.add(title)
+
+                if len(sugerencias) >= limit:
+                    break
+        if len(sugerencias) >= limit:
+            break
+    print(sugerencias)
+    if sugerencias:
+        return [{"nombre": s} for s in list(sugerencias)[:limit]]
+    else:
+        raise HTTPException(status_code=404, detail="Receta no encontrada")
 
 @router.get("/search_recipes")
 async def search(query: str):

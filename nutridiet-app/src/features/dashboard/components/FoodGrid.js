@@ -87,7 +87,8 @@ export function mapCategoryToMain(categoria) {
     return categoria;
   }
 }
-export default function FoodGrid({ categories = [] }) {
+
+export default function FoodGrid({ categories = [], basePath = "alimentos", imageFolder = "alimentos" }) {
   const itemsPerPage = 9;
   const totalPages = Math.ceil(categories.length / itemsPerPage);
 
@@ -100,6 +101,13 @@ export default function FoodGrid({ categories = [] }) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [page, setSearchParams]);
 
+  // Ordenar alfabéticamente antes del paginado
+  //const sortedCategories = [...categories].sort((a, b) =>
+    //a.localeCompare(b, 'es', { sensitivity: 'base' })
+  //);
+
+  //const currentPageItems = sortedCategories.slice(page * itemsPerPage, (page + 1) * itemsPerPage);
+
   const currentPageItems = categories.slice(page * itemsPerPage, (page + 1) * itemsPerPage);
 
   const handlePageChange = (event, value) => {
@@ -108,27 +116,26 @@ export default function FoodGrid({ categories = [] }) {
 
   const getImageForCategory = (category) => {
     const formattedCategory = category
-        .toLowerCase() // 转为小写
-        .normalize("NFD") // 分解重音符
-        .replace(/[\u0300-\u036f]/g, "") // 去除重音符
-        .replace(/[^\w\s-]/g, '') // 去除其他特殊字符（如括号等）
-        .replace(/\s+/g, '-') // 替换空格为连字符
-        .replace(/-+/g, '-'); // 替换多个连字符为一个
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^\w\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-');
 
-    const imagePath = `/img/alimentos/${formattedCategory}.jpg`; // 生成图片路径
-    console.log(`Category: ${category}, Image Path: ${imagePath}`); // 打印分类和图片路径
-    return imagePath; // 返回对应的图片路径
+    const imagePath = `/img/${imageFolder}/${formattedCategory}.jpg`;
+    return imagePath;
   };
 
   return (
     <Box sx={{ width: '100%', maxWidth: { sm: '100%', md: '1700px' }, mt: 4 }}>
       <Grid container spacing={2} columns={12} sx={{ mb: (theme) => theme.spacing(2) }}>
-        {currentPageItems.map((category, index) => (
+        {currentPageItems.map((category) => (
           <Grid size={{ xs: 12, sm: 6, lg: 4, md: 4 }} key={category}>
             <UniversalCard
-              title={category} // 直接使用分类名
-              image={getImageForCategory(category)} // 获取分类对应的图片
-              buttonLink={`/alimentos/categorias/${encodeURIComponent(category)}`}
+              title={category}
+              image={getImageForCategory(category)}
+              buttonLink={`/${basePath}/categorias/${encodeURIComponent(category)}`}
             />
           </Grid>
         ))}

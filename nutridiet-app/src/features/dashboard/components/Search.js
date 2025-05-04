@@ -82,19 +82,19 @@ const Search = ({
                   button
                   key={index}
                   onClick={() => {
-                    const text = typeof item === 'string' ? item : item.label;
+                    const text = item.value;
                     if (suggestionClick) {
-                      suggestionClick(text); 
+                      suggestionClick(text);
                     } else {
-                      onChange(text);        
-                      onSubmit(text);        
+                      onChange(text);
+                      onSubmit(text);
                     }
                   }}
                 >
                   {suggestionRenderer ? (
                     suggestionRenderer(item)
                   ) : (
-                    <ListItemText primary={typeof item === 'string' ? item : item.label} />
+                    <ListItemText primary={item.label} />
                   )}
                 </ListItem>
               ))}

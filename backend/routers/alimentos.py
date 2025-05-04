@@ -2,7 +2,7 @@
 import os
 import requests
 from fastapi import APIRouter, HTTPException
-from database.connection import ingredient_categories_collection, recipe_db_host, bedca_collection,embeddings_collection
+from database.connection import ingredient_categories_collection, recipe_db_host, bedca_collection,embeddings_collection,images_collection
 from models.schemas import IngredientCategory
 from unidecode import unidecode
 from fastapi.encoders import jsonable_encoder
@@ -10,11 +10,12 @@ from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 from pathlib import Path
 from bson import ObjectId
-import re
+from utils.food_utils import remove_stop_words
 from dotenv import load_dotenv
 from sentence_transformers import SentenceTransformer, util
 import numpy as np
 import torch
+from fastapi.concurrency import run_in_threadpool
 
 load_dotenv()
 IMAGE_DIR = Path("static/images")
@@ -86,24 +87,24 @@ async def get_unsplash_image_api(search_term: str):
 
         # 获取第一张图片的 URL（使用 regular 或 full）
         first_image_url = data["results"][0]["urls"]["regular"]
-
+        print(f"[Saved] Imagen guardada: {first_image_url}")
+        return first_image_url
         # 本地保存路径
-        safe_name = "-".join(words[:3]).lower()
-        file_name = f"{safe_name}.jpg"
-        save_path = IMAGE_DIR / file_name
+        #safe_name = "-".join(words[:3]).lower()
+        #file_name = f"{safe_name}.jpg"
+        #save_path = IMAGE_DIR / file_name
 
         # 如果文件已存在，直接返回
-        if save_path.exists():
-            return {"image_url": f"/static/images/{file_name}"}
+        #if save_path.exists():
+        #    return {"image_url": f"/static/images/{file_name}"}
 
         # 下载图片并保存
-        img_data = requests.get(first_image_url, timeout=10).content
-        with open(save_path, "wb") as f:
-            f.write(img_data)
+        #img_data = requests.get(first_image_url, timeout=10).content
+        #with open(save_path, "wb") as f:
+        #    f.write(img_data)
 
-        print(f"[Saved] Imagen guardada: {save_path}")
-        return {"image_url": f"/static/images/{file_name}"}
-
+        #print(f"[Saved] Imagen guardada: {save_path}")
+        #return {"image_url": f"/static/images/{file_name}"}
     except requests.exceptions.RequestException as e:
         raise HTTPException(status_code=500, detail=f"Unsplash API request failed: {str(e)}")
     
@@ -179,20 +180,12 @@ async def get_ingredient_categories():
     sorted_categories = sorted(categories)
     return {"categories": sorted_categories}
 
-STOP_WORDS = {"de", "con", "y", "a", "en", "por", "para", "el", "la", "los", "las", "un", "una", "del", "al", "que", "es", "como", ",", "-"}
-
-def remove_stop_words(nombre: str):
-    nombre = re.sub(r'[^\w\s]', '', nombre.lower())
-    palabras = nombre.split()
-    palabras = [palabra for palabra in palabras if palabra not in STOP_WORDS]
-    return palabras
-
-
 model = SentenceTransformer('sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2')
 
 @router.get("/sugerir_alimentos/{nombre}")
 async def sugerir_alimentos(nombre: str, limit: int = 10):
-    nombre_normalizado = unidecode(nombre.lower())
+    nombre_normalizado = unidecode(nombre.strip().lower())
+    
     embedding_input = model.encode(nombre_normalizado)
     embedding_input = torch.tensor(embedding_input, dtype=torch.float32)
 
@@ -201,11 +194,18 @@ async def sugerir_alimentos(nombre: str, limit: int = 10):
 
     similarities = []
     for doc in docs:
+        
+        doc_name_normalized = unidecode(doc["name_esp"].strip().lower())  
+        if doc_name_normalized == nombre_normalizado:  
+            continue
+        
         emb = np.array(doc["embedding"])
         emb = torch.tensor(emb, dtype=torch.float32)
         sim = util.cos_sim(embedding_input, emb)[0][0].item()
         similarities.append((sim, doc))
-
+    
+    if not similarities:
+        raise HTTPException(status_code=404, detail="No se encontraron sugerencias")
     
     top = sorted(similarities, key=lambda x: x[0], reverse=True)[:limit]
 
@@ -219,7 +219,6 @@ async def sugerir_alimentos(nombre: str, limit: int = 10):
             "similitud": round(sim, 4)
         }
         for sim, doc in top
-        if doc["name_esp"].lower() != nombre_normalizado
     ]
     
     # Si no hay sugerencias después de filtrar el término exacto
@@ -227,15 +226,6 @@ async def sugerir_alimentos(nombre: str, limit: int = 10):
         raise HTTPException(status_code=404, detail="No se encontraron sugerencias distintas al término de búsqueda")
 
     return resultados
-
-
-STOP_WORDS = {",", "-", " "}
-
-def remove_stop_words(nombre: str):
-    nombre = re.sub(r'[^\w\s]', '', nombre.lower())
-    palabras = nombre.split()
-    palabras = [palabra for palabra in palabras if palabra not in STOP_WORDS]
-    return palabras
 
 @router.get("/buscar_alimentos/{nombre}")
 async def buscar_alimentos(nombre: str, limit: int = 5):
@@ -260,7 +250,7 @@ async def buscar_alimentos(nombre: str, limit: int = 5):
             break
 
     alimentos_sugeridos = list(alimentos_sugeridos)
-    
+    print(alimentos_sugeridos)
     if alimentos_sugeridos:
         return [{"nombre": nombre} for nombre in alimentos_sugeridos[:limit]] 
     else:
@@ -306,12 +296,22 @@ async def get_alimento_detalle(nombre: str):
     result = convert_objectid(result)
 
     sugeridos = await sugerir_alimentos(nombre)
+    
+    name_en = result.get("name_en")
+    image_url = None
 
-    # 增加：找图片
-    try:
-        image_url = await get_unsplash_image_api(nombre)
-    except Exception:
-        image_url = None
+    if name_en:
+        image_doc = await run_in_threadpool(images_collection.find_one, {"name_en": name_en})
+        if image_doc:
+            image_url = image_doc.get("image")
+
+    if not image_url:
+        try:
+            image_url = await get_unsplash_image_api(nombre)
+            print(f"[Saved] Imagen guardada: {image_url}")
+
+        except Exception:
+            image_url = None
 
     # 结构不变，只是多一个 image_url
     return {
@@ -344,3 +344,11 @@ async def get_all_categories():
         return {"categories": categorias}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al obtener categorías: {e}")
+    
+
+@router.get("/ingredient_image/{name_en}")
+def get_ingredient_image(name_en: str):
+    result = images_collection.find_one({"name_en": name_en})
+    if not result:
+        raise HTTPException(status_code=404, detail="Image not found")
+    return {"name_en": result["name_en"], "image": result["image"]}

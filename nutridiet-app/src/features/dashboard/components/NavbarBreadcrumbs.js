@@ -21,6 +21,7 @@ const pathNameMap = {
   'inicio': 'Inicio',
   'alimentos': 'Alimentos',
   'detalle_alimento': '',
+  'recetas': 'Recetas',
   'busqueda-recetas': 'Búsqueda de Recetas',
   'pacientes': 'Pacientes',
   'crear-dieta': 'Planificación de dieta',

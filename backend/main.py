@@ -19,7 +19,7 @@ app.add_middleware(
 # 添加路由
 app.include_router(auth.router, prefix="/api/auth")
 app.include_router(nutritionists.router)
-app.include_router(recipes.router)
+app.include_router(recipes.router, prefix="/recetas")
 app.include_router(alimentos.router, prefix="/alimentos")
 app.include_router(pacientes.router, prefix="/pacientes")
 

@@ -5,16 +5,37 @@ import Search from '../components/Search';
 import FoodSearch from '../components/FoodSearch';
 import { CircularProgress, Typography } from '@mui/material';
 
-export default function AlimentosPage() {
+export default function RecetasPage() {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const RecetaCategories = [
+    'Sopas',
+    'Ensaladas',
+    'Arroz',
+    'Pasta',
+    'Guisos',
+    'Pescado',
+    'Carne',
+    'Fruta',
+    'Postre'
+  ];
+
+  function capitalize(text) {
+    return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
+  }
+
   useEffect(() => {
-    fetch('http://localhost:8000/alimentos/all_categories')
+    fetch('http://localhost:8000/recetas/all_categories')
       .then(res => res.json())
       .then(data => {
         console.log('Data received:', data);
-        setCategories(data.categories);
+        const apiCategories = data.categories
+        const all = [...RecetaCategories, ...apiCategories];
+        const unique = Array.from(new Set(all.map(c => c.toLowerCase())));
+        const finalCategories = unique.map(capitalize);
+        
+        setCategories(finalCategories);
       })
       .catch(err => {
         console.error("Error al obtener categorías:", err)
@@ -31,7 +52,7 @@ export default function AlimentosPage() {
     handleSearch,
     handleSelectSuggestion,
     handleSuggestions
-  } = FoodSearch({ type: 'alimentos' });
+  } = FoodSearch({ type: 'recetas' });
 
   return (
     <Dashboard>
@@ -43,12 +64,12 @@ export default function AlimentosPage() {
         }}
         onSubmit={handleSearch}
         suggestions={suggestions}
-        placeholder="Buscar alimentos..."
+        placeholder="Buscar recetas..."
         suggestionClick={handleSelectSuggestion}
       />
 
       <Typography variant="h4" gutterBottom>
-        Categorías de Alimentos
+        Categorías de Recetas
       </Typography>
 
       {loading ? (
@@ -59,7 +80,7 @@ export default function AlimentosPage() {
             <Typography variant="h6" color="error">No se encontraron categorías.</Typography>
           ) : (
             <>
-              <FoodGrid categories={categories} basePath="alimentos" imageFolder="alimentos" />
+              <FoodGrid categories={categories} basePath="recetas" imageFolder="recetas" />
             </>
           )}
         </>
