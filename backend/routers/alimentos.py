@@ -10,7 +10,7 @@ from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 from pathlib import Path
 from bson import ObjectId
-from utils.food_utils import remove_stop_words
+from utils.food_utils import remove_stop_words, convert_objectid
 from dotenv import load_dotenv
 from sentence_transformers import SentenceTransformer, util
 import numpy as np
@@ -255,21 +255,6 @@ async def buscar_alimentos(nombre: str, limit: int = 5):
         return [{"nombre": nombre} for nombre in alimentos_sugeridos[:limit]] 
     else:
         raise HTTPException(status_code=404, detail="Alimento no encontrado")
-
-def convert_objectid(data):
-    if isinstance(data, dict):
-        for key, value in data.items():
-            if isinstance(value, ObjectId):
-                data[key] = str(value)
-            elif isinstance(value, dict):
-                convert_objectid(value)
-            elif isinstance(value, list):
-                for item in value:
-                    if isinstance(item, ObjectId):
-                        item = str(item)
-                    elif isinstance(item, dict):
-                        convert_objectid(item)
-    return data
 
 @router.get("/detalle_alimento/{nombre}")
 async def get_alimento_detalle(nombre: str):
