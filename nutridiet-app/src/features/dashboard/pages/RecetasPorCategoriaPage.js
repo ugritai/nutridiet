@@ -110,7 +110,6 @@ export default function RecetasPorCategoriaPage() {
             <Grid size={{ xs: 12, sm: 6, lg: 4, md: 4 }} key={nombre}>
               <UniversalCard
                 title={nombre}
-                image="/img/receta/default.jpg"
                 buttonLink={`/recetas/detalle_receta/${encodeURIComponent(nombre)}`}
               />
             </Grid>

@@ -60,7 +60,7 @@ export default function MainGrid() {
             icon={<DateRangeIcon fontSize="large" color="" />}
             buttonText="Ver pacientes"
             buttonColor="primary"
-            buttonLink="/PlanificacionDietas"
+            buttonLink="/planificacion_dietas"
           />
         </Grid>
       </Grid>

@@ -1,13 +1,28 @@
 from fastapi import APIRouter, HTTPException
 from database.connection import recipe_db_host
-from utils.food_utils import remove_stop_words
+from utils.food_utils import remove_stop_words, convert_objectid
 from unidecode import unidecode
+from fastapi.encoders import jsonable_encoder
+
 
 
 router = APIRouter(tags=["Recipes"])
 
 #collections = ['abuela', 'food.com', 'mealrec', 'recipe1m', 'recipenlg', 'recipeQA']
 recetas_collection = ['abuela']
+
+# Mapa de categorías a palabras clave
+PALABRAS_CLAVE = {
+    'sopas': ['sopa', 'crema'],
+    'ensaladas': ['ensalada'],
+    'arroz': ['paella', 'risotto', 'arroz'],
+    'pasta': ['espaguetis', 'macarrones', 'ravioli', 'lasaña', 'pizza', 'tortellini', 'spaghetti', 'ramen'],
+    'guisos': ['guiso', 'puré', 'pure', 'lentejas', 'garbanzos', 'estofado', 'cocido'],
+    'pescado': ['bonito', 'atún', 'sardina', 'dorada', 'bacalao', 'salmón'],
+    'carne': ['pollo', 'ternera', 'cerdo', 'pavo', 'jamón', 'conejo', 'redondo'],
+    'postre': ['postre', 'helado', 'tarta', 'galleta', 'bizcocho', 'mousse', 'chocolate', 'dulce', 'brownie', 'pudin', 'batido', 'pancakes', 'porridge'],
+    'fruta': ['manzana', 'plátano', 'pera', 'naranja', 'pomelo', 'kiwi', 'sandía', 'melón', 'cereza', 'ciruela', 'fresa', 'mandarina']
+}
 
 @router.get("/all_categories")
 async def get_all_categories():
@@ -57,6 +72,69 @@ async def buscar_recetas(nombre: str, limit: int = 5):
     else:
         raise HTTPException(status_code=404, detail="Receta no encontrada")
 
+@router.get("/por_categoria/{categoria}")
+async def get_recetas_por_categoria(categoria: str):
+    categoria_normalizada = unidecode(categoria.lower().strip())
+    resultados = {}
+
+    # Primero, buscar si hay recetas donde category == categoria (caso directo)
+    for collection_name in recetas_collection:
+        collection = recipe_db_host[collection_name]
+        cursor = collection.find({
+            'language_ISO': 'ES',
+            'category': {'$regex': f'^{categoria}$', '$options': 'i'}
+        }, {'title': 1})
+
+        async for doc in cursor:
+            titulo = doc.get("title", "")
+            resultados[titulo.lower()] = titulo  # Guardar el original
+
+    if resultados:
+        return {"recetas": list(resultados.values())}
+
+    # Si no hay coincidencias por category exacto, buscar por palabras clave
+    if categoria_normalizada not in PALABRAS_CLAVE:
+        raise HTTPException(status_code=404, detail="Categoría no válida")
+
+    palabras_clave = [unidecode(p.lower()) for p in PALABRAS_CLAVE[categoria_normalizada]]
+
+    for collection_name in recetas_collection:
+        collection = recipe_db_host[collection_name]
+        cursor = collection.find({'language_ISO': 'ES'}, {'title': 1})
+
+        async for doc in cursor:
+            titulo = doc.get("title", "")
+            titulo_sin_tildes = unidecode(titulo.lower())
+
+            if any(palabra in titulo_sin_tildes for palabra in palabras_clave):
+                resultados[titulo.lower()] = titulo  # Guardar el original
+
+    if not resultados:
+        raise HTTPException(status_code=404, detail="No se encontraron recetas para esta categoría")
+
+    return {"recetas": list(resultados.values())}
+ 
+@router.get("/detalle_receta/{nombre}")
+async def get_receta_detalle(nombre: str):
+    nombre_normalizado = unidecode(nombre.strip().lower())
+
+    for collection_name in recetas_collection:
+        collection = recipe_db_host[collection_name]
+        cursor = collection.find({}, {"_id": 0})
+        
+        async for doc in cursor:
+            titulo = doc.get("title", "")
+            titulo_normalizado = unidecode(titulo.strip().lower())
+
+            if nombre_normalizado == titulo_normalizado:
+                result = doc
+                result = convert_objectid(result)
+                return {
+                    "receta": jsonable_encoder(result)
+                }
+
+    raise HTTPException(status_code=404, detail="Receta no encontrada")
+    
 @router.get("/search_recipes")
 async def search(query: str):
     collections = ['abuela', 'food.com', 'mealrec', 'recipe1m', 'recipenlg', 'recipeQA']

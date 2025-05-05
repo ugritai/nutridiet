@@ -24,7 +24,7 @@ const pathNameMap = {
   'recetas': 'Recetas',
   'busqueda-recetas': 'Búsqueda de Recetas',
   'pacientes': 'Pacientes',
-  'crear-dieta': 'Planificación de dieta',
+  'planificacion_dietas': 'Planificación de dieta',
   'categorias': 'Categorías',
 };
 
@@ -59,6 +59,13 @@ export default function NavbarBreadcrumbs() {
         if (pathnames.includes('detalle_alimento')) {
           if (value === 'detalle_alimento') return null;
           if (pathnames[index - 1] === 'detalle_alimento') {
+            label = decodeURIComponent(value);
+          }
+        }
+
+        if (pathnames.includes('detalle_receta')) {
+          if (value === 'detalle_receta') return null;
+          if (pathnames[index - 1] === 'detalle_receta') {
             label = decodeURIComponent(value);
           }
         }

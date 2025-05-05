@@ -10,6 +10,7 @@ import Alimentos from '../features/dashboard/pages/AlimentosPage';
 import DetalleAlimentoPage from '../features/dashboard/pages/DetalleAlimentoPage';
 import AlimentosPorCategoriaPage from '../features/dashboard/pages/AlimentosPorCategoriaPage';
 import Recetas from '../features/dashboard/pages/RecetasPage';
+import DetalleRecetasPage from '../features/dashboard/pages/DetalleRecetasPage';
 import RecetasPorCategoriaPage from '../features/dashboard/pages/RecetasPorCategoriaPage';
 import PacientesPage from '../features/dashboard/pages/PacientesPage'
 import PlanificacionDietasPage from '../features/dashboard/pages/PlanificacionDietasPage'
@@ -69,6 +70,12 @@ function App() {
 
         } />
 
+        <Route path="/recetas/detalle_receta/:nombre" element={
+          <ProtectedRoute>
+            <DetalleRecetasPage />
+          </ProtectedRoute>}
+        />
+
         <Route path="/pacientes" element={
           <ProtectedRoute>
             <PacientesPage />
@@ -76,7 +83,7 @@ function App() {
 
         } />
 
-        <Route path="/PlanificacionDietas" element={
+        <Route path="/planificacion_dietas" element={
           <ProtectedRoute>
             <PlanificacionDietasPage />
           </ProtectedRoute>
