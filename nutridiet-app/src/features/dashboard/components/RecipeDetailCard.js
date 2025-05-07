@@ -130,7 +130,7 @@ export default function RecipeDetailCard() {
         {/* Header Section */}
         <Box sx={{ mb: 3 }}>
           <Typography variant="h3" gutterBottom>
-            {recipe.title}
+            {recipe.title.charAt(0).toUpperCase() + recipe.title.slice(1)}
           </Typography>
 
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
@@ -197,7 +197,7 @@ export default function RecipeDetailCard() {
                         </Avatar>
                       </ListItemIcon>
                       <ListItemText
-                        primary={ingredient.ingredient}
+                        primary={ingredient.ingredient.replace(/^'+|'+$/g, '').trim()}
                       />
                     </ListItem>
                   ))}
@@ -217,7 +217,7 @@ export default function RecipeDetailCard() {
 
                 <List>
                   {recipe.steps
-                    .map((step) => step.replace(/(Paso \d+|,)/g, '').trim()) // Eliminar 'Paso X' y comas
+                    .map((step) => step.replace(/(Paso\s*\d+|,\s*|'?\d+|'?\s*\d+)/gi, '').replace(/^'+|'+$/g, '').trim()) // Eliminar 'Paso X' y comas
                     .filter((step) => step) // Filtrar vacíos, por si hay pasos vacíos después de la limpieza
                     .map((step, index) => (
                       <ListItem key={index} sx={{ alignItems: 'flex-start', py: 1.5 }}>

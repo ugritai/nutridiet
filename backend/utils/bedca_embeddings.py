@@ -20,6 +20,7 @@ def main():
     for doc in documents:
         name_esp = doc.get("name_esp", "")  # Solo usar el nombre
         texto_sin_tildes = unidecode(name_esp.lower())  # Eliminar tildes y pasar a minúsculas
+        categoria = doc.get("category_esp", "")
 
         # Genera el embedding para el nombre
         embedding = model.encode(texto_sin_tildes)
@@ -27,6 +28,7 @@ def main():
         # Guarda en la colección de embeddings solo el nombre y el embedding
         embeddings_collection.insert_one({
             "name_esp": name_esp,
+            "category_esp": categoria,
             "embedding": embedding.tolist(),
         })
 

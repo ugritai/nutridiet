@@ -285,9 +285,9 @@ export default function FoodDetailCard() {
                                         }}>
                                             <TableCell sx={{ pl: 3, width: '30%' }}>Nutriente</TableCell>
                                             <TableCell align="center" sx={{ width: '30%' }}>Componente</TableCell>
-                                            <TableCell align="center" sx={{ width: '20%' }}>Por 100g</TableCell>
+                                            <TableCell align="center" sx={{ width: '30%' }}>Por 100g</TableCell>
                                             {alimento.edible !== 100 &&
-                                                <TableCell align="center" sx={{ width: '20%' }}>Porción comestible</TableCell>}
+                                                <TableCell align="center" sx={{ width: '30%' }}>Porción comestible {alimento.edible}g</TableCell>}
                                         </TableRow>
 
                                         {/* 数据行 */}
@@ -362,7 +362,7 @@ export default function FoodDetailCard() {
                                                         <TableCell align="center" sx={{ color: 'success.main' }}>
                                                             {row.value === 'N/D'
                                                                 ? 'N/D'
-                                                                : (row.value * alimento.edible / 100).toFixed(2)}
+                                                                : Number((row.value * alimento.edible / 100).toFixed(2))}
                                                         </TableCell>
                                                     )}
                                                 </TableRow>
