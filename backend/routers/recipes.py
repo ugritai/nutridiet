@@ -121,7 +121,7 @@ async def get_receta_detalle(nombre: str):
     for collection_name in recetas_collection:
         collection = recipe_db_host[collection_name]
         cursor = collection.find({}, {"_id": 0})
-        
+
         async for doc in cursor:
             titulo = doc.get("title", "")
             titulo_normalizado = unidecode(titulo.strip().lower())
@@ -129,12 +129,23 @@ async def get_receta_detalle(nombre: str):
             if nombre_normalizado == titulo_normalizado:
                 result = doc
                 result = convert_objectid(result)
+                
+                # Determinar la categoría usando el mapa de palabras clave
+                categoria = "desconocida"  # Valor por defecto en caso de no encontrar ninguna categoría
+                for cat, palabras in PALABRAS_CLAVE.items():
+                    if any(palabra in unidecode(titulo.lower()) for palabra in palabras):
+                        categoria = cat
+                        break
+                
+                # Añadir la categoría a la respuesta
+                result["categoria"] = categoria.capitalize()
+
                 return {
                     "receta": jsonable_encoder(result)
                 }
 
     raise HTTPException(status_code=404, detail="Receta no encontrada")
-    
+
 @router.get("/search_recipes")
 async def search(query: str):
     collections = ['abuela', 'food.com', 'mealrec', 'recipe1m', 'recipenlg', 'recipeQA']
