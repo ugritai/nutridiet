@@ -109,7 +109,7 @@ export default function RecetasPorCategoriaPage() {
           {currentRecetas.map((nombre) => (
             <Grid size={{ xs: 12, sm: 6, lg: 4, md: 4 }} key={nombre}>
               <UniversalCard
-                title={nombre}
+                title={nombre.charAt(0).toUpperCase() + nombre.slice(1)}
                 buttonLink={`/recetas/detalle_receta/${encodeURIComponent(nombre)}`}
               />
             </Grid>

@@ -21,12 +21,15 @@ const UniversalCard = ({
 }) => {
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
+  
+  // Determinar si es una tarjeta simple (solo título y botón)
+  const isSimpleCard = !image && !description && !icon;
 
   return (
     <Card
       sx={{
-        height: '100%', // 保证高度根据内容自适应
-        width: '100%',  // 保证宽度相同
+        height: '100%',
+        width: '100%',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
@@ -35,7 +38,7 @@ const UniversalCard = ({
         overflow: 'hidden',
         transition: 'transform 0.3s',
         '&:hover': { transform: 'scale(1.02)' },
-        minHeight: 300, // 设置最小高度，避免卡片过小
+        minHeight: isSimpleCard ? 180 : (image ? 300 : 240),
       }}
     >
       {image ? (
@@ -52,8 +55,6 @@ const UniversalCard = ({
               }}
             />
           </div>
-
-          {/* 标题：仅在有图片时显示 */}
           <Typography
             variant="h5"
             sx={{
@@ -61,7 +62,9 @@ const UniversalCard = ({
               fontWeight: 600,
               fontSize: '1rem',
               textAlign: 'left',
-              marginTop: '16px',
+              mx: 2,
+              mt: 1.5,
+              mb: description ? 0 : 1,
             }}
           >
             {title}
@@ -75,26 +78,26 @@ const UniversalCard = ({
             flexDirection: 'column',
             alignItems: 'flex-start',
             pt: 2,
-            minHeight: 80,
+            pb: 0,
           }}
         >
-          {/* 图标 */}
-          <div
-            style={{
-              position: 'absolute',
-              top: 8,
-              left: 8,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: 40,
-              height: 40,
-            }}
-          >
-            {icon}
-          </div>
-
-          {/* 没有图片时的标题 */}
+          {icon && (
+            <div
+              style={{
+                position: 'absolute',
+                top: 8,
+                left: 8,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: 40,
+                height: 40,
+              }}
+            >
+              {icon}
+            </div>
+          )}
+          
           <Typography
             variant="h6"
             sx={{
@@ -102,7 +105,8 @@ const UniversalCard = ({
               fontWeight: 600,
               fontSize: '1rem',
               textAlign: 'left',
-              marginTop: '48px',
+              mt: icon ? 6 : 2,
+              mb: description ? 0 : 1,
             }}
           >
             {title}
@@ -110,14 +114,12 @@ const UniversalCard = ({
         </CardContent>
       )}
 
-      <CardContent sx={{ pt: image ? 1 : 0 }}>
-        {/* 只有在描述存在时才显示这个区域 */}
+      <CardContent sx={{ pt: description ? 1 : 0, pb: 2 }}>
         {description && (
           <Typography
             sx={{
               color: 'text.secondary',
               mb: 2,
-              minHeight: '3em',
               display: '-webkit-box',
               WebkitLineClamp: 2,
               WebkitBoxOrient: 'vertical',
@@ -127,6 +129,7 @@ const UniversalCard = ({
             {description}
           </Typography>
         )}
+        
         <Button
           component={buttonLink ? Link : 'button'}
           to={buttonLink}
@@ -136,7 +139,10 @@ const UniversalCard = ({
           endIcon={<ChevronRightRoundedIcon />}
           fullWidth={isSmallScreen}
           onClick={!buttonLink ? onAction : undefined}
-          sx={{ fontWeight: 500 }}
+          sx={{ 
+            fontWeight: 500,
+            mt: !description && !image ? 1 : 0 
+          }}
         >
           {buttonText}
         </Button>

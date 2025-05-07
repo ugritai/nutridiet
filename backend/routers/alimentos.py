@@ -24,6 +24,8 @@ IMAGE_DIR.mkdir(parents=True, exist_ok=True)
 
 router = APIRouter(tags=["Ingredients"])
 
+alimentos_collection = bedca_collection
+
 @router.get("/pixabay_search")
 async def get_pixabay_image(search_term: str) -> str:
     api_key = os.getenv("PIXABAY_API_KEY")
@@ -87,23 +89,23 @@ async def get_unsplash_image_api(search_term: str):
 
         # 获取第一张图片的 URL（使用 regular 或 full）
         first_image_url = data["results"][0]["urls"]["regular"]
-        print(f"[Saved] Imagen guardada: {first_image_url}")
-        return first_image_url
+        
         # 本地保存路径
-        #safe_name = "-".join(words[:3]).lower()
-        #file_name = f"{safe_name}.jpg"
-        #save_path = IMAGE_DIR / file_name
+        safe_name = "-".join(words[:3]).lower()
+        file_name = f"{safe_name}.jpg"
+        save_path = IMAGE_DIR / file_name
 
         # 如果文件已存在，直接返回
-        #if save_path.exists():
-        #    return {"image_url": f"/static/images/{file_name}"}
-
+        if save_path.exists():
+            print(f"[Exist] Imagen guardada: {save_path}")
+            return first_image_url
         # 下载图片并保存
-        #img_data = requests.get(first_image_url, timeout=10).content
-        #with open(save_path, "wb") as f:
-        #    f.write(img_data)
+        img_data = requests.get(first_image_url, timeout=10).content
+        with open(save_path, "wb") as f:
+            f.write(img_data)
 
-        #print(f"[Saved] Imagen guardada: {save_path}")
+        print(f"[Saved] Imagen guardada: {save_path}")
+        return first_image_url
         #return {"image_url": f"/static/images/{file_name}"}
     except requests.exceptions.RequestException as e:
         raise HTTPException(status_code=500, detail=f"Unsplash API request failed: {str(e)}")
@@ -234,7 +236,7 @@ async def buscar_alimentos(nombre: str, limit: int = 5):
     alimentos_sugeridos = set()  # eliminar repetidos
     
     for palabra in palabras:
-        cursor = bedca_collection.find()
+        cursor = alimentos_collection.find()
         
         async for doc in cursor:
             name_esp = doc.get("name_esp", "")
@@ -260,7 +262,7 @@ async def buscar_alimentos(nombre: str, limit: int = 5):
 async def get_alimento_detalle(nombre: str):
     nombre_normalizado = unidecode(nombre.strip().lower())
     
-    cursor = bedca_collection.find({}, {"_id": 0})
+    cursor = alimentos_collection.find({}, {"_id": 0})
     async for doc in cursor:
         nombre_doc = doc.get("name_esp", "")
         nombre_doc_normalizado = unidecode(nombre_doc.strip().lower())
@@ -310,7 +312,7 @@ async def get_alimento_detalle(nombre: str):
 async def get_alimentos_por_categoria(categoria: str):
     categoria = unidecode(categoria.lower().strip())
 
-    alimentos_cursor = bedca_collection.find()
+    alimentos_cursor = alimentos_collection.find()
     resultado = []
 
     async for item in alimentos_cursor:
@@ -324,7 +326,7 @@ async def get_alimentos_por_categoria(categoria: str):
 @router.get("/all_categories")
 async def get_all_categories():
     try:
-        categorias = await bedca_collection.distinct("category_esp")
+        categorias = await alimentos_collection.distinct("category_esp")
         
         return {"categories": categorias}
     except Exception as e:

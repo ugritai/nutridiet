@@ -13,10 +13,15 @@ import {
     TableBody,
     TableCell,
     TableRow,
-    useTheme
+    useTheme,
+    alpha
 } from '@mui/material';
+import { LocalDining } from '@mui/icons-material';
 
 const OmsChip = ({ type, status }) => {
+    const theme = useTheme();
+    const isDark = theme.palette.mode === 'dark';
+
     const typeLabels = {
         salt: 'Sal',
         sugar: 'Azúcar',
@@ -25,14 +30,21 @@ const OmsChip = ({ type, status }) => {
 
     // 添加默认值处理
     const getStatusColor = (status) => {
-        const colorMap = {
+        const lightColors = {
             red: { bg: '#ffebee', text: '#ff5252', border: '#ff5252' },
             yellow: { bg: '#fff8e1', text: '#ffa000', border: '#ffc107' },
             green: { bg: '#e8f5e9', text: '#4caf50', border: '#4caf50' },
-            // 添加默认值
             default: { bg: '#f5f5f5', text: '#616161', border: '#e0e0e0' }
         };
-        return colorMap[status] || colorMap.default;
+
+        const darkColors = {
+            red: { bg: '#311b1b', text: '#ff867c', border: '#ff5252' },
+            yellow: { bg: '#332900', text: '#ffd95e', border: '#ffc107' },
+            green: { bg: '#1b2a1d', text: '#66bb6a', border: '#4caf50' },
+            default: { bg: '#424242', text: '#e0e0e0', border: '#616161' }
+        };
+
+        return (isDark ? darkColors : lightColors)[status] || (isDark ? darkColors : lightColors).default;
     };
 
     const statusTextMap = {
@@ -58,7 +70,7 @@ const OmsChip = ({ type, status }) => {
                     display: 'flex',
                     alignItems: 'center',
                     gap: 0.5,
-                    fontSize: '0.875rem',
+                    fontSize: '0.775rem',
                     padding: '0 10px'
                 }
             }}
@@ -146,15 +158,6 @@ export default function FoodDetailCard() {
                                             component={RouterLink}
                                             to={`/alimentos/detalle_alimento/${encodeURIComponent(nombreSugerido)}`}
                                             clickable
-                                            sx={{
-                                                borderRadius: 1,
-                                                px: 2,
-                                                transition: 'all 0.3s',
-                                                '&:hover': {
-                                                    transform: 'translateY(-2px)',
-                                                    boxShadow: 2
-                                                }
-                                            }}
                                         />
                                     );
                                 })}
@@ -189,47 +192,24 @@ export default function FoodDetailCard() {
                                 gap: 1.5,
                                 flexWrap: 'wrap'
                             }}>
-                                {/* 分类标签 */}
+                                {/* categoria */}
                                 <Chip
+                                    icon={<LocalDining />}
                                     label={alimento.category_esp}
                                     component={RouterLink}
+                                    color="secondary"
                                     to={`/alimentos/categorias/${encodeURIComponent(alimento.category_esp)}`}
                                     clickable
-                                    sx={{
-                                        borderRadius: 1,
-                                        borderColor: theme.palette.primary.main,
-                                        color: theme.palette.primary.contrastText,
-                                        fontSize: '0.875rem',
-                                        height: 34,
-                                        '&:hover': {
-                                            backgroundColor: theme.palette.primary.light + '20', // 半透明悬停效果
-                                            borderColor: theme.palette.primary.dark
-                                        },
-                                        '& .MuiChip-label': {
-                                            padding: '0 12px',
-                                            fontWeight: 500
-                                        }
-                                    }}
                                 />
 
-                                {/* 可食用率 */}
+                                {/* edible */}
                                 <Chip
                                     label={`${alimento.edible}% comestible`}
                                     variant="outlined"
-                                    sx={{
-                                        fontSize: '0.875rem',
-                                        height: 34,
-                                        borderColor: theme.palette.success.light,
-                                        color: theme.palette.success.dark,
-                                        bgcolor: `${theme.palette.success.light}30`,
-                                        '& .MuiChip-label': {
-                                            padding: '0 10px',
-                                            fontWeight: 500
-                                        }
-                                    }}
+                                    sx={{ borderColor: theme.palette.primary.main }}
                                 />
 
-                                {/* OMS指示灯组 */}
+                                {/* OMS lights */}
                                 <OmsChip type="salt" status={alimento.oms_lights.salt} />
                                 <OmsChip type="sugar" status={alimento.oms_lights.sug} />
                                 <OmsChip type="fat" status={alimento.oms_lights.total_fat} />
@@ -249,7 +229,7 @@ export default function FoodDetailCard() {
                                     {image_url && (
                                         <img
                                             src={image_url}
-                                            alt={alimento.name_esp} 
+                                            alt={alimento.name_esp}
                                             style={{
                                                 width: '100%',
                                                 height: '100%',
@@ -260,186 +240,134 @@ export default function FoodDetailCard() {
                                 </Box>
                             </Grid>
 
+                            {/* Tabla nutricional */}
                             <Grid item xs={12} md={8}>
-                                <Table sx={{
-                                    border: `1px solid ${theme.palette.divider}`,
-                                    overflow: 'hidden',
-                                    '& .MuiTableCell-root': {
-                                        padding: '14px 16px',
-                                        fontSize: '0.875rem',
-                                        color: theme.palette.text.primary,
-                                        verticalAlign: 'middle',
-                                        '&:not(:last-child)': {
-                                            borderRight: `1px solid ${theme.palette.divider}`
-                                        },
-                                        '&:nth-of-type(1)': {
-                                            width: alimento.edible === 100 ? '35%' : '25%',
-                                            position: 'relative'
-                                        },
-                                        '&:nth-of-type(2)': {
-                                            width: alimento.edible === 100 ? '45%' : '35%'
-                                        },
-                                    }
-                                }}>
+                                <Table
+                                    sx={{
+                                        border: `1px solid ${theme.palette.divider}`,
+                                        borderRadius: 2,
+                                        overflow: 'hidden',
+                                        bgcolor: 'background.paper',
+                                        boxShadow: 1,
+                                        '& .MuiTableCell-root': {
+                                            fontSize: '0.875rem',
+                                            py: 1.5,
+                                            '&:not(:last-child)': {
+                                                borderRight: `1px solid ${theme.palette.divider}`
+                                            }
+                                        }
+                                    }}
+                                >
                                     <TableBody>
                                         {/* 主标题 */}
                                         <TableRow sx={{
-                                            bgcolor: 'action.hover',
-                                            '& td': { borderBottom: `1px solid ${theme.palette.divider}` }
+                                            bgcolor: theme.palette.mode === 'dark' ? 'grey.800' : 'grey.100',
+                                            '& td': {
+                                                borderBottom: `2px solid ${theme.palette.divider}`,
+                                                py: 2,
+                                                fontSize: '1.1rem',
+                                                fontWeight: 600
+                                            }
                                         }}>
-                                            <TableCell colSpan={alimento.edible === 100 ? 3 : 4} sx={{
-                                                textAlign: 'center',
-                                                fontWeight: 600,
-                                                fontSize: '1rem',
-                                            }}>
+                                            <TableCell colSpan={alimento.edible === 100 ? 3 : 4} align="center">
                                                 Composición Nutricional
                                             </TableCell>
                                         </TableRow>
 
                                         {/* 表头 */}
                                         <TableRow sx={{
-                                            bgcolor: theme.palette.grey[100],
+                                            bgcolor: 'action.hover',
                                             '& .MuiTableCell-root': {
                                                 fontWeight: 600,
-                                                textAlign: 'center',
-                                                borderBottom: `1px solid ${theme.palette.divider}`
+                                                borderBottom: `2px solid ${theme.palette.divider}`,
+                                                py: 1.5
                                             }
                                         }}>
-                                            <TableCell>Nutriente</TableCell>
-                                            <TableCell>Componente</TableCell>
-                                            <TableCell>Por 100g</TableCell>
-                                            {alimento.edible !== 100 && <TableCell>Porción comestible</TableCell>}
+                                            <TableCell sx={{ pl: 3, width: '30%' }}>Nutriente</TableCell>
+                                            <TableCell align="center" sx={{ width: '30%' }}>Componente</TableCell>
+                                            <TableCell align="center" sx={{ width: '20%' }}>Por 100g</TableCell>
+                                            {alimento.edible !== 100 &&
+                                                <TableCell align="center" sx={{ width: '20%' }}>Porción comestible</TableCell>}
                                         </TableRow>
 
-                                        {/* Macronutrientes */}
-                                        <TableRow>
-                                            <TableCell
-                                                rowSpan={3}
-                                                sx={{
-                                                    bgcolor: theme.palette.grey[50],
-                                                    fontWeight: 600,
-                                                    borderBottom: `1px solid ${theme.palette.divider}`
-                                                }}
-                                            >
-                                                Macronutrientes
-                                            </TableCell>
-                                            <TableCell>Energía (kcal)</TableCell>
-                                            <TableCell>{alimento.nutritional_info_100g.energy_kcal}</TableCell>
-                                            {alimento.edible !== 100 && <TableCell>{(alimento.nutritional_info_100g.energy_kcal * alimento.edible / 100).toFixed(1)}</TableCell>}
-                                        </TableRow>
-                                        <TableRow>
-                                            <TableCell>Proteínas (g)</TableCell>
-                                            <TableCell>{alimento.nutritional_info_100g.pro}</TableCell>
-                                            {alimento.edible !== 100 && (
-                                                <TableCell>{(alimento.nutritional_info_100g.pro * alimento.edible / 100).toFixed(1)}</TableCell>
-                                            )}
-                                        </TableRow>
-                                        <TableRow sx={{ '& td': { borderBottom: `1px solid ${theme.palette.divider}` } }} >
-                                            <TableCell>Carbohidratos (g)</TableCell>
-                                            <TableCell>{alimento.nutritional_info_100g.car}</TableCell>
-                                            {alimento.edible !== 100 && (
-                                                <TableCell>{(alimento.nutritional_info_100g.car * alimento.edible / 100).toFixed(1)}</TableCell>
-                                            )}
-                                        </TableRow>
-
-                                        {/* Grasas */}
-                                        <TableRow>
-                                            <TableCell
-                                                rowSpan={3}
-                                                sx={{
-                                                    bgcolor: theme.palette.grey[50],
-                                                    fontWeight: 600,
-                                                    borderBottom: `1px solid ${theme.palette.divider}`
-                                                }}
-                                            >
-                                                Grasas
-                                            </TableCell>
-                                            <TableCell>Totales (g)</TableCell>
-                                            <TableCell>{alimento.nutritional_info_100g.fats.total_fat}</TableCell>
-                                            {alimento.edible !== 100 && (
-                                                <TableCell>{(alimento.nutritional_info_100g.fats.total_fat * alimento.edible / 100).toFixed(1)}</TableCell>
-                                            )}
-                                        </TableRow>
-                                        <TableRow>
-                                            <TableCell>Saturadas (g)</TableCell>
-                                            <TableCell>{alimento.nutritional_info_100g.fats.sat ?? 'N/D'}</TableCell>
-                                            {alimento.edible !== 100 && (
-                                                <TableCell>{(alimento.nutritional_info_100g.fats.sat * alimento.edible / 100)?.toFixed(1) || 'N/D'}</TableCell>
-                                            )}
-                                        </TableRow>
-                                        <TableRow sx={{ '& td': { borderBottom: `1px solid ${theme.palette.divider}` } }} >
-                                            <TableCell>Trans (g)</TableCell>
-                                            <TableCell>{alimento.nutritional_info_100g.fats.trans ?? 'N/D'}</TableCell>
-                                            {alimento.edible !== 100 && (
-                                                <TableCell>{(alimento.nutritional_info_100g.fats.trans * alimento.edible / 100)?.toFixed(1) || 'N/D'}</TableCell>
-                                            )}
-                                        </TableRow>
-
-                                        {/* Minerales */}
-                                        <TableRow>
-                                            <TableCell
-                                                rowSpan={4}
-                                                sx={{
-                                                    bgcolor: theme.palette.grey[50],
-                                                    fontWeight: 600,
-                                                    borderBottom: `1px solid ${theme.palette.divider}`
-                                                }}
-                                            >
-                                                Minerales
-                                            </TableCell>
-                                            <TableCell>Sodio (mg)</TableCell>
-                                            <TableCell>{alimento.nutritional_info_100g.sod}</TableCell>
-                                            {alimento.edible !== 100 && (
-                                                <TableCell>{(alimento.nutritional_info_100g.sod * alimento.edible / 100).toFixed(1)}</TableCell>
-                                            )}
-                                        </TableRow>
-                                        <TableRow>
-                                            <TableCell>Potasio (mg)</TableCell>
-                                            <TableCell>{alimento.nutritional_info_100g.pot}</TableCell>
-                                            {alimento.edible !== 100 && (
-                                                <TableCell>{(alimento.nutritional_info_100g.pot * alimento.edible / 100).toFixed(1)}</TableCell>
-                                            )}
-                                        </TableRow>
-                                        <TableRow>
-                                            <TableCell>Calcio (mg)</TableCell>
-                                            <TableCell>{alimento.nutritional_info_100g.cal}</TableCell>
-                                            {alimento.edible !== 100 && (
-                                                <TableCell>{(alimento.nutritional_info_100g.cal * alimento.edible / 100).toFixed(1)}</TableCell>
-                                            )}
-                                        </TableRow>
-                                        <TableRow sx={{ '& td': { borderBottom: `1px solid ${theme.palette.divider}` } }} >
-                                            <TableCell>Hierro (mg)</TableCell>
-                                            <TableCell>{alimento.nutritional_info_100g.iron}</TableCell>
-                                            {alimento.edible !== 100 && (
-                                                <TableCell>{(alimento.nutritional_info_100g.iron * alimento.edible / 100).toFixed(1)}</TableCell>
-                                            )}
-                                        </TableRow>
-
-                                        {/* Otros Componentes */}
-                                        <TableRow>
-                                            <TableCell
-                                                rowSpan={2}
-                                                sx={{
-                                                    bgcolor: theme.palette.grey[50],
-                                                    fontWeight: 600,
-                                                    borderBottom: `1px solid ${theme.palette.divider}`
-                                                }}
-                                            >
-                                                Otros Componentes
-                                            </TableCell>
-                                            <TableCell>Fibra (g)</TableCell>
-                                            <TableCell>{alimento.nutritional_info_100g.fiber}</TableCell>
-                                            {alimento.edible !== 100 && (
-                                                <TableCell>{(alimento.nutritional_info_100g.fiber * alimento.edible / 100).toFixed(1)}</TableCell>
-                                            )}
-                                        </TableRow>
-                                        <TableRow sx={{ '& td': { borderBottom: `1px solid ${theme.palette.divider}` } }} >
-                                            <TableCell>Colesterol (mg)</TableCell>
-                                            <TableCell>{alimento.nutritional_info_100g.cholesterol}</TableCell>
-                                            {alimento.edible !== 100 && (
-                                                <TableCell>{(alimento.nutritional_info_100g.cholesterol * alimento.edible / 100).toFixed(1)}</TableCell>
-                                            )}
-                                        </TableRow>
+                                        {/* 数据行 */}
+                                        {[
+                                            {
+                                                category: 'Macronutrientes',
+                                                values: [
+                                                    { nutrient: 'Energía (kcal)', value: alimento.nutritional_info_100g.energy_kcal ?? 'N/D' },
+                                                    { nutrient: 'Proteínas (g)', value: alimento.nutritional_info_100g.pro ?? 'N/D'},
+                                                    { nutrient: 'Carbohidratos (g)', value: alimento.nutritional_info_100g.car ?? 'N/D' }
+                                                ]
+                                            },
+                                            {
+                                                category: 'Grasas',
+                                                values: [
+                                                    { nutrient: 'Totales (g)', value: alimento.nutritional_info_100g.fats.total_fat ?? 'N/D'},
+                                                    { nutrient: 'Saturadas (g)', value: alimento.nutritional_info_100g.fats.sat ?? 'N/D' },
+                                                    { nutrient: 'Trans (g)', value: alimento.nutritional_info_100g.fats.trans ?? 'N/D' }
+                                                ]
+                                            },
+                                            {
+                                                category: 'Minerales',
+                                                values: [
+                                                    { nutrient: 'Sodio (mg)', value: alimento.nutritional_info_100g.sod ?? 'N/D'},
+                                                    { nutrient: 'Potasio (mg)', value: alimento.nutritional_info_100g.pot ?? 'N/D'},
+                                                    { nutrient: 'Calcio (mg)', value: alimento.nutritional_info_100g.cal ?? 'N/D'},
+                                                    { nutrient: 'Hierro (mg)', value: alimento.nutritional_info_100g.iron ?? 'N/D'}
+                                                ]
+                                            },
+                                            {
+                                                category: 'Otros Componentes',
+                                                values: [
+                                                    { nutrient: 'Fibra (g)', value: alimento.nutritional_info_100g.fiber ?? 'N/D'},
+                                                    { nutrient: 'Colesterol (mg)', value: alimento.nutritional_info_100g.cholesterol ?? 'N/D'}
+                                                ]
+                                            }
+                                        ].map((categoryData, index) => (
+                                            categoryData.values.map((row, i) => (
+                                                <TableRow
+                                                    key={`${index}-${i}`}
+                                                    sx={{
+                                                        '&:nth-of-type(odd)': {
+                                                            bgcolor: theme.palette.mode === 'dark'
+                                                                ? 'grey.800'
+                                                                : 'grey.50'
+                                                        },
+                                                        '&:hover': {
+                                                            bgcolor: 'action.hover'
+                                                        }
+                                                    }}
+                                                >
+                                                    {i === 0 && (
+                                                        <TableCell
+                                                            rowSpan={categoryData.values.length}
+                                                            sx={{
+                                                                fontWeight: 600,
+                                                                pl: 3,
+                                                                bgcolor: theme.palette.mode === 'dark'
+                                                                    ? 'grey.700'
+                                                                    : 'grey.100',
+                                                                borderLeft: `3px solid ${theme.palette.divider}`
+                                                            }}
+                                                        >
+                                                            {categoryData.category}
+                                                        </TableCell>
+                                                    )}
+                                                    <TableCell sx={{ color: 'text.secondary' }}>
+                                                        {row.nutrient}
+                                                    </TableCell>
+                                                    <TableCell align="center">{row.value}</TableCell>
+                                                    {alimento.edible !== 100 && (
+                                                        <TableCell align="center" sx={{ color: 'success.main' }}>
+                                                            {row.value === 'N/D'
+                                                                ? 'N/D'
+                                                                : (row.value * alimento.edible / 100).toFixed(2)}
+                                                        </TableCell>
+                                                    )}
+                                                </TableRow>
+                                            ))
+                                        ))}
                                     </TableBody>
                                 </Table>
                             </Grid>
