@@ -33,8 +33,8 @@ async def get_all_categories():
         # Iterar sobre cada colección y obtener las categorías
         for collection_name in recetas_collection:
             collection = recipe_db_host[collection_name]
-            # Filtrar documentos por language_ISO: 'ES' y obtener las categorías
-            cursor = collection.find({'language_ISO': 'ES'}, {'category': 1})
+            # Filtrar documentos por origin_ISO: 'ESP' y obtener las categorías
+            cursor = collection.find({'origin_ISO': 'ESP'}, {'category': 1})
             
             # Recorrer los documentos y agregar categorías al conjunto
             async for doc in cursor:
@@ -53,7 +53,7 @@ async def buscar_recetas(nombre: str, limit: int = 5):
     for palabra in palabras:
         for collection_name in recetas_collection:
             collection = recipe_db_host[collection_name]
-            cursor = collection.find({'language_ISO': 'ES'})
+            cursor = collection.find({'origin_ISO': 'ESP'})
 
             async for doc in cursor:
                 title = doc.get("title", "")
@@ -81,7 +81,7 @@ async def get_recetas_por_categoria(categoria: str):
     for collection_name in recetas_collection:
         collection = recipe_db_host[collection_name]
         cursor = collection.find({
-            'language_ISO': 'ES',
+            'origin_ISO': 'ESP',
             'category': {'$regex': f'^{categoria}$', '$options': 'i'}
         }, {'title': 1})
 
@@ -100,7 +100,7 @@ async def get_recetas_por_categoria(categoria: str):
 
     for collection_name in recetas_collection:
         collection = recipe_db_host[collection_name]
-        cursor = collection.find({'language_ISO': 'ES'}, {'title': 1})
+        cursor = collection.find({'origin_ISO': 'ESP'}, {'title': 1})
 
         async for doc in cursor:
             titulo = doc.get("title", "")

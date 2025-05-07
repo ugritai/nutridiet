@@ -191,36 +191,48 @@ async def sugerir_alimentos(nombre: str, limit: int = 10):
     embedding_input = model.encode(nombre_normalizado)
     embedding_input = torch.tensor(embedding_input, dtype=torch.float32)
 
-
-    docs = list(embeddings_collection.find({}, {"_id": 0, "name_esp": 1, "categoria": 1, "etiquetas": 1, "embedding": 1}))
-
+    # Obtener todos los documentos de la base de datos
+    docs = list(embeddings_collection.find({}, {"_id": 0, "name_esp": 1, "category_esp": 1, "embedding": 1}))
+    
     similarities = []
+
     for doc in docs:
-        
-        doc_name_normalized = unidecode(doc["name_esp"].strip().lower())  
-        if doc_name_normalized == nombre_normalizado:  
+        doc_name_normalized = unidecode(doc["name_esp"].strip().lower())
+        if doc_name_normalized == nombre_normalizado:
             continue
         
+        categoria_doc = doc["category_esp"]
         emb = np.array(doc["embedding"])
         emb = torch.tensor(emb, dtype=torch.float32)
         sim = util.cos_sim(embedding_input, emb)[0][0].item()
-        similarities.append((sim, doc))
-    
+
+        similarities.append((sim, doc, categoria_doc))
+
     if not similarities:
         raise HTTPException(status_code=404, detail="No se encontraron sugerencias")
     
+    # Ordenar primero por similitud (de mayor a menor)
     top = sorted(similarities, key=lambda x: x[0], reverse=True)[:limit]
 
-    if not top:
-        raise HTTPException(status_code=404, detail="No se encontraron sugerencias")
+    # Obtener la categoría del término de búsqueda (nombre ingresado)
+    categoria_objetivo = None
+    for doc in docs:
+        doc_name_normalized = unidecode(doc["name_esp"].strip().lower())
+        if doc_name_normalized == nombre_normalizado:
+            categoria_objetivo = doc["category_esp"]
+            break
+    
+    # Ahora ordenamos para mostrar primero los elementos de la misma categoría
+    top_ordenado = sorted(top, key=lambda x: x[2] != categoria_objetivo, reverse=False)
 
+    # Generar los resultados finales
     resultados = [
         {
             "nombre": doc["name_esp"],
-            "etiquetas": doc.get("etiquetas", []),
+            "category_esp": categoria_doc,
             "similitud": round(sim, 4)
         }
-        for sim, doc in top
+        for sim, doc, categoria_doc in top_ordenado
     ]
     
     # Si no hay sugerencias después de filtrar el término exacto
@@ -228,6 +240,7 @@ async def sugerir_alimentos(nombre: str, limit: int = 10):
         raise HTTPException(status_code=404, detail="No se encontraron sugerencias distintas al término de búsqueda")
 
     return resultados
+
 
 @router.get("/buscar_alimentos/{nombre}")
 async def buscar_alimentos(nombre: str, limit: int = 5):
