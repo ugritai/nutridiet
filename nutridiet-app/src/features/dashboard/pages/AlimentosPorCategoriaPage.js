@@ -30,6 +30,7 @@ export default function AlimentosPorCategoriaPage() {
     fetch(`http://localhost:8000/alimentos/por_categoria/${encodeURIComponent(categoria)}`)
       .then(res => res.json())
       .then(data => {
+        console.log("API 返回的完整数据:", data.alimentos);
         setAlimentos(data.alimentos || []);
         setFilteredAlimentos(data.alimentos || []);
         setCurrentPage(1);
@@ -44,7 +45,9 @@ export default function AlimentosPorCategoriaPage() {
     if (letter === '') {
       setFilteredAlimentos(alimentos);
     } else {
-      const filtered = alimentos.filter(nombre => nombre.toLowerCase().startsWith(letter.toLowerCase()));
+      const filtered = alimentos.filter(alimento =>
+        alimento.nombre.toLowerCase().startsWith(letter.toLowerCase())
+      );
       setFilteredAlimentos(filtered);
     }
     setCurrentPage(1);
@@ -68,8 +71,11 @@ export default function AlimentosPorCategoriaPage() {
   // 统计每个字母对应多少 alimentos
   const letterCounts = {};
   alphabet.forEach(letter => {
-    letterCounts[letter] = alimentos.filter(nombre => nombre.toLowerCase().startsWith(letter.toLowerCase())).length;
+    letterCounts[letter] = alimentos.filter(alimento =>
+      alimento.nombre.toLowerCase().startsWith(letter.toLowerCase())
+    ).length;
   });
+
 
   return (
     <Dashboard>
@@ -109,12 +115,12 @@ export default function AlimentosPorCategoriaPage() {
         </Box>
 
         <Grid container spacing={2} sx={{ mt: 2 }}>
-          {currentAlimentos.map((nombre) => (
-            <Grid size={{ xs: 12, sm: 6, lg: 4, md: 4 }} key={nombre}>
+          {currentAlimentos.map((alimento) => (
+            <Grid size={{ xs: 12, sm: 6, lg: 4, md: 4 }} key={alimento.nombre}>
               <UniversalCard
-                title={nombre}
-                image="/img/alimentos/default.jpg"
-                buttonLink={`/alimentos/detalle_alimento/${encodeURIComponent(nombre)}`}
+                title={alimento.nombre}
+                image={alimento.image_url} 
+                buttonLink={`/alimentos/detalle_alimento/${encodeURIComponent(alimento.nombre)}`}
               />
             </Grid>
           ))}

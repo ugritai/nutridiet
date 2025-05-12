@@ -1,15 +1,20 @@
 from fastapi import APIRouter, HTTPException
-from database.connection import recipe_db_host
-from utils.food_utils import remove_stop_words, convert_objectid
+from database.connection import recipe_db_host, bedca_collection
+from utils.food_utils import remove_stop_words, convert_objectid, convertir_a_gramos, convertir_fracciones_a_decimal
 from unidecode import unidecode
+from pymongo.collection import Collection
 from fastapi.encoders import jsonable_encoder
+from typing import Dict, Any
+from bson import ObjectId
+from motor.motor_asyncio import AsyncIOMotorCollection
 
 
 
 router = APIRouter(tags=["Recipes"])
 
 #collections = ['abuela', 'food.com', 'mealrec', 'recipe1m', 'recipenlg', 'recipeQA']
-recetas_collection = ['abuela']
+collections = ['abuela']
+recetas_collection = recipe_db_host['abuela_bedca']
 
 # Mapa de categorías a palabras clave
 PALABRAS_CLAVE = {
@@ -31,7 +36,7 @@ async def get_all_categories():
         categorias = set()
 
         # Iterar sobre cada colección y obtener las categorías
-        for collection_name in recetas_collection:
+        for collection_name in collections:
             collection = recipe_db_host[collection_name]
             # Filtrar documentos por origin_ISO: 'ESP' y obtener las categorías
             cursor = collection.find({'origin_ISO': 'ESP'}, {'category': 1})
@@ -51,7 +56,7 @@ async def buscar_recetas(nombre: str, limit: int = 5):
     sugerencias = set()
 
     for palabra in palabras:
-        for collection_name in recetas_collection:
+        for collection_name in collections:
             collection = recipe_db_host[collection_name]
             cursor = collection.find({'origin_ISO': 'ESP'})
 
@@ -78,7 +83,7 @@ async def get_recetas_por_categoria(categoria: str):
     resultados = {}
 
     # Primero, buscar si hay recetas donde category == categoria (caso directo)
-    for collection_name in recetas_collection:
+    for collection_name in collections:
         collection = recipe_db_host[collection_name]
         cursor = collection.find({
             'origin_ISO': 'ESP',
@@ -98,7 +103,7 @@ async def get_recetas_por_categoria(categoria: str):
 
     palabras_clave = [unidecode(p.lower()) for p in PALABRAS_CLAVE[categoria_normalizada]]
 
-    for collection_name in recetas_collection:
+    for collection_name in collections:
         collection = recipe_db_host[collection_name]
         cursor = collection.find({'origin_ISO': 'ESP'}, {'title': 1})
 
@@ -118,7 +123,7 @@ async def get_recetas_por_categoria(categoria: str):
 async def get_receta_detalle(nombre: str):
     nombre_normalizado = unidecode(nombre.strip().lower())
 
-    for collection_name in recetas_collection:
+    for collection_name in collections:
         collection = recipe_db_host[collection_name]
         cursor = collection.find({}, {"_id": 0})
 
@@ -206,3 +211,92 @@ async def get_recipes_by_category(category: str):
     
     return {"recipes": recipes}
     
+def extraer_cantidad_y_unidad(texto):
+    texto = convertir_fracciones_a_decimal(texto)
+    texto = texto.lower()
+    patron = r'([\d.]+)\s*(\w+)?'
+    match = re.search(patron, texto)
+    if match:
+        cantidad = float(match.group(1))
+        unidad = match.group(2) if match.group(2) else 'gramos'
+        return cantidad, unidad
+    return 100.0, 'gramos'  # valor por defecto
+
+import re
+
+@router.get("/{receta}/nutricion")
+async def calcular_nutricion(
+    receta: str,  # Usamos 'receta' como título de la receta
+    por_porcion: bool = True
+):
+    # Busca la receta usando el título directamente
+    receta_obj = await recetas_collection.find_one({"title": receta})
+    if not receta_obj:
+        raise HTTPException(status_code=404, detail="Receta no encontrada")
+
+    total_nutricion = {}
+    ingredientes = receta_obj.get("ingredients", [])  # Cambié receta por receta_obj
+    if not isinstance(ingredientes, list):
+        raise HTTPException(status_code=400, detail="Formato de ingredientes incorrecto")
+
+    # Iteramos sobre los ingredientes
+    # Buscar y procesar cada ingrediente de la receta
+# Iteramos sobre los ingredientes
+    for ing in ingredientes:
+        ingrediente_texto = ing.get("ingredient")  # Obtenemos el nombre del ingrediente
+        ingrediente_id = ing.get("ingredientID")  # Obtenemos el ObjectId del ingrediente
+
+        if ingrediente_id is None:
+            continue  # Si no hay ID, pasamos al siguiente ingrediente
+
+        # Verificamos si el ID es un ObjectId
+        if not isinstance(ingrediente_id, ObjectId):
+            try:
+                ingrediente_id = ObjectId(ingrediente_id)  # Convertimos el ID a ObjectId si es necesario
+            except Exception as e:
+                print(f"Error al convertir {ingrediente_id}: {e}")
+                continue  # Si el ID no es válido, lo ignoramos
+
+        print(f"Procesando ingrediente: {ingrediente_texto}")
+        print(f"ID del ingrediente: {ingrediente_id}")
+
+        # Extraemos la cantidad y unidad del ingrediente
+        cantidad, unidad = extraer_cantidad_y_unidad(ingrediente_texto)
+        gramos_estimados = convertir_a_gramos(cantidad, unidad)  # Convertimos a gramos
+
+        # Buscamos el alimento en la colección de BEDCA
+        alimento = await bedca_collection.find_one({"_id": ingrediente_id})
+        print("Alimento encontrado:", alimento)
+
+        if not alimento:
+            continue  # Si no encontramos el alimento, pasamos al siguiente
+
+        # Obtenemos la información nutricional del alimento
+        info = alimento.get("nutritional_info_100g", {})
+
+        # Sumamos la información nutricional al total
+        for clave, valor in info.items():
+            if valor in ('', None):  # Si el valor es vacío o None, lo ignoramos
+                continue
+            if isinstance(valor, dict):
+                for subclave, subvalor in valor.items():
+                    if subvalor in ('', None):  # Ignoramos valores vacíos o None
+                        continue
+                    clave_compuesta = f"{clave}.{subclave}"
+                    total_nutricion[clave_compuesta] = total_nutricion.get(clave_compuesta, 0) + float(subvalor) * gramos_estimados / 100
+            else:
+                total_nutricion[clave] = total_nutricion.get(clave, 0) + float(valor) * gramos_estimados / 100
+
+    # Si la nutrición es por porción, ajustamos según el número de raciones
+    raciones = receta_obj.get("n_diners", 1)  # Usamos receta_obj aquí también
+    if por_porcion:
+        total_nutricion = {k: round(v / raciones, 2) for k, v in total_nutricion.items()}
+    else:
+        total_nutricion = {k: round(v, 2) for k, v in total_nutricion.items()}
+
+    return {
+        "receta": receta_obj.get("title"),
+        "por_porcion": por_porcion,
+        "raciones": raciones,
+        "valores_nutricionales": total_nutricion
+    }

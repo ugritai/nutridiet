@@ -171,7 +171,7 @@ export default function FoodDetailCard() {
 
     return (
         <Card sx={{
-            maxWidth: 1200,
+            maxWidth:'100%' ,
             mx: 'auto',
             mt: 4,
             boxShadow: 3,

@@ -8,16 +8,61 @@ import {
   CircularProgress,
   Chip,
   Box,
-  Divider,
   List,
   ListItem,
   ListItemText,
   ListItemIcon,
   Avatar,
-  LinearProgress,
-  useTheme
 } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import { AccessTime, Restaurant, People, Flag, LocalDining } from '@mui/icons-material';
+import RecipeNutritionTable from '../components/RecipeNutritionTable';
+
+const ListSection = ({ title, icon: Icon, items, filterFn }) => {
+  const theme = useTheme();  // Obtener el tema
+  const filteredItems = items.filter(filterFn);
+
+  return (
+    <Card variant="outlined" sx={{ borderRadius: 3 }}>
+      <CardContent>
+        <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
+          <Icon sx={{ mr: 1 }} />
+          {title} ({filteredItems.length})
+        </Typography>
+        <List dense>
+          {filteredItems.map((item, index) => (
+            <ListItem key={index} sx={{ alignItems: 'flex-start', py: 1.5 }}>
+              <ListItemIcon sx={{ mt: '4px', minWidth: 32 }}>
+                <Avatar sx={{
+                  width: 24,
+                  height: 24,
+                  bgcolor: theme.palette.primary.main,  // Acceder al color del tema
+                  color: theme.palette.primary.contrastText, // Acceder al texto del color del tema
+                  fontSize: '0.75rem'
+                }}>
+                  {index + 1}
+                </Avatar>
+              </ListItemIcon>
+              <ListItemText
+                primary={
+                  item.ingredient
+                    ? item.ingredient.replace(/^'+|'+$/g, '').trim()
+                    : item
+                      .replace(/\bPaso\s*\d+\b/gi, '')                       // Quitar "Paso 1"
+                      .replace(/(?:^|,)\s*'?\d+'?(?=\s|$)/g, '')             // Quitar , '3 o '3
+                      .replace(/(^|[\s])[,]+(?=[\s]|$)/g, ' ')               // Quitar comas aisladas
+                      .replace(/^'+|'+$/g, '')                               // Quitar comillas de inicio/fin
+                      .replace(/\s+/g, ' ')                                  // Espacios múltiples → uno
+                      .trim()
+                }
+              />
+            </ListItem>
+          ))}
+        </List>
+      </CardContent>
+    </Card>
+  );
+};
 
 const getDomainFromUrl = (url) => {
   try {
@@ -120,7 +165,7 @@ export default function RecipeDetailCard() {
 
   return (
     <Card sx={{
-      maxWidth: 1200,
+      width: '100%',
       mx: 'auto',
       mt: 4,
       boxShadow: 3,
@@ -174,80 +219,36 @@ export default function RecipeDetailCard() {
 
         <Grid container spacing={3}>
           {/* Ingredients Section */}
-          <Grid item xs={12} md={4}>
-            <Card variant="outlined" sx={{ borderRadius: 3 }}>
-              <CardContent>
-                <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
-                  <Restaurant sx={{ mr: 1 }} />
-                  Ingredientes ({recipe.n_ingredients})
-                </Typography>
-
-                <List dense>
-                  {recipe.ingredients.map((ingredient, index) => (
-                    <ListItem key={index} sx={{ py: 0.5 }}>
-                      <ListItemIcon sx={{ minWidth: 32 }}>
-                        <Avatar sx={{
-                          width: 24,
-                          height: 24,
-                          bgcolor: theme.palette.primary.light,
-                          color: theme.palette.primary.contrastText,
-                          fontSize: '0.75rem'
-                        }}>
-                          {index + 1}
-                        </Avatar>
-                      </ListItemIcon>
-                      <ListItemText
-                        primary={ingredient.ingredient.replace(/^'+|'+$/g, '').trim()}
-                      />
-                    </ListItem>
-                  ))}
-                </List>
-              </CardContent>
-            </Card>
+          <Grid item size={{ xs: 12, sm: 4, lg: 4, md: 6 }}>
+            <ListSection
+              title="Ingredientes"
+              icon={Restaurant}
+              items={recipe.ingredients}
+              filterFn={(ing) => ing.ingredient && ing.ingredient.trim() !== ""}
+            />
           </Grid>
 
           {/* Steps Section */}
-          <Grid item xs={12} md={8}>
-            <Card variant="outlined" sx={{ borderRadius: 3 }}>
-              <CardContent>
-                <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
-                  <AccessTime sx={{ mr: 1 }} />
-                  Preparación ({recipe.n_steps} pasos)
-                </Typography>
-
-                <List>
-                  {recipe.steps
-                    .map((step) => step.replace(/(Paso\s*\d+|,\s*|'?\d+|'?\s*\d+)/gi, '').replace(/^'+|'+$/g, '').trim()) // Eliminar 'Paso X' y comas
-                    .filter((step) => step) // Filtrar vacíos, por si hay pasos vacíos después de la limpieza
-                    .map((step, index) => (
-                      <ListItem key={index} sx={{ alignItems: 'flex-start', py: 1.5 }}>
-                        <ListItemIcon sx={{ mt: '4px', minWidth: 32 }}>
-                          <Avatar sx={{
-                            width: 24,
-                            height: 24,
-                            bgcolor: theme.palette.secondary.main,
-                            color: theme.palette.secondary.contrastText,
-                            fontSize: '0.75rem'
-                          }}>
-                            {index + 1}
-                          </Avatar>
-                        </ListItemIcon>
-                        <ListItemText
-                          primary={
-                            <Typography variant="body1" sx={{ lineHeight: 1.6 }}>
-                              {step}
-                            </Typography>
-                          }
-                        />
-                      </ListItem>
-                    ))}
-                </List>
-              </CardContent>
-            </Card>
+          <Grid size={{ xs: 12, sm: 8, lg: 8, md: 6 }}>
+            <ListSection
+              title="Preparación"
+              icon={AccessTime}
+              items={recipe.steps}
+              filterFn={(step) => {
+                // Filtra los pasos vacíos y también elimina "Paso X", comas, comillas y otros caracteres no deseados
+                return step
+                  .replace(/(Paso\s*\d+|,\s*|'?\d+|'?\s*\d+)/gi, '')  // Eliminar "Paso X", comas y números extra
+                  .replace(/^'+|'+$/g, '')  // Eliminar comillas al inicio y final
+                  .replace(/(^|[\s])[,]+(?=[\s]|$)/g, ' ')
+                  .trim() !== "";  // Filtrar pasos vacíos después de limpiar
+              }}
+            />
           </Grid>
 
         </Grid>
-
+        <Box sx={{ mt: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <RecipeNutritionTable />
+        </Box>
         {/* Source & Additional Info */}
         <Box sx={{ mt: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Typography variant="body2" color="textSecondary">
