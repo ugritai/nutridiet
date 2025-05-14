@@ -3,34 +3,34 @@ import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import AutoFixHighRoundedIcon from '@mui/icons-material/AutoFixHighRounded';
-import ConstructionRoundedIcon from '@mui/icons-material/ConstructionRounded';
-import SettingsSuggestRoundedIcon from '@mui/icons-material/SettingsSuggestRounded';
-import ThumbUpAltRoundedIcon from '@mui/icons-material/ThumbUpAltRounded';
+import RestaurantMenuRoundedIcon from '@mui/icons-material/RestaurantMenuRounded';    
+import SearchRoundedIcon from '@mui/icons-material/SearchRounded';  
+import Logo from '../../../assets/shared-theme/logo'
 
 const items = [
   {
-    icon: <SettingsSuggestRoundedIcon sx={{ color: 'text.secondary' }} />,
-    title: 'Adaptable performance',
+    icon: <RestaurantMenuRoundedIcon sx={{ color: 'text.secondary' }} />,
+    title: 'Creación de dietas saludable',
     description:
-      'Our product effortlessly adjusts to your needs, boosting efficiency and simplifying your tasks.',
+      'Personaliza planes alimenticios de forma clara sugún tus objetivos y necesidad nutricional.',
   },
   {
-    icon: <ConstructionRoundedIcon sx={{ color: 'text.secondary' }} />,
-    title: 'Built to last',
+    icon: <SearchRoundedIcon sx={{ color: 'text.secondary' }} />,
+    title: 'Búsqueda de recetas',
     description:
-      'Experience unmatched durability that goes above and beyond with lasting investment.',
+      'Explora recetas saludables adaptadas a tus preferencias, ingredientes y requerimientos calóricos.',
   },
   {
-    icon: <ThumbUpAltRoundedIcon sx={{ color: 'text.secondary' }} />,
-    title: 'Great user experience',
+    icon: <SearchRoundedIcon sx={{ color: 'text.secondary' }} />,
+    title: 'Búsqueda de alimentos',
     description:
-      'Integrate our product into your routine with an intuitive and easy-to-use interface.',
+      'Encuentra alimentos y conoce su valor nutricional detallado para tomar decisiones informadas.',
   },
   {
     icon: <AutoFixHighRoundedIcon sx={{ color: 'text.secondary' }} />,
-    title: 'Innovative functionality',
+    title: 'Funcionalidad innovadora',
     description:
-      'Stay ahead with features that set new standards, addressing your evolving needs better than the rest.',
+      'Disfruta de herramientas inteligentes que facilitan tu planificación alimentaria día a día.',
   },
 ];
 
@@ -39,8 +39,35 @@ export default function Content() {
     <Stack
       sx={{ flexDirection: 'column', alignSelf: 'center', gap: 4, maxWidth: 450 }}
     >
-      <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
-      {/* Logo de la aplicación*/}
+      <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            mt: 'calc(var(--template-frame-height, 0px) + 4px)',
+            p: 1.5,
+          }}
+        >
+        {/* Logo de la aplicación*/}
+        <Logo
+          style={{
+            width: '40px',
+            height: '40px',
+            objectFit: 'contain',
+            marginRight: '10px',
+          }}
+        />
+
+        <Typography
+          variant="h3"
+          sx={{
+            fontWeight: 700,
+            fontFamily: 'Poppins, sans-serif',
+            color: 'green',
+          }}
+        >
+          NutriDiet
+        </Typography>
       </Box>
       {items.map((item, index) => (
         <Stack key={index} direction="row" sx={{ gap: 2 }}>

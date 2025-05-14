@@ -6,6 +6,8 @@ from database.connection import recipe_db_host, bedca_collection,embeddings_coll
 from unidecode import unidecode
 from fastapi.encoders import jsonable_encoder
 from pathlib import Path
+from fastapi import Query
+
 
 from utils.food_utils import remove_stop_words, convert_objectid, sanitize_filename, save_image_to_db, fetch_pixabay_images, download_and_save_image
 from dotenv import load_dotenv
@@ -200,10 +202,26 @@ async def get_ingredient_categories():
 
 # Para obetener nombre de alimentos en español de una categorías en concreta del BedCA 
 @router.get("/por_categoria/{categoria}")
-async def get_alimentos_por_categoria(categoria: str):
+async def get_alimentos_por_categoria(
+    categoria: str,
+    salt: str = Query(None),
+    sug: str = Query(None),
+    total_fat: str = Query(None),
+    trans: str = Query(None)
+):
     categoria = unidecode(categoria.lower().strip())
+    filtros = {}
 
-    alimentos_cursor = alimentos_collection.find()
+    if salt:
+        filtros["oms_lights.salt"] = salt
+    if sug:
+        filtros["oms_lights.sug"] = sug
+    if total_fat:
+        filtros["oms_lights.total_fat"] = total_fat
+    if trans:
+        filtros["oms_lights.trans"] = trans
+
+    alimentos_cursor = alimentos_collection.find(filtros)
     resultado = []
 
     async for item in alimentos_cursor:
@@ -220,6 +238,7 @@ async def get_alimentos_por_categoria(categoria: str):
 
     resultado.sort(key=lambda x: x["nombre"])
     return {"alimentos": resultado}
+
 
 # Para obetener imagen del alimento por categoría y guardar en base de datos
 @router.get("/por_categoria_imagen/{categoria}")
