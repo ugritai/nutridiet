@@ -6,39 +6,26 @@ import Avatar from '@mui/material/Avatar';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import OptionsMenu from './PerfilOptionsMenu';
+import Divider from '@mui/material/Divider';
 
 function stringToColor(string) {
   let hash = 0;
-  let i;
-
-  /* eslint-disable no-bitwise */
-  for (i = 0; i < string.length; i += 1) {
+  for (let i = 0; i < string.length; i++) {
     hash = string.charCodeAt(i) + ((hash << 5) - hash);
   }
-
   let color = '#';
-
-  for (i = 0; i < 3; i += 1) {
+  for (let i = 0; i < 3; i++) {
     const value = (hash >> (i * 8)) & 0xff;
     color += `00${value.toString(16)}`.slice(-2);
   }
-  /* eslint-enable no-bitwise */
-
   return color;
 }
 
 function stringAvatar(name) {
   const nameParts = name?.split(' ') || [];
-
-  let initials = '';
-  if (nameParts.length === 1) {
-    initials = nameParts[0][0]?.toUpperCase() || '?';
-  } else if (nameParts.length >= 2) {
-    initials = `${nameParts[0][0]?.toUpperCase() || ''}${nameParts[1][0]?.toUpperCase() || ''}`;
-  } else {
-    initials = '?';
-  }
-
+  const initials = nameParts.length >= 2
+    ? `${nameParts[0][0]?.toUpperCase() || ''}${nameParts[1][0]?.toUpperCase() || ''}`
+    : nameParts[0]?.[0]?.toUpperCase() || '?';
   return {
     sx: {
       bgcolor: stringToColor(name || 'User'),
@@ -48,50 +35,53 @@ function stringAvatar(name) {
 }
 
 export default function Header() {
-  // Obtener datos del localStorage
   const userEmail = localStorage.getItem('userEmail') || sessionStorage.getItem('userEmail');
   const userName = localStorage.getItem('userName') || sessionStorage.getItem('userName');
 
   return (
     <Stack
-      direction="row"
+      direction={{ xs: 'column', md: 'row' }}
+      spacing={2}
       sx={{
-        display: { xs: 'none', md: 'flex' },
         width: '100%',
-        alignItems: { xs: 'flex-start', md: 'center' },
+        alignItems: 'stretch',
         justifyContent: 'space-between',
         maxWidth: { sm: '100%', md: '1700px' },
-        pt: 1.5,
+        pt: 2,
+        px: { xs: 2, md: 3 },
       }}
-      spacing={2}
     >
       <NavbarBreadcrumbs />
-      <Stack direction="row" spacing={2} alignItems="center">
-        {/* Perfil del usuario */}
+
+      <Stack
+        direction={{ xs: 'column', sm: 'row' }}
+        spacing={2}
+        alignItems={{ xs: 'flex-start', sm: 'center' }}
+        justifyContent="flex-end"
+        sx={{ mt: { xs: 2, md: 0 } }}
+      >
+        {/* Perfil */}
         <Stack
           direction="row"
-          sx={{
-            gap: 1,
-            alignItems: 'center',
-            borderRight: '1px solid',
-            borderColor: 'divider',
-            pr: 2,
-          }}
+          spacing={1}
+          alignItems="center"
+          divider={<Divider orientation="vertical" flexItem />}
         >
-            <Avatar {...stringAvatar(userName)} alt={userName} />
+          <Avatar {...stringAvatar(userName)} alt={userName} />
 
-          <Box sx={{ mr: 'auto' }}>
-            <Typography variant="body2" sx={{ fontWeight: 500, lineHeight: '16px' }}>
+          <Box>
+            <Typography variant="body2" sx={{ fontWeight: 500 }}>
               {userName}
             </Typography>
             <Typography variant="caption" sx={{ color: 'text.secondary' }}>
               {userEmail}
             </Typography>
           </Box>
+
           <OptionsMenu />
         </Stack>
 
-        {/* Tema */}
+        {/* Switch de tema */}
         <ColorModeIconDropdown />
       </Stack>
     </Stack>

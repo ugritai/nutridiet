@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link as RouterLink } from 'react-router-dom';
 import {
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
   Grid,
   Card,
   CardContent,
@@ -17,18 +20,25 @@ import {
 import { useTheme } from '@mui/material/styles';
 import { AccessTime, Restaurant, People, Flag, LocalDining } from '@mui/icons-material';
 import RecipeNutritionTable from '../components/RecipeNutritionTable';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
 const ListSection = ({ title, icon: Icon, items, filterFn }) => {
-  const theme = useTheme();  // Obtener el tema
+  const theme = useTheme();
   const filteredItems = items.filter(filterFn);
 
   return (
-    <Card variant="outlined" sx={{ borderRadius: 3 }}>
-      <CardContent>
-        <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
+    <Accordion sx={{ borderRadius: 3, boxShadow: 1 }}>
+      <AccordionSummary
+        expandIcon={<ExpandMoreIcon />}
+        aria-controls={`${title}-content`}
+        id={`${title}-header`}
+      >
+        <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center' }}>
           <Icon sx={{ mr: 1 }} />
           {title} ({filteredItems.length})
         </Typography>
+      </AccordionSummary>
+      <AccordionDetails>
         <List dense>
           {filteredItems.map((item, index) => (
             <ListItem key={index} sx={{ alignItems: 'flex-start', py: 1.5 }}>
@@ -36,8 +46,8 @@ const ListSection = ({ title, icon: Icon, items, filterFn }) => {
                 <Avatar sx={{
                   width: 24,
                   height: 24,
-                  bgcolor: theme.palette.primary.main,  // Acceder al color del tema
-                  color: theme.palette.primary.contrastText, // Acceder al texto del color del tema
+                  bgcolor: theme.palette.primary.main,
+                  color: theme.palette.primary.contrastText,
                   fontSize: '0.75rem'
                 }}>
                   {index + 1}
@@ -48,21 +58,22 @@ const ListSection = ({ title, icon: Icon, items, filterFn }) => {
                   item.ingredient
                     ? item.ingredient.replace(/^'+|'+$/g, '').trim()
                     : item
-                      .replace(/\bPaso\s*\d+\b/gi, '')                       // Quitar "Paso 1"
-                      .replace(/(?:^|,)\s*'?\d+'?(?=\s|$)/g, '')             // Quitar , '3 o '3
-                      .replace(/(^|[\s])[,]+(?=[\s]|$)/g, ' ')               // Quitar comas aisladas
-                      .replace(/^'+|'+$/g, '')                               // Quitar comillas de inicio/fin
-                      .replace(/\s+/g, ' ')                                  // Espacios múltiples → uno
+                      .replace(/\bPaso\s*\d+\b/gi, '')
+                      .replace(/(?:^|,)\s*'?\d+'?(?=\s|$)/g, '')
+                      .replace(/(^|[\s])[,]+(?=[\s]|$)/g, ' ')
+                      .replace(/^'+|'+$/g, '')
+                      .replace(/\s+/g, ' ')
                       .trim()
                 }
               />
             </ListItem>
           ))}
         </List>
-      </CardContent>
-    </Card>
+      </AccordionDetails>
+    </Accordion>
   );
 };
+
 
 const getDomainFromUrl = (url) => {
   try {
@@ -244,11 +255,12 @@ export default function RecipeDetailCard() {
               }}
             />
           </Grid>
-
         </Grid>
+
         <Box sx={{ mt: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <RecipeNutritionTable />
         </Box>
+
         {/* Source & Additional Info */}
         <Box sx={{ mt: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Typography variant="body2" color="textSecondary">

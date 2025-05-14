@@ -7,8 +7,14 @@ import {
     TableBody,
     TableCell,
     TableRow,
+    Accordion,
+    AccordionSummary,
+    AccordionDetails,
+    Typography,
     useTheme
 } from '@mui/material';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import TableChartIcon from '@mui/icons-material/TableChart';
 
 export default function NutritionTable() {
     const theme = useTheme();
@@ -80,93 +86,88 @@ export default function NutritionTable() {
 
     return (
         <Grid item xs={12}>
-            <Table
-                sx={{
-                    border: `1px solid ${theme.palette.divider}`,
-                    borderRadius: 2,
-                    overflow: 'hidden',
-                    bgcolor: 'background.paper',
-                    boxShadow: 1,
-                    '& .MuiTableCell-root': {
-                        fontSize: '0.875rem',
-                        py: 1.5
-                    }
-                }}
-            >
-                <TableBody>
-                    <TableRow sx={{
-                        bgcolor: theme.palette.mode === 'dark' ? 'grey.800' : 'grey.100',
-                        '& td': {
-                            borderBottom: `2px solid ${theme.palette.divider}`,
-                            py: 2,
-                            fontSize: '1.1rem',
-                            fontWeight: 600
-                        }
-                    }}>
-                        <TableCell colSpan={por_porcion ? 4 : 3} align="center">
-                            Composición Nutricional {receta} ({raciones} raciones)
-                        </TableCell>
-                    </TableRow>
+            <Accordion sx={{ borderRadius: 3, boxShadow: 1 }}>
+                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                    <TableChartIcon sx={{ mr: 1, color: 'primary' }} />
+                    <Typography variant="h6" fontWeight={600}>
+                        Composición Nutricional
+                    </Typography>
+                </AccordionSummary>
+                <AccordionDetails>
+                    <Table
+                        sx={{
+                            border: `1px solid ${theme.palette.divider}`,
+                            borderRadius: 2,
+                            overflow: 'hidden',
+                            bgcolor: 'background.paper',
+                            '& .MuiTableCell-root': {
+                                fontSize: '0.875rem',
+                                py: 1.5
+                            }
+                        }}
+                    >
+                        <TableBody>
+                            <TableRow sx={{
+                                bgcolor: 'action.hover',
+                                '& .MuiTableCell-root': {
+                                    fontWeight: 600,
+                                    borderBottom: `2px solid ${theme.palette.divider}`,
+                                    py: 1.5
+                                }
+                            }}>
+                                <TableCell sx={{ pl: 3, width: '25%' }}>Categoría</TableCell>
+                                <TableCell sx={{ width: '25%' }}>Nutriente</TableCell>
+                                <TableCell align="center" sx={{ width: '25%' }}>Total receta</TableCell>
+                                {por_porcion && (
+                                    <TableCell align="center" sx={{ width: '25%' }}>Por ración</TableCell>
+                                )}
+                            </TableRow>
 
-                    <TableRow sx={{
-                        bgcolor: 'action.hover',
-                        '& .MuiTableCell-root': {
-                            fontWeight: 600,
-                            borderBottom: `2px solid ${theme.palette.divider}`,
-                            py: 1.5
-                        }
-                    }}>
-                        <TableCell sx={{ pl: 3, width: '25%' }}>Categoría</TableCell>
-                        <TableCell sx={{ width: '25%' }}>Nutriente</TableCell>
-                        <TableCell align="center" sx={{ width: '25%' }}>Total receta</TableCell>
-                        {por_porcion && (
-                            <TableCell align="center" sx={{ width: '25%' }}>Por ración</TableCell>
-                        )}
-                    </TableRow>
+                            {dataMap.map((group, i) =>
+                                group.values.map((item, j) => {
+                                    const valTotal = getValue(item.key);
+                                    const valPorcion = typeof valTotal === 'number' && por_porcion
+                                        ? (valTotal / raciones).toFixed(2)
+                                        : 'N/D';
 
-                    {dataMap.map((group, i) =>
-                        group.values.map((item, j) => {
-                            const valTotal = getValue(item.key);
-                            const valPorcion = typeof valTotal === 'number' && por_porcion
-                                ? (valTotal / raciones).toFixed(2)
-                                : 'N/D';
-
-                            return (
-                                <TableRow
-                                    key={`${i}-${j}`}
-                                    sx={{
-                                        '&:nth-of-type(odd)': {
-                                            bgcolor: theme.palette.mode === 'dark' ? 'grey.800' : 'grey.50'
-                                        },
-                                        '&:hover': { bgcolor: 'action.hover' }
-                                    }}
-                                >
-                                    {j === 0 && (
-                                        <TableCell
-                                            rowSpan={group.values.length}
+                                    return (
+                                        <TableRow
+                                            key={`${i}-${j}`}
                                             sx={{
-                                                fontWeight: 600,
-                                                pl: 3,
-                                                bgcolor: theme.palette.mode === 'dark' ? 'grey.700' : 'grey.100',
-                                                borderLeft: `3px solid ${theme.palette.divider}`
+                                                '&:nth-of-type(odd)': {
+                                                    bgcolor: theme.palette.mode === 'dark' ? 'grey.800' : 'grey.50'
+                                                },
+                                                '&:hover': { bgcolor: 'action.hover' }
                                             }}
                                         >
-                                            {group.category}
-                                        </TableCell>
-                                    )}
-                                    <TableCell>{item.nutrient}</TableCell>
-                                    <TableCell align="center">{format(valTotal)}</TableCell>
-                                    {por_porcion && (
-                                        <TableCell align="center" sx={{ color: 'success.main' }}>
-                                            {valPorcion}
-                                        </TableCell>
-                                    )}
-                                </TableRow>
-                            );
-                        })
-                    )}
-                </TableBody>
-            </Table>
+                                            {j === 0 && (
+                                                <TableCell
+                                                    rowSpan={group.values.length}
+                                                    sx={{
+                                                        fontWeight: 600,
+                                                        pl: 3,
+                                                        bgcolor: theme.palette.mode === 'dark' ? 'grey.700' : 'grey.100',
+                                                        borderLeft: `3px solid ${theme.palette.divider}`
+                                                    }}
+                                                >
+                                                    {group.category}
+                                                </TableCell>
+                                            )}
+                                            <TableCell>{item.nutrient}</TableCell>
+                                            <TableCell align="center">{format(valTotal)}</TableCell>
+                                            {por_porcion && (
+                                                <TableCell align="center" sx={{ color: 'success.main' }}>
+                                                    {valPorcion}
+                                                </TableCell>
+                                            )}
+                                        </TableRow>
+                                    );
+                                })
+                            )}
+                        </TableBody>
+                    </Table>
+                </AccordionDetails>
+            </Accordion>
         </Grid>
     );
 }

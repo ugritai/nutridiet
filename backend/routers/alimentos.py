@@ -387,11 +387,17 @@ async def get_alimento_detalle(nombre: str):
     sugeridos = await sugerir_alimentos(nombre)
     
     image_url = None
-    image_doc = images_collection.find_one({"name_esp": nombre})
-    if image_doc:
-        image_url = image_doc.get("image_url")
+    for image in images_collection.find({}):  # Aquí no es asíncrono porque estamos usando pymongo
+        nombre_img_normalizado = unidecode(image.get("name_esp", "").strip().lower())
+        if nombre_img_normalizado == nombre_normalizado:
+            image_url = image.get("image_url")
+            break
+        
+    if not image_url:
+        print("No se encontró imagen para el alimento.")  # Depuración
 
-    # 结构不变，只是多一个 image_url
+    sugeridos = await sugerir_alimentos(nombre)
+
     return {
         "alimento": jsonable_encoder(result),
         "sugeridos": sugeridos,
