@@ -4,7 +4,6 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import SignInSide from "../features/auth/SignInSide";
 import SignUp from "../features/auth/SignUp";
 import InicioPage from "../features/dashboard/pages/InicioPage"
-import BusquedaRecetas from '../features/dashboard/pages/BusquedaRecetas';
 import ProtectedRoute from '../features/auth/ProtectedRoute';
 import Alimentos from '../features/dashboard/pages/AlimentosPage';
 import DetalleAlimentoPage from '../features/dashboard/pages/DetalleAlimentoPage';
@@ -28,12 +27,6 @@ function App() {
         <Route path="/inicio" element={
           <ProtectedRoute>
             < InicioPage />
-          </ProtectedRoute>}
-        />
-
-        <Route path="/busqueda-recetas" element={
-          <ProtectedRoute>
-            <BusquedaRecetas />
           </ProtectedRoute>}
         />
 

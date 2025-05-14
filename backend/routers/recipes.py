@@ -66,7 +66,6 @@ async def buscar_recetas(nombre: str, limit: int = 5):
                     break
         if len(sugerencias) >= limit:
             break
-    print(sugerencias)
     if sugerencias:
         return [{"nombre": s} for s in list(sugerencias)[:limit]]
     else:
@@ -179,16 +178,12 @@ async def calcular_nutricion(
                 print(f"Error al convertir {ingrediente_id}: {e}")
                 continue  # Si el ID no es válido, lo ignoramos
 
-        print(f"Procesando ingrediente: {ingrediente_texto}")
-        print(f"ID del ingrediente: {ingrediente_id}")
-
         # Extraemos la cantidad y unidad del ingrediente
         cantidad, unidad = extraer_cantidad_y_unidad(ingrediente_texto)
         gramos_estimados = convertir_a_gramos(cantidad, unidad)  # Convertimos a gramos
 
         # Buscamos el alimento en la colección de BEDCA
         alimento = await bedca_collection.find_one({"_id": ingrediente_id})
-        print("Alimento encontrado:", alimento)
 
         if not alimento:
             continue  # Si no encontramos el alimento, pasamos al siguiente

@@ -14,7 +14,6 @@ import {
     TableCell,
     TableRow,
     useTheme,
-    alpha
 } from '@mui/material';
 import { LocalDining } from '@mui/icons-material';
 
@@ -28,7 +27,7 @@ const OmsChip = ({ type, status }) => {
         fat: 'Grasa'
     };
 
-    // 添加默认值处理
+    // añadir valor default 
     const getStatusColor = (status) => {
         const lightColors = {
             red: { bg: '#ffebee', text: '#ff5252', border: '#ff5252' },
