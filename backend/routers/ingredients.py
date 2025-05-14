@@ -1,15 +1,13 @@
 # routers/ingredients.py
 import os
 import requests
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException
 from database.connection import recipe_db_host, bedca_collection,embeddings_collection,images_collection
 from unidecode import unidecode
 from fastapi.encoders import jsonable_encoder
 from pathlib import Path
-from typing import Optional
-import re
 
-from utils.food_utils import remove_stop_words, convert_objectid
+from utils.food_utils import remove_stop_words, convert_objectid, sanitize_filename, save_image_to_db, fetch_pixabay_images, download_and_save_image
 from dotenv import load_dotenv
 from sentence_transformers import SentenceTransformer, util
 import numpy as np
@@ -19,78 +17,10 @@ load_dotenv()
 IMAGE_DIR = Path("static/image/api")
 IMAGE_DIR.mkdir(parents=True, exist_ok=True)
 
-
 router = APIRouter(tags=["Ingredients"])
 
 alimentos_collection = bedca_collection
-
-def sanitize_filename(name: str) -> str:
-    """生成安全的文件名，替换特殊字符为连字符"""
-    return re.sub(r"[^\w\-]", "-", name).lower()
-
-def save_image_to_db(name_esp: str, image_url: str):
-    document = {
-        "name_esp": name_esp,
-        "image_url": image_url,
-    }
-    existing = images_collection.find_one({"name_esp": name_esp})
-    print(f"[MongoDB] nombre encontrado")
-    if not existing:
-        images_collection.insert_one(document)
-        print(f"[MongoDB] Imagen insertada: {name_esp}")
-    else:
-        print(f"[MongoDB] Imagen ya existe: {name_esp}")
-
-def fetch_pixabay_images(keyword: str, api_key: str, retry: bool = False) -> Optional[dict]:
-    """封装Pixabay API请求"""
-    url = "https://pixabay.com/api/"
-    params = {
-        "key": api_key,
-        "q": keyword,
-        "image_type": "photo",
-        "safesearch": "true",
-        "lang": "es",
-        "per_page": 3,
-    }
-
-    try:
-        response = requests.get(url, params=params, timeout=15)
-        response.raise_for_status()
-        data = response.json()
-
-        if data.get("totalHits", 0) > 0 and data.get("hits"):
-            return data
-            
-        if not retry and " " in keyword:  # 如果含空格则尝试第一个单词
-            print(f"No results, retrying with first word: {keyword.split()[0]}")
-            return fetch_pixabay_images(keyword.split()[0], api_key, retry=True)
-            
-        return None
-
-    except requests.exceptions.RequestException as e:
-        print(f"Pixabay API request failed: {str(e)}")
-        return None
-    
-def download_and_save_image(url: str, filename: str) -> bool:
-    """下载并保存图片到本地"""
-    try:
-        response = requests.get(url, timeout=15)
-        response.raise_for_status()
-        
-        save_path = IMAGE_DIR / filename
-        if save_path.exists():
-            print(f"Image already exists locally: {filename}")
-            return True
-            
-        with open(save_path, "wb") as f:
-            f.write(response.content)
-            
-        print(f"Saved image locally: {filename}")
-        return True
-        
-    except (IOError, requests.exceptions.RequestException) as e:
-        print(f"Failed to download/save image: {str(e)}")
-        return False
+model = SentenceTransformer('sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2')
 
 @router.get("/pixabay_search")
 async def get_pixabay_image_api(search_term: str) -> str:
@@ -192,8 +122,6 @@ async def get_pixabay_image(search_term: str) -> str:
     except requests.exceptions.RequestException as e:
         raise HTTPException(status_code=500, detail=f"Pixabay API request failed: {str(e)}")
 
-
-#API
 @router.get("/unsplash_search")
 async def get_unsplash_image(search_term: str) -> str:
     access_key = os.getenv("UNSPLASH_ACCESS_KEY")
@@ -243,7 +171,6 @@ async def get_unsplash_image(search_term: str) -> str:
     except requests.exceptions.RequestException as e:
         raise HTTPException(status_code=500, detail=f"Unsplash API request failed: {str(e)}")
     
-
 @router.get("/ingredient_categories")
 async def get_ingredient_categories():
     collections = ['all_ingredients']
@@ -271,7 +198,52 @@ async def get_ingredient_categories():
     sorted_categories = sorted(categories)
     return {"categories": sorted_categories}
 
-model = SentenceTransformer('sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2')
+# Para obetener nombre de alimentos en español de una categorías en concreta del BedCA 
+@router.get("/por_categoria/{categoria}")
+async def get_alimentos_por_categoria(categoria: str):
+    categoria = unidecode(categoria.lower().strip())
+
+    alimentos_cursor = alimentos_collection.find()
+    resultado = []
+
+    async for item in alimentos_cursor:
+        cat = item.get("category_esp", "")
+        if unidecode(cat.lower().strip()) == categoria:
+            nombre_esp = item.get("name_esp")
+            image_doc = images_collection.find_one({"name_esp": nombre_esp})
+            image_url = image_doc.get("image_url") if image_doc else None
+
+            resultado.append({
+                "nombre": nombre_esp,
+                "image_url": image_url
+            })
+
+    resultado.sort(key=lambda x: x["nombre"])
+    return {"alimentos": resultado}
+
+# Para obetener imagen del alimento por categoría y guardar en base de datos
+@router.get("/por_categoria_imagen/{categoria}")
+async def get_alimentos_por_categoria_imagen(categoria: str):
+    categoria = unidecode(categoria.lower().strip())
+
+    alimentos_cursor = alimentos_collection.find()
+    resultado = []
+
+    # Recorrer los alimentos de la categoría
+    async for item in alimentos_cursor:
+        cat = item.get("category_esp", "")
+        if unidecode(cat.lower().strip()) == categoria:
+            # Obtener la URL de la imagen del alimento
+            image_url = await get_pixabay_image_api(item["name_esp"])
+
+            # Agregar el alimento y la URL de la imagen al resultado
+            resultado.append({
+                "name_esp": item["name_esp"],
+                "image_url": image_url  # Se incluye la URL de la imagen
+            })
+
+    resultado.sort(key=lambda x: x["name_esp"])  # Ordenar por nombre
+    return {"alimentos": resultado}
 
 @router.get("/sugerir_alimentos/{nombre}")
 async def sugerir_alimentos(nombre: str, limit: int = 10):
@@ -330,36 +302,6 @@ async def sugerir_alimentos(nombre: str, limit: int = 10):
 
     return resultados
 
-
-@router.get("/buscar_alimentos/{nombre}")
-async def buscar_alimentos(nombre: str, limit: int = 5):
-    palabras = remove_stop_words(nombre)
-    
-    alimentos_sugeridos = set()  # eliminar repetidos
-    
-    for palabra in palabras:
-        cursor = alimentos_collection.find()
-        
-        async for doc in cursor:
-            name_esp = doc.get("name_esp", "")
-            name_sin_tildes = unidecode(name_esp.lower()) 
-
-            if palabra in name_sin_tildes:
-                alimentos_sugeridos.add(name_esp)
-            
-            if len(alimentos_sugeridos) >= limit:
-                break  
-        
-        if len(alimentos_sugeridos) >= limit:
-            break
-
-    alimentos_sugeridos = list(alimentos_sugeridos)
-    print(alimentos_sugeridos)
-    if alimentos_sugeridos:
-        return [{"nombre": nombre} for nombre in alimentos_sugeridos[:limit]] 
-    else:
-        raise HTTPException(status_code=404, detail="Alimento no encontrado")
-
 @router.get("/detalle_alimento/{nombre}")
 async def get_alimento_detalle(nombre: str):
     nombre_normalizado = unidecode(nombre.strip().lower())
@@ -404,54 +346,6 @@ async def get_alimento_detalle(nombre: str):
         "image_url": image_url,
     }
 
-# Para obetener nombre de alimentos en español de una categorías en concreta del BedCA 
-@router.get("/por_categoria/{categoria}")
-async def get_alimentos_por_categoria(categoria: str):
-    categoria = unidecode(categoria.lower().strip())
-
-    alimentos_cursor = alimentos_collection.find()
-    resultado = []
-
-    async for item in alimentos_cursor:
-        cat = item.get("category_esp", "")
-        if unidecode(cat.lower().strip()) == categoria:
-            nombre_esp = item.get("name_esp")
-            image_doc = images_collection.find_one({"name_esp": nombre_esp})
-            image_url = image_doc.get("image_url") if image_doc else None
-
-            resultado.append({
-                "nombre": nombre_esp,
-                "image_url": image_url
-            })
-
-    resultado.sort(key=lambda x: x["nombre"])
-    return {"alimentos": resultado}
-
-# Para obetener nombre de alimentos en español de una categorías en concreta del BedCA 
-@router.get("/por_categoria_imagen/{categoria}")
-async def get_alimentos_por_categoria_imagen(categoria: str):
-    categoria = unidecode(categoria.lower().strip())
-
-    alimentos_cursor = alimentos_collection.find()
-    resultado = []
-
-    # Recorrer los alimentos de la categoría
-    async for item in alimentos_cursor:
-        cat = item.get("category_esp", "")
-        if unidecode(cat.lower().strip()) == categoria:
-            # Obtener la URL de la imagen del alimento
-            image_url = await get_pixabay_image_api(item["name_esp"])
-
-            # Agregar el alimento y la URL de la imagen al resultado
-            resultado.append({
-                "name_esp": item["name_esp"],
-                "image_url": image_url  # Se incluye la URL de la imagen
-            })
-
-    resultado.sort(key=lambda x: x["name_esp"])  # Ordenar por nombre
-    return {"alimentos": resultado}
-
-
 # Para obetener todas las categorías de alimentos del BedCA
 @router.get("/all_categories")
 async def get_all_categories():
@@ -462,10 +356,31 @@ async def get_all_categories():
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al obtener categorías: {e}")
     
+@router.get("/buscar_alimentos/{nombre}")
+async def buscar_alimentos(nombre: str, limit: int = 5):
+    palabras = remove_stop_words(nombre)
+    
+    alimentos_sugeridos = set()  # eliminar repetidos
+    
+    for palabra in palabras:
+        cursor = alimentos_collection.find()
+        
+        async for doc in cursor:
+            name_esp = doc.get("name_esp", "")
+            name_sin_tildes = unidecode(name_esp.lower()) 
 
-@router.get("/ingredient_image/{name_en}")
-def get_ingredient_image(name_en: str):
-    result = images_collection.find_one({"name_en": name_en})
-    if not result:
-        raise HTTPException(status_code=404, detail="Image not found")
-    return {"name_en": result["name_en"], "image": result["image"]}
+            if palabra in name_sin_tildes:
+                alimentos_sugeridos.add(name_esp)
+            
+            if len(alimentos_sugeridos) >= limit:
+                break  
+        
+        if len(alimentos_sugeridos) >= limit:
+            break
+
+    alimentos_sugeridos = list(alimentos_sugeridos)
+    print(alimentos_sugeridos)
+    if alimentos_sugeridos:
+        return [{"nombre": nombre} for nombre in alimentos_sugeridos[:limit]] 
+    else:
+        raise HTTPException(status_code=404, detail="Alimento no encontrado")

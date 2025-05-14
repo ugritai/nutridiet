@@ -1,3 +1,4 @@
+# routers/auth.py
 from fastapi import APIRouter, HTTPException, status, Depends
 from fastapi.responses import JSONResponse
 from database.connection import nutritionist_collection
@@ -81,7 +82,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 @router.get("/me")
 async def get_current_user(token: str = Depends(oauth2_scheme)):
-    # 解码 JWT token
+    # descode JWT token
     payload = decode_jwt_token(token)
     
     if not payload:
@@ -90,7 +91,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
             detail="Token inválido o expirado"
         )
     
-    email = payload.get("sub")  # 提取 email 信息
+    email = payload.get("sub")  # obtener informacion del email
     user = nutritionist_collection.find_one({"email": email})
     
     if not user:
@@ -99,4 +100,4 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
             detail="Usuario no encontrado"
         )
     
-    return {"email": user["email"], "name": user["name"]}  # 返回用户信息
+    return {"email": user["email"], "name": user["name"]}  # return informacion usuario actual

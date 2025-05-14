@@ -1,13 +1,13 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from database.connection import client_host
-from routers import auth, nutritionists, recipes, alimentos, pacientes
+from routers import auth, nutritionists, recipes, pacientes, ingredients
 from dotenv import load_dotenv
 
 load_dotenv()
 app = FastAPI()
 
-# CORS配置
+# CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000"],
@@ -16,11 +16,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 添加路由
 app.include_router(auth.router, prefix="/api/auth")
 app.include_router(nutritionists.router)
 app.include_router(recipes.router, prefix="/recetas")
-app.include_router(alimentos.router, prefix="/alimentos")
+app.include_router(ingredients.router, prefix="/alimentos")
 app.include_router(pacientes.router, prefix="/pacientes")
 
 @app.on_event("shutdown")

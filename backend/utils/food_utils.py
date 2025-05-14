@@ -2,6 +2,20 @@ import re
 from bson import ObjectId
 import unicodedata
 
+import requests
+from typing import Optional
+import re
+
+from dotenv import load_dotenv
+from pathlib import Path
+
+from database.connection import images_collection
+
+load_dotenv()
+IMAGE_DIR = Path("static/image/api")
+IMAGE_DIR.mkdir(parents=True, exist_ok=True)
+
+
 STOP_WORDS = {",", "-", " "}
 
 def remove_stop_words(nombre: str):
@@ -78,4 +92,81 @@ def quitar_tildes(texto):
     texto_sin_tildes = ''.join([c for c in texto_normalizado if not unicodedata.combining(c)])
     return texto_sin_tildes
 
+def sanitize_filename(name: str) -> str:
+    """生成安全的文件名，替换特殊字符为连字符"""
+    return re.sub(r"[^\w\-]", "-", name).lower()
 
+def save_image_to_db(name_esp: str, image_url: str):
+    document = {
+        "name_esp": name_esp,
+        "image_url": image_url,
+    }
+    existing = images_collection.find_one({"name_esp": name_esp})
+    print(f"[MongoDB] nombre encontrado")
+    if not existing:
+        images_collection.insert_one(document)
+        print(f"[MongoDB] Imagen insertada: {name_esp}")
+    else:
+        print(f"[MongoDB] Imagen ya existe: {name_esp}")
+
+def fetch_pixabay_images(keyword: str, api_key: str, retry: bool = False) -> Optional[dict]:
+    """封装Pixabay API请求"""
+    url = "https://pixabay.com/api/"
+    params = {
+        "key": api_key,
+        "q": keyword,
+        "image_type": "photo",
+        "safesearch": "true",
+        "lang": "es",
+        "per_page": 3,
+    }
+
+    try:
+        response = requests.get(url, params=params, timeout=15)
+        response.raise_for_status()
+        data = response.json()
+
+        if data.get("totalHits", 0) > 0 and data.get("hits"):
+            return data
+            
+        if not retry and " " in keyword:  # 如果含空格则尝试第一个单词
+            print(f"No results, retrying with first word: {keyword.split()[0]}")
+            return fetch_pixabay_images(keyword.split()[0], api_key, retry=True)
+            
+        return None
+
+    except requests.exceptions.RequestException as e:
+        print(f"Pixabay API request failed: {str(e)}")
+        return None
+    
+def download_and_save_image(url: str, filename: str) -> bool:
+    """下载并保存图片到本地"""
+    try:
+        response = requests.get(url, timeout=15)
+        response.raise_for_status()
+        
+        save_path = IMAGE_DIR / filename
+        if save_path.exists():
+            print(f"Image already exists locally: {filename}")
+            return True
+            
+        with open(save_path, "wb") as f:
+            f.write(response.content)
+            
+        print(f"Saved image locally: {filename}")
+        return True
+        
+    except (IOError, requests.exceptions.RequestException) as e:
+        print(f"Failed to download/save image: {str(e)}")
+        return False
+
+def extraer_cantidad_y_unidad(texto):
+    texto = convertir_fracciones_a_decimal(texto)
+    texto = texto.lower()
+    patron = r'([\d.]+)\s*(\w+)?'
+    match = re.search(patron, texto)
+    if match:
+        cantidad = float(match.group(1))
+        unidad = match.group(2) if match.group(2) else 'gramos'
+        return cantidad, unidad
+    return 100.0, 'gramos'  # valor por defecto
