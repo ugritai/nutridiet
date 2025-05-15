@@ -3,6 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from database.connection import client_host
 from routers import auth, nutritionists, recipes, pacientes, ingredients
 from dotenv import load_dotenv
+from fastapi.staticfiles import StaticFiles
+from pathlib import Path
 
 load_dotenv()
 app = FastAPI()
@@ -15,6 +17,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+Path("static/images").mkdir(parents=True, exist_ok=True)
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 app.include_router(auth.router, prefix="/api/auth")
 app.include_router(nutritionists.router)

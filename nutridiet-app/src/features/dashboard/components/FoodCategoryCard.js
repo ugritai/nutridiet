@@ -1,16 +1,76 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import {
-  Grid, Typography, CircularProgress, Box, Pagination, Button
+  Grid, Typography, CircularProgress, Box, Pagination, Button, IconButton
 } from '@mui/material';
-import Dashboard from '../Dashboard';
+
 import UniversalCard from '../components/UniversalCard';
 import Search from '../components/Search';
 import FoodSearch from '../components/FoodSearch';
 import FiltrosNutricionales from '../components/FoodFilter';
 
-export default function AlimentosPorCategoriaPage() {
-  const { categoria } = useParams();
+const FiltrosActivos = ({ filters, handleFilterChange }) => {
+  const etiquetas = {
+    salt: 'Sodio',
+    sug: 'Azúcares',
+    total_fat: 'Grasa Total',
+    trans: 'Grasas Trans',
+  };
+
+  const colores = {
+    green: { label: 'Bajo', color: '#66BB6A' },
+    yellow: { label: 'Moderado', color: '#FFEE58' },
+    red: { label: 'Alto', color: '#EF5350' },
+  };
+
+  const getEtiqueta = (key, value) => {
+    const colorInfo = colores[value];
+    if (!colorInfo) return null;
+
+    return (
+      <Box
+        key={key}
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 0.5,
+          px: 1,
+          py: 0.25,
+          bgcolor: colorInfo.color,
+          borderRadius: 2,
+          fontSize: '0.75rem',
+        }}
+      >
+        <Typography variant="caption" fontWeight={500}>
+          {etiquetas[key]}: {colorInfo.label}
+        </Typography>
+        <IconButton
+          size=""
+          onClick={() => handleFilterChange(key, '')}
+          sx={{ p: 0.5, ml: 0.5 }}
+        >
+          <Typography variant="caption" sx={{ lineHeight: 1 }}>
+            ✕
+          </Typography>
+        </IconButton>
+      </Box>
+    );
+  };
+
+  const filtrosActivos = Object.entries(filters).filter(([_, v]) => v);
+
+  if (filtrosActivos.length === 0) return null;
+
+  return (
+    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mt: 2 }}>
+      {filtrosActivos.map(([key, value]) => getEtiqueta(key, value))}
+    </Box>
+  );
+};
+
+
+
+export default function FoodCategoryCard({ categoria }) {
   const [searchParams, setSearchParams] = useSearchParams();
 
   // 📌 Utilidades
@@ -117,7 +177,7 @@ export default function AlimentosPorCategoriaPage() {
   if (loading) return <CircularProgress sx={{ mt: 4 }} />;
 
   return (
-    <Dashboard>
+    <Box>
       <Grid container spacing={2} alignItems="center" sx={{ mb: 2 }} width={'100%'}>
         <Grid item xs={12} md={10} width={'94%'}>
           <Search
@@ -144,6 +204,10 @@ export default function AlimentosPorCategoriaPage() {
         </Grid>
       </Grid>
 
+      <FiltrosActivos
+        filters={filters}
+        handleFilterChange={handleFilterChange}
+      />
 
       {/* 🔠 Filtro por letra */}
       <Box sx={{ mt: 4 }}>
@@ -195,6 +259,7 @@ export default function AlimentosPorCategoriaPage() {
           </Box>
         )}
       </Box>
-    </Dashboard>
+    </Box>
   );
 }
+

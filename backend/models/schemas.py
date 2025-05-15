@@ -1,6 +1,7 @@
-from pydantic import BaseModel, EmailStr, validator, Field
-from typing import List, Optional
+from pydantic import BaseModel, EmailStr, validator
+from typing import Optional
 from datetime import date
+from typing import Optional
 
 class NutritionistBase(BaseModel):
     name: str
@@ -32,6 +33,7 @@ class IngredientCategory(BaseModel):
     image_url: str     
     search_term: str   
     
+
 class Pacient(BaseModel):
     nombre: str
     email: EmailStr
@@ -47,3 +49,25 @@ class Pacient(BaseModel):
     kcal: Optional[float] = None
     pro: Optional[float] = None
     car: Optional[float] = None
+
+    # Relación con el nutricionista
+    nutricionista_id: Optional[str] = None
+    nutricionista_email: Optional[str] = None
+
+class PacientOut(BaseModel):
+    id: str
+    nombre: str
+    email: EmailStr
+    genero: str
+    fechaNacimiento: date
+    altura: float
+    peso: float
+    actividad: int
+    tmb: int
+    kcal: int
+    pro: float
+    car: float
+
+    class Config:
+        orm_mode = True
+        fields = {'id': '_id'}

@@ -76,6 +76,12 @@ function App() {
 
         } />
 
+        <Route path="/paciente/crear_paciente" element={
+          <ProtectedRoute>
+            <PacientesPage />
+          </ProtectedRoute>
+        } />
+
         <Route path="/planificacion_dietas" element={
           <ProtectedRoute>
             <PlanificacionDietasPage />

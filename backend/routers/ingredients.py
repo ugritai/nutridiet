@@ -9,170 +9,22 @@ from pathlib import Path
 from fastapi import Query
 
 
-from utils.food_utils import remove_stop_words, convert_objectid, sanitize_filename, save_image_to_db, fetch_pixabay_images, download_and_save_image
-from dotenv import load_dotenv
+from utils.food_utils import remove_stop_words, convert_objectid, get_pixabay_image_api, actualizar_imagen_alimento
 from sentence_transformers import SentenceTransformer, util
 import numpy as np
 import torch
 
-load_dotenv()
-IMAGE_DIR = Path("static/image/api")
-IMAGE_DIR.mkdir(parents=True, exist_ok=True)
 
 router = APIRouter(tags=["Ingredients"])
 
 alimentos_collection = bedca_collection
 model = SentenceTransformer('sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2')
 
-@router.get("/pixabay_search")
-async def get_pixabay_image_api(search_term: str) -> str:
-    # 验证API Key
-    if not (api_key := os.getenv("PIXABAY_API_KEY")):
-        print(f"Pixabay API key not configured")
-        raise HTTPException(status_code=500, detail="API key missing")
+@router.post("/actualizar_imagen/{name_esp}")
+async def actualizar_imagen_endpoint(name_esp: str):
+    url_actualizada = await actualizar_imagen_alimento(name_esp)
+    return {"message": f"Imagen actualizada para {name_esp}", "image_url": url_actualizada}
 
-    # 处理搜索词
-    clean_search = search_term.strip()
-    if not clean_search:
-        raise HTTPException(status_code=400, detail="Empty search term")
-
-    # 获取API数据
-    api_data = fetch_pixabay_images(clean_search, api_key)
-    if not api_data or not api_data.get("hits"):
-        return ""  # 两次搜索均无结果
-
-    # 处理图片结果
-    first_image_url = api_data["hits"][0]["webformatURL"]
-    
-    # 生成安全文件名
-    base_name = sanitize_filename(clean_search)[:50]  # 限制长度
-    file_name = f"{base_name}.jpg"
-
-    # 保存图片和记录
-    if download_and_save_image(first_image_url, file_name):
-        if save_image_to_db(clean_search, first_image_url):
-            print(f"Successfully processed: {clean_search}")
-        return first_image_url
-
-    return ""  # 所有尝试均失败
-
-@router.get("/pixabay_search")
-async def get_pixabay_image(search_term: str) -> str:
-    api_key = os.getenv("PIXABAY_API_KEY")
-    if not api_key:
-        raise HTTPException(status_code=500, detail="Pixabay API key not found in environment variables.")
-    
-    words = search_term.strip().split()
-    keyword = " ".join(words[:3]) 
-    print(f"[Pixabay] 使用关键词搜索: '{keyword}'")
-
-    # 准备请求
-    url = "https://pixabay.com/api/"
-    params = {
-        "key": api_key,
-        "q": keyword,
-        "image_type": "photo",
-        "safesearch": "true",
-        "lang": "es",
-        "per_page": 3,  
-    }
-
-    try:
-        response = requests.get(url, params=params, timeout=10)
-        response.raise_for_status()
-        data = response.json()
-
-        if data.get("totalHits", 0) == 0 or not data.get("hits"):
-           if data.get("totalHits", 0) == 0 or not data.get("hits"):
-            # No results, retry with the first word of the search term
-            print(f"[Pixabay] No se encontraron imágenes, intentando con la primera palabra: '{words[0]}'")
-            keyword = words[0]  # Use only the first word of the search term
-            params["q"] = keyword
-
-            response = requests.get(url, params=params, timeout=10)
-            response.raise_for_status()
-            data = response.json()
-
-            # If still no results, return empty string
-            if data.get("totalHits", 0) == 0 or not data.get("hits"):
-                return ""  # No images found after retrying
-       
-        # 取第一张图片的 URL（可以根据需要改成列表）
-        first_image_url = data["hits"][0]["webformatURL"]
-        
-        # 本地保存路径
-        safe_name = "-".join(words[:3]).lower()
-        file_name = f"{safe_name}.jpg"
-        save_path = IMAGE_DIR / file_name
-
-        # 如果文件已存在，直接返回
-        if save_path.exists():
-            print(f"[Exist] Imagen guardada: {save_path}")
-            save_image_to_db(search_term, str(first_image_url))
-            return first_image_url
-        # 下载图片并保存
-        img_data = requests.get(first_image_url, timeout=10).content
-        with open(save_path, "wb") as f:
-            f.write(img_data)
-
-        print(f"[Saved] Imagen guardada: {save_path}")
-        
-        # Asegúrate de pasar una URL o el nombre correcto de la imagen
-        save_image_to_db(search_term, str(first_image_url))  # Guardar la ruta como string
-        return first_image_url
-
-    except requests.exceptions.RequestException as e:
-        raise HTTPException(status_code=500, detail=f"Pixabay API request failed: {str(e)}")
-
-@router.get("/unsplash_search")
-async def get_unsplash_image(search_term: str) -> str:
-    access_key = os.getenv("UNSPLASH_ACCESS_KEY")
-    if not access_key:
-        raise HTTPException(status_code=500, detail="Unsplash Access Key not found in environment variables.")
-    
-    words = search_term.strip().split()
-    keyword = " ".join(words[:3])
-    print(f"[Unsplash API] 使用关键词搜索: '{keyword}'")
-
-    url = "https://api.unsplash.com/search/photos"
-    params = {
-        "query": keyword,
-        "per_page": 1,
-        "client_id": access_key,
-    }
-
-    try:
-        response = requests.get(url, params=params, timeout=10)
-        response.raise_for_status()
-        data = response.json()
-
-        if not data.get("results"):
-            raise HTTPException(status_code=404, detail="No images found for the given search term.")
-
-        # URL del primer imagen
-        first_image_url = data["results"][0]["urls"]["regular"]
-        
-        # url local
-        file_name = f"{search_term}.jpg"
-        save_path = IMAGE_DIR / file_name
-
-        #  si ya existe devolver directamente
-        if save_path.exists():
-            print(f"[Exist] Imagen guardada: {save_path}")
-            return first_image_url
-        # descarga la imagen y guardar 
-        img_data = requests.get(first_image_url, timeout=10).content
-        with open(save_path, "wb") as f:
-            f.write(img_data)
-            
-        save_image_to_db(search_term, first_image_url, save_path)
-
-        print(f"[Saved] Imagen guardada: {save_path}")
-        return first_image_url
-        #return {"image_url": f"/static/images/{file_name}"}
-    except requests.exceptions.RequestException as e:
-        raise HTTPException(status_code=500, detail=f"Unsplash API request failed: {str(e)}")
-    
 @router.get("/ingredient_categories")
 async def get_ingredient_categories():
     collections = ['all_ingredients']
@@ -239,7 +91,6 @@ async def get_alimentos_por_categoria(
     resultado.sort(key=lambda x: x["nombre"])
     return {"alimentos": resultado}
 
-
 # Para obetener imagen del alimento por categoría y guardar en base de datos
 @router.get("/por_categoria_imagen/{categoria}")
 async def get_alimentos_por_categoria_imagen(categoria: str):
@@ -248,20 +99,18 @@ async def get_alimentos_por_categoria_imagen(categoria: str):
     alimentos_cursor = alimentos_collection.find()
     resultado = []
 
-    # Recorrer los alimentos de la categoría
     async for item in alimentos_cursor:
         cat = item.get("category_esp", "")
         if unidecode(cat.lower().strip()) == categoria:
-            # Obtener la URL de la imagen del alimento
-            image_url = await get_pixabay_image_api(item["name_esp"])
+            nombre = item.get("name_esp", "")
+            image_url = await get_pixabay_image_api(nombre)
 
-            # Agregar el alimento y la URL de la imagen al resultado
             resultado.append({
-                "name_esp": item["name_esp"],
-                "image_url": image_url  # Se incluye la URL de la imagen
+                "name_esp": nombre,
+                "image_url": image_url
             })
 
-    resultado.sort(key=lambda x: x["name_esp"])  # Ordenar por nombre
+    resultado.sort(key=lambda x: x["name_esp"])
     return {"alimentos": resultado}
 
 @router.get("/sugerir_alimentos/{nombre}")

@@ -4,15 +4,16 @@ import unicodedata
 
 import requests
 from typing import Optional
-import re
+import os
 
 from dotenv import load_dotenv
 from pathlib import Path
 
 from database.connection import images_collection
+from fastapi import HTTPException
 
 load_dotenv()
-IMAGE_DIR = Path("static/image/api")
+IMAGE_DIR = Path("static/images")
 IMAGE_DIR.mkdir(parents=True, exist_ok=True)
 
 
@@ -170,3 +171,187 @@ def extraer_cantidad_y_unidad(texto):
         unidad = match.group(2) if match.group(2) else 'gramos'
         return cantidad, unidad
     return 100.0, 'gramos'  # valor por defecto
+
+async def get_pixabay_image(search_term: str) -> str:
+    api_key = os.getenv("PIXABAY_API_KEY")
+    if not api_key:
+        raise HTTPException(status_code=500, detail="Pixabay API key not found in environment variables.")
+    
+    words = search_term.strip().split()
+    keyword = " ".join(words[:3]) 
+    print(f"[Pixabay] 使用关键词搜索: '{keyword}'")
+
+    # 准备请求
+    url = "https://pixabay.com/api/"
+    params = {
+        "key": api_key,
+        "q": keyword,
+        "image_type": "photo",
+        "safesearch": "true",
+        "lang": "es",
+        "per_page": 3,  
+    }
+
+    try:
+        response = requests.get(url, params=params, timeout=10)
+        response.raise_for_status()
+        data = response.json()
+
+        if data.get("totalHits", 0) == 0 or not data.get("hits"):
+           if data.get("totalHits", 0) == 0 or not data.get("hits"):
+            # No results, retry with the first word of the search term
+            print(f"[Pixabay] No se encontraron imágenes, intentando con la primera palabra: '{words[0]}'")
+            keyword = words[0]  # Use only the first word of the search term
+            params["q"] = keyword
+
+            response = requests.get(url, params=params, timeout=10)
+            response.raise_for_status()
+            data = response.json()
+
+            # If still no results, return empty string
+            if data.get("totalHits", 0) == 0 or not data.get("hits"):
+                return ""  # No images found after retrying
+       
+        # 取第一张图片的 URL（可以根据需要改成列表）
+        first_image_url = data["hits"][0]["webformatURL"]
+        
+        # 本地保存路径
+        safe_name = "-".join(words[:3]).lower()
+        file_name = f"{safe_name}.jpg"
+        save_path = IMAGE_DIR / file_name
+
+        # 如果文件已存在，直接返回
+        if save_path.exists():
+            print(f"[Exist] Imagen guardada: {save_path}")
+            save_image_to_db(search_term, str(first_image_url))
+            return first_image_url
+        # 下载图片并保存
+        img_data = requests.get(first_image_url, timeout=10).content
+        with open(save_path, "wb") as f:
+            f.write(img_data)
+
+        print(f"[Saved] Imagen guardada: {save_path}")
+        
+        # Asegúrate de pasar una URL o el nombre correcto de la imagen
+        save_image_to_db(search_term, str(first_image_url))  # Guardar la ruta como string
+        return first_image_url
+
+    except requests.exceptions.RequestException as e:
+        raise HTTPException(status_code=500, detail=f"Pixabay API request failed: {str(e)}")
+
+async def get_unsplash_image(search_term: str) -> str:
+    access_key = os.getenv("UNSPLASH_ACCESS_KEY")
+    if not access_key:
+        raise HTTPException(status_code=500, detail="Unsplash Access Key not found in environment variables.")
+    
+    words = search_term.strip().split()
+    keyword = " ".join(words[:3])
+    print(f"[Unsplash API] 使用关键词搜索: '{keyword}'")
+
+    url = "https://api.unsplash.com/search/photos"
+    params = {
+        "query": keyword,
+        "per_page": 1,
+        "client_id": access_key,
+    }
+
+    try:
+        response = requests.get(url, params=params, timeout=10)
+        response.raise_for_status()
+        data = response.json()
+
+        if not data.get("results"):
+            raise HTTPException(status_code=404, detail="No images found for the given search term.")
+
+        # URL del primer imagen
+        first_image_url = data["results"][0]["urls"]["regular"]
+        
+        # url local
+        file_name = f"{search_term}.jpg"
+        save_path = IMAGE_DIR / file_name
+
+        #  si ya existe devolver directamente
+        if save_path.exists():
+            print(f"[Exist] Imagen guardada: {save_path}")
+            return first_image_url
+        # descarga la imagen y guardar 
+        img_data = requests.get(first_image_url, timeout=10).content
+        with open(save_path, "wb") as f:
+            f.write(img_data)
+            
+        save_image_to_db(search_term, first_image_url, save_path)
+
+        print(f"[Saved] Imagen guardada: {save_path}")
+        return first_image_url
+        #return {"image_url": f"/static/images/{file_name}"}
+    except requests.exceptions.RequestException as e:
+        raise HTTPException(status_code=500, detail=f"Unsplash API request failed: {str(e)}")
+
+async def get_pixabay_image_api(name_esp: str) -> str:
+    # Primero revisar si ya está en la BD
+    existing = images_collection.find_one({"name_esp": name_esp})
+    if existing:
+        print(f"[Pixabay] Imagen encontrada en BD: {name_esp}")
+        return existing["image_url"]
+
+    # Si no está, buscar en Pixabay
+    api_key = os.getenv("PIXABAY_API_KEY")
+    if not api_key:
+        print("❌ API key de Pixabay no configurada")
+        return ""
+
+    data = fetch_pixabay_images(name_esp, api_key)
+    if not data or not data.get("hits"):
+        print(f"⚠️ No se encontró imagen para: {name_esp}")
+        return ""
+
+    image_url = data["hits"][0]["webformatURL"]
+
+    # (Opcional) Guardar imagen localmente
+    filename = sanitize_filename(name_esp) + ".jpg"
+    if download_and_save_image(image_url, filename):
+        print(f"[Pixabay] Imagen descargada: {filename}")
+
+    # Guardar en MongoDB
+    local_url = f"http://localhost:8000/static/images/{filename}"
+    save_image_to_db(name_esp, local_url)
+
+    return image_url
+
+async def actualizar_imagen_alimento(name_esp: str) -> str:
+    api_key = os.getenv("PIXABAY_API_KEY")
+    if not api_key:
+        raise HTTPException(status_code=500, detail="API key de Pixabay no configurada")
+
+    print(f"[Actualizar] Buscando nueva imagen para: {name_esp}")
+    data = fetch_pixabay_images(name_esp, api_key)
+    if not data or not data.get("hits"):
+        raise HTTPException(status_code=404, detail=f"No se encontró imagen para: {name_esp}")
+
+    nueva_url = data["hits"][0]["webformatURL"]
+    filename = sanitize_filename(name_esp) + ".jpg"
+
+    # Descargar y reemplazar la imagen local
+    if not download_and_save_image(nueva_url, filename):
+        raise HTTPException(status_code=500, detail="Error descargando la imagen")
+
+    # Construir la URL local permanente (ajusta el host si es necesario)
+    local_url = f"http://localhost:8000/static/images/{filename}"
+
+    # Actualizar la base de datos
+    result = images_collection.update_one(
+        {"name_esp": name_esp},
+        {"$set": {"image_url": local_url}}
+    )
+
+    if result.matched_count == 0:
+        # Si no existe, inserta nuevo documento
+        images_collection.insert_one({
+            "name_esp": name_esp,
+            "image_url": local_url
+        })
+        print(f"[Actualizar] Documento insertado para: {name_esp}")
+    else:
+        print(f"[Actualizar] Documento actualizado para: {name_esp}")
+
+    return local_url

@@ -21,6 +21,7 @@ export default function MenuContent() {
   const mainListItems = [
     { text: 'Inicio', icon: <HomeRoundedIcon />, path: '/inicio' },
     { text: 'Pacientes', icon: <PeopleRoundedIcon />, path: '/pacientes' },
+    { text: 'Búsqueda de Alimentos', icon: <SearchIcon />, path: '/alimentos' },
     { text: 'Búsqueda de Recetas', icon: <SearchIcon />, path: '/recetas' },
     { text: 'Crear Dieta', icon: <DateRangeIcon />, path: '/planificacion_dietas' }
   ];
