@@ -23,7 +23,7 @@ export default function MenuContent() {
     { text: 'Pacientes', icon: <PeopleRoundedIcon />, path: '/pacientes' },
     { text: 'Búsqueda de Alimentos', icon: <SearchIcon />, path: '/alimentos' },
     { text: 'Búsqueda de Recetas', icon: <SearchIcon />, path: '/recetas' },
-    { text: 'Crear Dieta', icon: <DateRangeIcon />, path: '/planificacion_dietas' }
+    { text: 'Crear Dieta', icon: <DateRangeIcon />, path: '/planificacion_dieta' }
   ];
 
   const secondaryListItems = [

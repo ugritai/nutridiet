@@ -15,6 +15,8 @@ export default function PacienteCard({ paciente }) {
 
   const handleExpandClick = () => setExpanded(!expanded);
 
+  console.log('Data received:', paciente);
+
   if (!paciente) return null;
 
   return (
@@ -22,7 +24,7 @@ export default function PacienteCard({ paciente }) {
       <CardContent>
         <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
           <Typography variant="h6" component="div">
-            {paciente.nombre}
+            {paciente.name}
           </Typography>
           <IconButton
             onClick={handleExpandClick}
@@ -44,7 +46,7 @@ export default function PacienteCard({ paciente }) {
             Email: {paciente.email}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Género: {paciente.genero}
+            Género: {paciente.gender}
           </Typography>
         </Stack>
 
@@ -52,28 +54,28 @@ export default function PacienteCard({ paciente }) {
           <Divider sx={{ my: 1 }} />
           <Stack spacing={0.7}>
             <Typography variant="body2" color="text.secondary">
-              Fecha de nacimiento: {new Date(paciente.fechaNacimiento).toLocaleDateString()}
+              Fecha de nacimiento: {new Date(paciente.bornDate).toLocaleDateString()}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Altura: {paciente.altura} cm
+              Altura: {paciente.height} cm
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Peso: {paciente.peso} kg
+              Peso: {paciente.weight} kg
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Nivel de actividad: {paciente.actividad}
+              Nivel de actividad: {paciente.activityLevel}
             </Typography>
             <Typography variant="body2" color="text.secondary">
               TMB: {paciente.tmb} kcal
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Requerimiento kcal: {paciente.kcal} kcal
+              Requerimiento kcal: {paciente.restrictionsKcal} kcal
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Proteínas: {paciente.pro} g
+              Proteínas: {paciente.dailyProIntake} g
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Carbohidratos: {paciente.car} g
+              Carbohidratos: {paciente.dailyCaloricIntake} g
             </Typography>
           </Stack>
         </Collapse>

@@ -47,14 +47,14 @@ const SignUpContainer = styled(Stack)(({ theme }) => ({
 
 export default function CrearPacienteForm({ open, onClose, onPacienteCreado }) {
     const [formValues, setFormValues] = React.useState({
-        nombre: '',
+        name: '',
         email: '',
         password: '',
-        genero: '',
-        fechaNacimiento: '',
-        altura: '',
-        peso: '',
-        actividad: '',
+        gender: '',
+        bornDate: '',
+        height: '',
+        weight: '',
+        activityLevel: '',
     });
 
     const [formErrors, setFormErrors] = React.useState({});
@@ -72,18 +72,18 @@ export default function CrearPacienteForm({ open, onClose, onPacienteCreado }) {
 
     const validate = () => {
         const errors = {};
-        if (!formValues.nombre) errors.nombre = 'El nombre es obligatorio.';
+        if (!formValues.name) errors.name = 'El nombre es obligatorio.';
         if (!formValues.email || !/\S+@\S+\.\S+/.test(formValues.email))
             errors.email = 'Ingrese un correo válido.';
         if (!formValues.password || formValues.password.length < 6)
             errors.password = 'La contraseña debe tener al menos 6 caracteres.';
-        if (!formValues.genero) errors.genero = 'Seleccione un género.';
-        if (!formValues.fechaNacimiento) errors.fechaNacimiento = 'Seleccione la fecha de nacimiento.';
-        if (!formValues.altura || formValues.altura <= 0)
-            errors.altura = 'Ingrese una altura válida.';
-        if (!formValues.peso || formValues.peso <= 0)
-            errors.peso = 'Ingrese un peso válido.';
-        if (!formValues.actividad) errors.actividad = 'Seleccione un nivel de actividad.';
+        if (!formValues.gender) errors.gender = 'Seleccione un género.';
+        if (!formValues.bornDate) errors.bornDate = 'Seleccione la fecha de nacimiento.';
+        if (!formValues.height || formValues.height <= 0)
+            errors.height = 'Ingrese una altura válida.';
+        if (!formValues.weight || formValues.weight <= 0)
+            errors.weight = 'Ingrese un peso válido.';
+        if (!formValues.activityLevel) errors.activityLevel = 'Seleccione un nivel de actividad.';
 
         setFormErrors(errors);
         return Object.keys(errors).length === 0;
@@ -92,19 +92,19 @@ export default function CrearPacienteForm({ open, onClose, onPacienteCreado }) {
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!validate()) return;
-    
+
         try {
-            const token = localStorage.getItem('refreshToken');  // Ajusta esto según donde guardes el token
-    
+            const token = localStorage.getItem('refreshToken');
+
             const response = await fetch('http://localhost:8000/pacientes/crear_paciente/', {
                 method: 'POST',
-                headers: { 
+                headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`  // <-- Aquí envías el token JWT
+                    'Authorization': `Bearer ${token}`,
                 },
                 body: JSON.stringify(formValues),
             });
-    
+
             if (response.ok) {
                 const paciente = await response.json();
                 onPacienteCreado?.(paciente);
@@ -118,34 +118,31 @@ export default function CrearPacienteForm({ open, onClose, onPacienteCreado }) {
             alert('No se pudo conectar al servidor');
         }
     };
-    
+
     return (
         <Modal open={open} onClose={onClose}>
             <AppTheme>
                 <CssBaseline enableColorScheme />
                 <ColorModeSelect sx={{ position: 'fixed', top: '1rem', right: '1rem' }} />
                 <SignUpContainer direction="column" justifyContent="center">
-                    <Card
-                        variant="outlined"
-                        sx={{
-                            maxHeight: '90dvh',
-                            overflowY: 'auto',
-                        }}
-                    >
-
+                    <Card variant="outlined" sx={{ maxHeight: '90dvh', overflowY: 'auto' }}>
                         <Typography component="h1" variant="h5">
                             Crear paciente
                         </Typography>
-                        <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        <Box
+                            component="form"
+                            onSubmit={handleSubmit}
+                            sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}
+                        >
                             <FormControl>
                                 <FormLabel>Nombre completo</FormLabel>
                                 <TextField
-                                    name="nombre"
+                                    name="name"
                                     placeholder="Ej. María Gómez"
-                                    value={formValues.nombre}
-                                    onChange={handleChange('nombre')}
-                                    error={!!formErrors.nombre}
-                                    helperText={formErrors.nombre}
+                                    value={formValues.name}
+                                    onChange={handleChange('name')}
+                                    error={!!formErrors.name}
+                                    helperText={formErrors.name}
                                 />
                             </FormControl>
                             <FormControl>
@@ -176,11 +173,11 @@ export default function CrearPacienteForm({ open, onClose, onPacienteCreado }) {
                                 <FormLabel>Género</FormLabel>
                                 <TextField
                                     select
-                                    name="genero"
-                                    value={formValues.genero}
-                                    onChange={handleChange('genero')}
-                                    error={!!formErrors.genero}
-                                    helperText={formErrors.genero}
+                                    name="gender"
+                                    value={formValues.gender}
+                                    onChange={handleChange('gender')}
+                                    error={!!formErrors.gender}
+                                    helperText={formErrors.gender}
                                 >
                                     <MenuItem value="male">Masculino</MenuItem>
                                     <MenuItem value="female">Femenino</MenuItem>
@@ -190,11 +187,11 @@ export default function CrearPacienteForm({ open, onClose, onPacienteCreado }) {
                                 <FormLabel>Fecha de nacimiento</FormLabel>
                                 <TextField
                                     type="date"
-                                    name="fechaNacimiento"
-                                    value={formValues.fechaNacimiento}
-                                    onChange={handleChange('fechaNacimiento')}
-                                    error={!!formErrors.fechaNacimiento}
-                                    helperText={formErrors.fechaNacimiento}
+                                    name="bornDate"
+                                    value={formValues.bornDate}
+                                    onChange={handleChange('bornDate')}
+                                    error={!!formErrors.bornDate}
+                                    helperText={formErrors.bornDate}
                                     InputLabelProps={{ shrink: true }}
                                 />
                             </FormControl>
@@ -202,33 +199,33 @@ export default function CrearPacienteForm({ open, onClose, onPacienteCreado }) {
                                 <FormLabel>Altura (cm)</FormLabel>
                                 <TextField
                                     type="number"
-                                    name="altura"
-                                    value={formValues.altura}
-                                    onChange={handleChange('altura')}
-                                    error={!!formErrors.altura}
-                                    helperText={formErrors.altura}
+                                    name="height"
+                                    value={formValues.height}
+                                    onChange={handleChange('height')}
+                                    error={!!formErrors.height}
+                                    helperText={formErrors.height}
                                 />
                             </FormControl>
                             <FormControl>
                                 <FormLabel>Peso (kg)</FormLabel>
                                 <TextField
                                     type="number"
-                                    name="peso"
-                                    value={formValues.peso}
-                                    onChange={handleChange('peso')}
-                                    error={!!formErrors.peso}
-                                    helperText={formErrors.peso}
+                                    name="weight"
+                                    value={formValues.weight}
+                                    onChange={handleChange('weight')}
+                                    error={!!formErrors.weight}
+                                    helperText={formErrors.weight}
                                 />
                             </FormControl>
                             <FormControl>
                                 <FormLabel>Actividad física</FormLabel>
                                 <TextField
                                     select
-                                    name="actividad"
-                                    value={formValues.actividad}
-                                    onChange={handleChange('actividad')}
-                                    error={!!formErrors.actividad}
-                                    helperText={formErrors.actividad}
+                                    name="activityLevel"
+                                    value={formValues.activityLevel}
+                                    onChange={handleChange('activityLevel')}
+                                    error={!!formErrors.activityLevel}
+                                    helperText={formErrors.activityLevel}
                                 >
                                     <MenuItem value={1}>Sedentario</MenuItem>
                                     <MenuItem value={2}>Ligero</MenuItem>

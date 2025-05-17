@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-export default function FoodSearch({ type = 'alimentos' }) {
+export default function FoodSearch({ type = 'alimentos', onSelect }) {
   const [query, setQuery] = useState('');
   const [suggestions, setSuggestions] = useState([]);
   const navigate = useNavigate();
@@ -16,8 +16,14 @@ export default function FoodSearch({ type = 'alimentos' }) {
   };
 
   const handleSelectSuggestion = (value) => {
+    if (onSelect) {
+      // Llama a onSelect si está definido
+      onSelect(value);
+      return;
+    } 
     setSuggestions([]);
     setQuery('');
+
     const detallePath = type === 'recetas'
       ? `/recetas/detalle_receta/${encodeURIComponent(value)}`
       : `/alimentos/detalle_alimento/${encodeURIComponent(value)}`;
@@ -61,6 +67,7 @@ export default function FoodSearch({ type = 'alimentos' }) {
     setQuery,
     suggestions,
     handleSearch,
+    setSuggestions,  
     handleSelectSuggestion,
     handleSuggestions
   };

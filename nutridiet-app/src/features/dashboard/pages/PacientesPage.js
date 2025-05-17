@@ -30,10 +30,19 @@ export default function PacientesPage() {
     const fetchPacientes = async () => {
       try {
         setLoading(true);
-        const token = localStorage.getItem('refreshToken');
-        const res = await fetch('http://localhost:8000/pacientes/mis_pacientes', {
+
+        // Asegúrate de usar el token correcto (generalmente el accessToken)
+        const token = localStorage.getItem('accessToken') || localStorage.getItem('refreshToken');
+
+        if (!token) {
+          throw new Error('No token disponible');
+        }
+
+        const res = await fetch('http://localhost:8000/pacientes/mis_pacientes/', {
+          method: "GET",
           headers: {
-            Authorization: `Bearer ${token}`,
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
           },
         });
         if (!res.ok) throw new Error('Error al cargar pacientes');

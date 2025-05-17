@@ -1,5 +1,5 @@
-from pydantic import BaseModel, EmailStr, validator
-from typing import Optional
+from pydantic import BaseModel, EmailStr, validator, Field
+from typing import Optional, List
 from datetime import date
 from typing import Optional
 
@@ -35,20 +35,20 @@ class IngredientCategory(BaseModel):
     
 
 class Pacient(BaseModel):
-    nombre: str
+    name: str
     email: EmailStr
     password: str
-    genero: str
-    fechaNacimiento: date
-    altura: float
-    peso: float
-    actividad: int
+    gender: str
+    bornDate: date
+    height: float
+    weight: float
+    activityLevel: int
 
     # Campos calculados
     tmb: Optional[float] = None
-    kcal: Optional[float] = None
-    pro: Optional[float] = None
-    car: Optional[float] = None
+    restrictionsKcal: Optional[float] = None
+    dailyProIntake: Optional[float] = None
+    dailyCaloricIntake: Optional[float] = None
 
     # Relación con el nutricionista
     nutricionista_id: Optional[str] = None
@@ -56,18 +56,57 @@ class Pacient(BaseModel):
 
 class PacientOut(BaseModel):
     id: str
-    nombre: str
+    name: str
     email: EmailStr
-    genero: str
-    fechaNacimiento: date
-    altura: float
-    peso: float
-    actividad: int
+    gender: str
+    bornDate: date
+    height: float
+    weight: float
+    activityLevel: int
     tmb: int
-    kcal: int
-    pro: float
-    car: float
+    restrictionsKcal: float
+    dailyProIntake: float
+    dailyCaloricIntake: float
 
     class Config:
         orm_mode = True
-        fields = {'id': '_id'}
+
+class PatientInfo(BaseModel):
+    id: str
+    name: str
+
+class Diet(BaseModel):
+    id: Optional[str]
+    name: str
+    start_date: date
+    end_date: date
+    caloric_intake: float
+    
+    pacients: Optional[List[PatientInfo]] = []
+    
+
+tipos_ingesta = ['Desayuno', 'Media mañana', 'Almuerzo', 'Merienda', 'Cena', 'Snack']
+subtipos = ['entrante', 'primer_plato', 'segundo_plato', 'postre', 'bebida']
+
+class Receta(BaseModel):
+    name: str
+    kcal: Optional[float]
+    pro: Optional[float]
+    car: Optional[float]
+
+class IntakePorTipo(BaseModel):
+    entrante: Optional[List[Receta]] = []
+    primer_plato: Optional[List[Receta]] = []
+    segundo_plato: Optional[List[Receta]] = []
+    postre: Optional[List[Receta]] = []
+    bebida: Optional[List[Receta]] = []
+
+    @validator('*', pre=True, always=True)
+    def ensure_list(cls, v):
+        return v or []
+
+class IntakeCreate(BaseModel):
+    intake_type: str 
+    recipes: IntakePorTipo
+    nutricionista_email: Optional[str] = None
+    paciente: Optional[str] = None

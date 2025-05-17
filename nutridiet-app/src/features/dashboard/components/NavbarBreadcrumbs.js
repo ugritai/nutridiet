@@ -24,8 +24,10 @@ const pathNameMap = {
   'recetas': 'Recetas',
   'busqueda-recetas': 'Búsqueda de Recetas',
   'pacientes': 'Pacientes',
-  'planificacion_dietas': 'Planificación de dieta',
+  'planificacion_dieta': 'Planificación de dieta',
   'categorias': 'Categorías',
+  'crear_ingesta': 'Crear ingesta',
+  'crear_dieta': 'Crear dieta'
 };
 
 export default function NavbarBreadcrumbs() {

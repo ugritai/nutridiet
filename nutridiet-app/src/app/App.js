@@ -3,7 +3,7 @@ import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import SignInSide from "../features/auth/SignInSide";
 import SignUp from "../features/auth/SignUp";
-import InicioPage from "../features/dashboard/pages/InicioPage"
+import InicioPage from "../features/dashboard/pages/InicioPage";
 import ProtectedRoute from '../features/auth/ProtectedRoute';
 import Alimentos from '../features/dashboard/pages/AlimentosPage';
 import DetalleAlimentoPage from '../features/dashboard/pages/DetalleAlimentoPage';
@@ -11,9 +11,11 @@ import AlimentosPorCategoriaPage from '../features/dashboard/pages/AlimentosPorC
 import Recetas from '../features/dashboard/pages/RecetasPage';
 import DetalleRecetasPage from '../features/dashboard/pages/DetalleRecetasPage';
 import RecetasPorCategoriaPage from '../features/dashboard/pages/RecetasPorCategoriaPage';
-import PacientesPage from '../features/dashboard/pages/PacientesPage'
-import PlanificacionDietasPage from '../features/dashboard/pages/PlanificacionDietasPage'
-
+import PacientesPage from '../features/dashboard/pages/PacientesPage';
+import PlanificacionDietaPage from '../features/dashboard/pages/PlanificacionDietaPage';
+import SeleccionPacientePage from '../features/dashboard/components/dietas/SeleccionPacientePage';
+import CrearIngestaForm from '../features/dashboard/components/dietas/CrearIngestaForm';
+import CrearDietaForm from '../features/dashboard/components/dietas/CrearDietaForm';
 
 function App() {
   return (
@@ -82,11 +84,35 @@ function App() {
           </ProtectedRoute>
         } />
 
-        <Route path="/planificacion_dietas" element={
+        <Route path="/planificacion_dieta" element={
           <ProtectedRoute>
-            <PlanificacionDietasPage />
+            <PlanificacionDietaPage />
           </ProtectedRoute>
 
+        } />
+
+        <Route path="/planificacion_dieta/crear_dieta" element={
+          <ProtectedRoute>
+            <SeleccionPacientePage tipo="dieta" />
+          </ProtectedRoute>
+        } />
+
+        <Route path="/planificacion_dieta/crear_ingesta" element={
+          <ProtectedRoute>
+            <SeleccionPacientePage tipo="ingesta" />
+          </ProtectedRoute>
+        } />
+
+        <Route path="/planificacion_dieta/crear_ingesta/:pacienteN" element={
+          <ProtectedRoute>
+            < CrearIngestaForm />
+          </ProtectedRoute>
+        } />
+
+        <Route path="/planificacion_dieta/crear_dieta/:pacienteN" element={
+          <ProtectedRoute>
+            <CrearDietaForm />
+          </ProtectedRoute>
         } />
 
       </Routes>

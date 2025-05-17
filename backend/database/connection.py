@@ -9,6 +9,7 @@ ingredient_categories_collection = db_host['ingredient_categories']
 pacient_collection = db_host['pacient']
 embeddings_collection = db_host['bedca_embeddings']
 images_collection = db_host['ingredient_image']
+intake_collection = db_host['intake']
 
 recipe_host = AsyncIOMotorClient('mongodb://localhost:27018')
 recipe_db_host = recipe_host['nutridiet']
