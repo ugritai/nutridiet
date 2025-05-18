@@ -3,6 +3,8 @@ from models.schemas import IntakeCreate
 from database.connection import intake_collection, nutritionist_collection, pacient_collection
 from fastapi.security import OAuth2PasswordBearer 
 from .security import decode_jwt_token
+from typing import List
+
 
 router = APIRouter(tags=["Intakes"])
 
@@ -42,3 +44,19 @@ async def crear_ingesta(
     result = intake_collection.insert_one(nuevo_documento)
 
     return {"mensaje": "Ingesta creada correctamente", "id": str(result.inserted_id)}
+
+@router.get("/ingestas/{pacienteN}", response_model=List[dict])
+async def obtener_ingestas_paciente(
+    pacienteN: str = Path(..., description="Nombre del paciente"),
+    #token: str = Depends(oauth2_scheme)
+):
+    #payload = decode_jwt_token(token)
+    #if not payload:
+    #    raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token inválido o expirado")
+
+    ingestas = list(intake_collection.find({"paciente": pacienteN}))
+
+    for ingesta in ingestas:
+        ingesta["_id"] = str(ingesta["_id"])  # Convertir ObjectId a string para JSON serializable
+
+    return ingestas

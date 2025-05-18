@@ -9,12 +9,14 @@ import Dashboard from '../../Dashboard';
 import Search from '../../components/Search';
 import FoodSearch from '../../components/FoodSearch';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
+import { useNavigate } from 'react-router-dom';
 
 const subtipos = ['entrante', 'primer_plato', 'segundo_plato', 'postre', 'bebida'];
 const tiposIngesta = ['Desayuno', 'Media mañana', 'Almuerzo', 'Merienda', 'Cena', 'Snack'];
 
 export default function CrearIngestaForm() {
     const { pacienteN } = useParams();
+    const navigate = useNavigate();
     const [formData, setFormData] = useState({ tipo: '' });
     const [enviando, setEnviando] = useState(false);
     const [error, setError] = useState(null);
@@ -39,7 +41,6 @@ export default function CrearIngestaForm() {
         const fetchInfoPaciente = async () => {
             try {
                 const res = await fetch(`http://localhost:8000/pacientes/paciente_info/${pacienteN}`);
-                console.log('Data received:', pacienteN);
                 if (!res.ok) throw new Error('No se pudo obtener la información del paciente');
                 const data = await res.json();
                 setNutricion(data);
@@ -204,7 +205,7 @@ export default function CrearIngestaForm() {
                 intake_type: formData.tipo,
                 recipes: normalizeRecipes(recetasPorTipo)
             };
-            const res = await fetch(`http://localhost:8000/planificacion_dietas/crear_ingesta/${pacienteN}`, {
+            const res = await fetch(`http://localhost:8000/planificacion_ingestas/crear_ingesta/${pacienteN}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -412,10 +413,17 @@ export default function CrearIngestaForm() {
                         </Box>
                     </DragDropContext>
 
-                    <Box sx={{ mt: 3 }}>
+                    <Box sx={{ mt: 3 , display: 'flex', gap: 5  }}>
+                        <Button
+                            variant="outlined"
+                            onClick={() => navigate('/planificacion_dieta/crear_ingesta')}
+                        >
+                            Atrás
+                        </Button>
                         <Button type="submit" variant="contained" color="primary" disabled={enviando}>
                             {enviando ? <CircularProgress size={24} /> : 'Crear Ingesta'}
                         </Button>
+                        
                     </Box>
                 </form>
             </Card>

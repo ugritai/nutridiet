@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from database.connection import client_host
-from routers import auth, nutritionists, recipes, pacientes, ingredients, intake
+from routers import auth, nutritionists, recipes, pacientes, ingredients, intakes,diets
 from dotenv import load_dotenv
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
@@ -27,7 +27,8 @@ app.include_router(nutritionists.router)
 app.include_router(recipes.router, prefix="/recetas")
 app.include_router(ingredients.router, prefix="/alimentos")
 app.include_router(pacientes.router, prefix="/pacientes")
-app.include_router(intake.router, prefix="/planificacion_dietas" )
+app.include_router(intakes.router, prefix="/planificacion_ingestas")
+app.include_router(diets.router, prefix="/planificacion_dietas")
 
 @app.on_event("shutdown")
 async def shutdown_db_client():

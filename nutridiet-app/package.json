@@ -3,17 +3,17 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@emotion/react": "latest",
-    "@emotion/styled": "latest",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
     "@hello-pangea/dnd": "^18.0.1",
     "@mui/base": "latest",
-    "@mui/icons-material": "latest",
-    "@mui/material": "latest",
+    "@mui/icons-material": "^7.1.0",
+    "@mui/material": "^7.1.0",
     "@mui/x-charts": "latest",
     "@mui/x-data-grid": "latest",
-    "@mui/x-date-pickers": "latest",
+    "@mui/x-date-pickers": "^8.3.1",
     "@mui/x-tree-view": "latest",
-    "dayjs": "latest",
+    "dayjs": "^1.11.13",
     "decode": "^0.3.0",
     "jwt-decode": "^4.0.0",
     "react": "latest",
@@ -43,6 +43,8 @@
   },
   "devDependencies": {
     "eslint": "^9.23.0",
-    "eslint-plugin-import": "^2.31.0"
+    "eslint-plugin-import": "^2.31.0",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^5.2.0"
   }
 }

@@ -109,6 +109,7 @@ export default function CrearPacienteForm({ open, onClose, onPacienteCreado }) {
                 const paciente = await response.json();
                 onPacienteCreado?.(paciente);
                 onClose();
+                window.location.reload();
             } else {
                 const error = await response.json();
                 alert(error.detail || 'Error al crear paciente');

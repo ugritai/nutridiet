@@ -72,10 +72,9 @@ export default function PacienteCard({ paciente }) {
               Requerimiento kcal: {paciente.restrictionsKcal} kcal
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Proteínas: {paciente.dailyProIntake} g
-            </Typography>
+              Proteínas: {Number(paciente.dailyProIntake).toFixed(2)} g            </Typography>
             <Typography variant="body2" color="text.secondary">
-              Carbohidratos: {paciente.dailyCaloricIntake} g
+              Carbohidratos: {paciente.dailyCalIntake} g
             </Typography>
           </Stack>
         </Collapse>

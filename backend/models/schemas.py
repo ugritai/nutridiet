@@ -48,7 +48,7 @@ class Pacient(BaseModel):
     tmb: Optional[float] = None
     restrictionsKcal: Optional[float] = None
     dailyProIntake: Optional[float] = None
-    dailyCaloricIntake: Optional[float] = None
+    dailyCalIntake: Optional[float] = None
 
     # Relación con el nutricionista
     nutricionista_id: Optional[str] = None
@@ -66,7 +66,7 @@ class PacientOut(BaseModel):
     tmb: int
     restrictionsKcal: float
     dailyProIntake: float
-    dailyCaloricIntake: float
+    dailyCalIntake: float
 
     class Config:
         orm_mode = True
@@ -74,20 +74,7 @@ class PacientOut(BaseModel):
 class PatientInfo(BaseModel):
     id: str
     name: str
-
-class Diet(BaseModel):
-    id: Optional[str]
-    name: str
-    start_date: date
-    end_date: date
-    caloric_intake: float
-    
-    pacients: Optional[List[PatientInfo]] = []
-    
-
-tipos_ingesta = ['Desayuno', 'Media mañana', 'Almuerzo', 'Merienda', 'Cena', 'Snack']
-subtipos = ['entrante', 'primer_plato', 'segundo_plato', 'postre', 'bebida']
-
+  
 class Receta(BaseModel):
     name: str
     kcal: Optional[float]
@@ -110,3 +97,18 @@ class IntakeCreate(BaseModel):
     recipes: IntakePorTipo
     nutricionista_email: Optional[str] = None
     paciente: Optional[str] = None
+    
+class IntakeInfo(BaseModel):
+    intake_id: str
+    
+class DiaDieta(BaseModel):
+    fecha: date
+    ingestas: List[IntakeInfo]
+
+class DietaCreate(BaseModel):
+    paciente: str
+    name: str
+    start_date: date
+    end_date: date
+    dias: List[DiaDieta]
+    nutricionista_email: Optional[str] = None

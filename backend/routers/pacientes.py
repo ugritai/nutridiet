@@ -35,7 +35,7 @@ async def crear_paciente(pacient: Pacient, token: str = Depends(oauth2_scheme)):
     pacient.tmb = int(calcular_tmb(pacient.gender, pacient.weight, pacient.height, pacient.bornDate))
     pacient.restrictionsKcal = int(calcular_kcal(pacient.tmb, pacient.activityLevel))
     pacient.dailyProIntake = calcular_pro(pacient.gender, pacient.weight, pacient.activityLevel)
-    pacient.dailyCaloricIntake = calcular_car(pacient.gender, pacient.weight, pacient.activityLevel)
+    pacient.dailyCalIntake = calcular_car(pacient.gender, pacient.weight, pacient.activityLevel)
 
     paciente_dict = pacient.dict()
     paciente_dict["bornDate"] = pacient.bornDate.isoformat()
@@ -46,7 +46,7 @@ async def crear_paciente(pacient: Pacient, token: str = Depends(oauth2_scheme)):
     paciente_dict["tmb"] = pacient.tmb
     paciente_dict["restrictionsKcal"] = pacient.restrictionsKcal
     paciente_dict["dailyProIntake"] = pacient.dailyProIntake
-    paciente_dict["dailyCaloricIntake"] = pacient.dailyCaloricIntake
+    paciente_dict["dailyCalIntake"] = pacient.dailyCalIntake
 
     result = pacient_collection.insert_one(paciente_dict)
 
@@ -95,5 +95,5 @@ async def obtener_info_paciente(name: str):
         "name": paciente["name"],
         "kcal": paciente.get("restrictionsKcal"),
         "pro": paciente.get("dailyProIntake"),
-        "car": paciente.get("dailyCaloricIntake")
+        "car": paciente.get("dailyCalIntake")
     }
