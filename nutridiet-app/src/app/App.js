@@ -16,6 +16,7 @@ import PlanificacionDietaPage from '../features/dashboard/pages/PlanificacionDie
 import SeleccionPacientePage from '../features/dashboard/components/dietas/SeleccionPacientePage';
 import CrearIngestaForm from '../features/dashboard/components/dietas/CrearIngestaForm';
 import CrearDietaForm from '../features/dashboard/components/dietas/CrearDietaForm';
+import PerfilPage from '../features/dashboard/pages/PerfilPage';
 
 function App() {
   return (
@@ -112,6 +113,12 @@ function App() {
         <Route path="/planificacion_dieta/crear_dieta/:pacienteN" element={
           <ProtectedRoute>
             <CrearDietaForm />
+          </ProtectedRoute>
+        } />
+
+        <Route path="/mi_cuenta" element={
+          <ProtectedRoute>
+            <PerfilPage />
           </ProtectedRoute>
         } />
 

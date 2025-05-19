@@ -24,6 +24,13 @@ class NutritionistResponse(NutritionistBase):
     class Config:
         from_attributes = True
 
+class NutricionistaUpdate(BaseModel):
+    name: str
+    phone: str
+    language: str
+    old_password: Optional[str] = Field(None, alias="old_password")
+    new_password: Optional[str] = Field(None, alias="new_password")
+
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str

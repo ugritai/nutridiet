@@ -27,7 +27,8 @@ const pathNameMap = {
   'planificacion_dieta': 'Planificación de dieta',
   'categorias': 'Categorías',
   'crear_ingesta': 'Crear ingesta',
-  'crear_dieta': 'Crear dieta'
+  'crear_dieta': 'Crear dieta',
+  'mi_cuenta': 'Mi Cuenta'
 };
 
 export default function NavbarBreadcrumbs() {

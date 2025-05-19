@@ -23,7 +23,7 @@ Path("static/images").mkdir(parents=True, exist_ok=True)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 app.include_router(auth.router, prefix="/api/auth")
-app.include_router(nutritionists.router)
+app.include_router(nutritionists.router, prefix="/nutricionistas")
 app.include_router(recipes.router, prefix="/recetas")
 app.include_router(ingredients.router, prefix="/alimentos")
 app.include_router(pacientes.router, prefix="/pacientes")
