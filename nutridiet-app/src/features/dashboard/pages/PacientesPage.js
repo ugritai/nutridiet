@@ -17,13 +17,36 @@ export default function PacientesPage() {
 
   const openForm = location.pathname === '/paciente/crear_paciente';
 
-  const handleOpenForm = () => navigate('/paciente/crear_paciente');
-  const handleCloseForm = () => navigate('/pacientes');
+  // Paciente para editar, null si se crea nuevo
+  const [pacienteEditar, setPacienteEditar] = useState(null);
 
-  const handlePacienteCreado = (nuevoPaciente) => {
-    console.log('Paciente creado:', nuevoPaciente);
-    setPacientes((prev) => [...prev, nuevoPaciente]);
+  const handleOpenForm = () => {
+    setPacienteEditar(null); // limpia antes de abrir
+    navigate('/paciente/crear_paciente');
+  };
+
+  const handleCloseForm = () => {
+    setPacienteEditar(null); // limpia al cerrar
+    navigate('/pacientes');
+  };
+
+  // Cuando se crea o edita un paciente
+  const handlePacienteCreado = (paciente) => {
+    if (pacienteEditar) {
+      // Editamos: actualizar en la lista
+      setPacientes((prev) =>
+        prev.map((p) => (p.id === paciente.id ? paciente : p))
+      );
+    } else {
+      // Creamos: agregar al final
+      setPacientes((prev) => [...prev, paciente]);
+    }
     handleCloseForm();
+  };
+
+  const handleEditPaciente = (paciente) => {
+    setPacienteEditar(paciente);
+    navigate('/paciente/crear_paciente');
   };
 
   useEffect(() => {
@@ -31,12 +54,9 @@ export default function PacientesPage() {
       try {
         setLoading(true);
 
-        // Asegúrate de usar el token correcto (generalmente el accessToken)
         const token = localStorage.getItem('accessToken') || localStorage.getItem('refreshToken');
 
-        if (!token) {
-          throw new Error('No token disponible');
-        }
+        if (!token) throw new Error('No token disponible');
 
         const res = await fetch('http://localhost:8000/pacientes/mis_pacientes/', {
           method: "GET",
@@ -60,15 +80,18 @@ export default function PacientesPage() {
 
   return (
     <Dashboard>
-      <Typography variant="h4">
+      <Typography variant="h4" mb={2}>
         Pacientes
       </Typography>
+
       <CrearPacienteForm
         open={openForm}
         onClose={handleCloseForm}
         onPacienteCreado={handlePacienteCreado}
+        pacienteInicial={pacienteEditar}
       />
-      <Box sx={{ width: '100%', display: 'flex', gap: 2, flexWrap: 'wrap', mb: 2 }}>
+
+      <Box sx={{ width: '100%', display: 'flex', gap: 2, flexWrap: 'wrap' }}>
         <CrearPacienteCard onClick={handleOpenForm} />
 
         {loading && <Typography>Cargando pacientes...</Typography>}
@@ -77,11 +100,13 @@ export default function PacientesPage() {
         {!loading &&
           !error &&
           pacientes.map((paciente) => (
-            <PacienteCard key={paciente.id} paciente={paciente} />
+            <PacienteCard
+              key={paciente.id}
+              paciente={paciente}
+              onEdit={handleEditPaciente}
+            />
           ))}
       </Box>
-
-
     </Dashboard>
   );
 }

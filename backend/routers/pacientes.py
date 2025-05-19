@@ -1,12 +1,16 @@
-from fastapi import APIRouter, HTTPException, status, Depends
+from fastapi import APIRouter, HTTPException, status, Depends, Path
 from database.connection import pacient_collection, nutritionist_collection
 from utils.nutricion import calcular_tmb, calcular_kcal, calcular_pro, calcular_car
-from models.schemas import Pacient, PacientOut
+from models.schemas import Pacient, PacientOut, PacienteUpdate
 from fastapi.security import OAuth2PasswordBearer
 from .security import decode_jwt_token
 import bcrypt
 from typing import List
 import logging
+from fastapi import Body
+from bson import ObjectId
+from datetime import datetime, date
+
 
 router = APIRouter(tags=["Pacientes"])
 
@@ -97,3 +101,62 @@ async def obtener_info_paciente(name: str):
         "pro": paciente.get("dailyProIntake"),
         "car": paciente.get("dailyCalIntake")
     }
+
+@router.put("/actualizar_paciente/{paciente_id}")
+async def actualizar_paciente(
+    paciente_id: str = Path(..., description="ID del paciente"),
+    data: PacienteUpdate = Body(...),
+    token: str = Depends(oauth2_scheme)
+):
+    payload = decode_jwt_token(token)
+    if not payload:
+        raise HTTPException(status_code=401, detail="Token inválido o expirado")
+    
+    oid = ObjectId(paciente_id)
+    paciente = pacient_collection.find_one({"_id": oid})
+    if not paciente:
+        raise HTTPException(status_code=404, detail="Paciente no encontrado")
+
+    # Primero calcula los valores necesarios
+    # Para bornDate usa data.bornDate o paciente["bornDate"]
+    born_date = data.bornDate or paciente["bornDate"]
+
+    # Calcula valores nutricionales
+    tmb = int(calcular_tmb(
+        data.gender or paciente["gender"],
+        data.weight or paciente["weight"],
+        data.height or paciente["height"],
+        born_date
+    ))
+    restrictions_kcal = int(calcular_kcal(tmb, data.activityLevel or paciente["activityLevel"]))
+    daily_pro = calcular_pro(data.gender or paciente["gender"], data.weight or paciente["weight"], data.activityLevel or paciente["activityLevel"])
+    daily_cal = calcular_car(data.gender or paciente["gender"], data.weight or paciente["weight"], data.activityLevel or paciente["activityLevel"])
+
+    # Arma update_data
+    update_data = {
+        "name": data.name or paciente["name"],
+        "gender": data.gender or paciente["gender"],
+        "bornDate": born_date,
+        "height": data.height or paciente["height"],
+        "weight": data.weight or paciente["weight"],
+        "activityLevel": data.activityLevel or paciente["activityLevel"],
+        "tmb": tmb,
+        "restrictionsKcal": restrictions_kcal,
+        "dailyProIntake": daily_pro,
+        "dailyCalIntake": daily_cal,
+    }
+
+    # Convierte bornDate si es datetime.date a datetime.datetime para MongoDB
+    if isinstance(update_data["bornDate"], date) and not isinstance(update_data["bornDate"], datetime):
+        bd = update_data["bornDate"]
+        update_data["bornDate"] = datetime(bd.year, bd.month, bd.day)
+
+    result = pacient_collection.update_one(
+        {"_id": oid},
+        {"$set": update_data}
+    )
+
+    if result.modified_count == 0:
+        raise HTTPException(status_code=400, detail="No se realizaron cambios")
+
+    return {"message": "Perfil actualizado correctamente"}

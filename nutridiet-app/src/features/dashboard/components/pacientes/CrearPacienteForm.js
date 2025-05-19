@@ -45,7 +45,9 @@ const SignUpContainer = styled(Stack)(({ theme }) => ({
     },
 }));
 
-export default function CrearPacienteForm({ open, onClose, onPacienteCreado }) {
+export default function CrearPacienteForm({ open, onClose, onPacienteCreado, pacienteInicial }) {
+    const isEdit = Boolean(pacienteInicial);
+
     const [formValues, setFormValues] = React.useState({
         name: '',
         email: '',
@@ -56,6 +58,15 @@ export default function CrearPacienteForm({ open, onClose, onPacienteCreado }) {
         weight: '',
         activityLevel: '',
     });
+
+    React.useEffect(() => {
+        if (pacienteInicial) {
+            setFormValues({
+                ...pacienteInicial,
+                password: '', // no mostrar contraseña actual
+            });
+        }
+    }, [pacienteInicial]);
 
     const [formErrors, setFormErrors] = React.useState({});
 
@@ -75,7 +86,7 @@ export default function CrearPacienteForm({ open, onClose, onPacienteCreado }) {
         if (!formValues.name) errors.name = 'El nombre es obligatorio.';
         if (!formValues.email || !/\S+@\S+\.\S+/.test(formValues.email))
             errors.email = 'Ingrese un correo válido.';
-        if (!formValues.password || formValues.password.length < 6)
+        if (!isEdit && (!formValues.password || formValues.password.length < 6))
             errors.password = 'La contraseña debe tener al menos 6 caracteres.';
         if (!formValues.gender) errors.gender = 'Seleccione un género.';
         if (!formValues.bornDate) errors.bornDate = 'Seleccione la fecha de nacimiento.';
@@ -96,14 +107,34 @@ export default function CrearPacienteForm({ open, onClose, onPacienteCreado }) {
         try {
             const token = localStorage.getItem('refreshToken');
 
-            const response = await fetch('http://localhost:8000/pacientes/crear_paciente/', {
-                method: 'POST',
+            const url = isEdit
+                ? `http://localhost:8000/pacientes/actualizar_paciente/${(pacienteInicial.id)}`  // o el campo real de ID
+                : 'http://localhost:8000/pacientes/crear_paciente/';
+
+            const method = isEdit ? 'PUT' : 'POST';
+
+            const { id, tmb, restrictionsKcal, dailyProIntake, dailyCalIntake, ...rest } = formValues;
+
+            const payload = {
+                ...rest,
+                height: Number(formValues.height),
+                weight: Number(formValues.weight),
+                activityLevel: Number(formValues.activityLevel),
+                bornDate: formValues.bornDate,
+            };
+
+            if (isEdit && !formValues.password) delete payload.password;
+
+            const response = await fetch(url, {
+                method,
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
+                    Authorization: `Bearer ${token}`,
                 },
-                body: JSON.stringify(formValues),
+                body: JSON.stringify(payload),
             });
+            console.log('Payload enviado:', JSON.stringify(payload, null, 2));
+
 
             if (response.ok) {
                 const paciente = await response.json();
@@ -112,13 +143,14 @@ export default function CrearPacienteForm({ open, onClose, onPacienteCreado }) {
                 window.location.reload();
             } else {
                 const error = await response.json();
-                alert(error.detail || 'Error al crear paciente');
+                alert(error.detail || 'Error al guardar paciente');
             }
         } catch (err) {
             console.error('Error:', err);
             alert('No se pudo conectar al servidor');
         }
     };
+
 
     return (
         <Modal open={open} onClose={onClose}>
@@ -128,8 +160,9 @@ export default function CrearPacienteForm({ open, onClose, onPacienteCreado }) {
                 <SignUpContainer direction="column" justifyContent="center">
                     <Card variant="outlined" sx={{ maxHeight: '90dvh', overflowY: 'auto' }}>
                         <Typography component="h1" variant="h5">
-                            Crear paciente
+                            {isEdit ? 'Editar paciente' : 'Crear paciente'}
                         </Typography>
+
                         <Box
                             component="form"
                             onSubmit={handleSubmit}
@@ -158,18 +191,20 @@ export default function CrearPacienteForm({ open, onClose, onPacienteCreado }) {
                                     helperText={formErrors.email}
                                 />
                             </FormControl>
-                            <FormControl>
-                                <FormLabel>Contraseña</FormLabel>
-                                <TextField
-                                    name="password"
-                                    type="password"
-                                    placeholder="••••••"
-                                    value={formValues.password}
-                                    onChange={handleChange('password')}
-                                    error={!!formErrors.password}
-                                    helperText={formErrors.password}
-                                />
-                            </FormControl>
+                            {!isEdit && (
+                                <FormControl>
+                                    <FormLabel>Contraseña</FormLabel>
+                                    <TextField
+                                        name="password"
+                                        type="password"
+                                        placeholder="••••••"
+                                        value={formValues.password}
+                                        onChange={handleChange('password')}
+                                        error={!!formErrors.password}
+                                        helperText={formErrors.password}
+                                    />
+                                </FormControl>
+                            )}
                             <FormControl>
                                 <FormLabel>Género</FormLabel>
                                 <TextField
@@ -236,7 +271,7 @@ export default function CrearPacienteForm({ open, onClose, onPacienteCreado }) {
                                 </TextField>
                             </FormControl>
                             <Button type="submit" variant="contained" fullWidth>
-                                Registrar paciente
+                                {isEdit ? 'Guardar cambios' : 'Registrar paciente'}
                             </Button>
                         </Box>
                         <Divider />

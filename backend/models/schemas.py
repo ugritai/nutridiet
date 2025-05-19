@@ -60,6 +60,15 @@ class Pacient(BaseModel):
     # Relación con el nutricionista
     nutricionista_id: Optional[str] = None
     nutricionista_email: Optional[str] = None
+    
+class PacienteUpdate(BaseModel):
+    name: Optional[str]
+    email: Optional[EmailStr]
+    gender: Optional[str]
+    bornDate: Optional[date]
+    height: Optional[float]
+    weight: Optional[float]
+    activityLevel: Optional[int]
 
 class PacientOut(BaseModel):
     id: str

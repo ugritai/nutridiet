@@ -8,14 +8,18 @@ import {
   Stack,
   Divider,
 } from '@mui/material';
+import EditIcon from '@mui/icons-material/Edit';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
-export default function PacienteCard({ paciente }) {
+export default function PacienteCard({ paciente, onEdit }) {
   const [expanded, setExpanded] = useState(false);
 
   const handleExpandClick = () => setExpanded(!expanded);
-
-  console.log('Data received:', paciente);
+  const handleEditClick = () => {
+    if (onEdit) {
+      onEdit(paciente);
+    }
+  };
 
   if (!paciente) return null;
 
@@ -26,19 +30,28 @@ export default function PacienteCard({ paciente }) {
           <Typography variant="h6" component="div">
             {paciente.name}
           </Typography>
-          <IconButton
-            onClick={handleExpandClick}
-            aria-expanded={expanded}
-            aria-label="mostrar más"
-            size="small"
-          >
-            <ExpandMoreIcon
-              sx={{
-                transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)',
-                transition: 'transform 0.3s',
-              }}
-            />
-          </IconButton>
+          <Stack direction="row" spacing={1}>
+            <IconButton
+              onClick={handleEditClick}
+              aria-label="editar paciente"
+              size="small"
+            >
+              <EditIcon />
+            </IconButton>
+            <IconButton
+              onClick={handleExpandClick}
+              aria-expanded={expanded}
+              aria-label="mostrar más"
+              size="small"
+            >
+              <ExpandMoreIcon
+                sx={{
+                  transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                  transition: 'transform 0.3s',
+                }}
+              />
+            </IconButton>
+          </Stack>
         </Stack>
 
         <Stack direction="row" spacing={2} alignItems="center">
@@ -72,7 +85,8 @@ export default function PacienteCard({ paciente }) {
               Requerimiento kcal: {paciente.restrictionsKcal} kcal
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Proteínas: {Number(paciente.dailyProIntake).toFixed(2)} g            </Typography>
+              Proteínas: {Number(paciente.dailyProIntake).toFixed(2)} g
+            </Typography>
             <Typography variant="body2" color="text.secondary">
               Carbohidratos: {paciente.dailyCalIntake} g
             </Typography>
