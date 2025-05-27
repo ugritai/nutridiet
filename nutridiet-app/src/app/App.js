@@ -17,6 +17,8 @@ import SeleccionPacientePage from '../features/dashboard/components/dietas/Selec
 import CrearIngestaForm from '../features/dashboard/components/dietas/CrearIngestaForm';
 import CrearDietaForm from '../features/dashboard/components/dietas/CrearDietaForm';
 import PerfilPage from '../features/dashboard/pages/PerfilPage';
+import DietaIngePacienteCard from "../features/dashboard/components/dietas/DietaIngePacienteCard";
+import IngestaNameForm from "../features/dashboard/components/dietas/IngestaNameForm";
 
 function App() {
   return (
@@ -92,6 +94,13 @@ function App() {
 
         } />
 
+        <Route path="/planificacion_dieta/:pacienteN" element={
+          <ProtectedRoute>
+            <DietaIngePacienteCard />
+          </ProtectedRoute>
+
+        } />
+
         <Route path="/planificacion_dieta/crear_dieta" element={
           <ProtectedRoute>
             <SeleccionPacientePage tipo="dieta" />
@@ -104,13 +113,19 @@ function App() {
           </ProtectedRoute>
         } />
 
-        <Route path="/planificacion_dieta/crear_ingesta/:pacienteN" element={
+        <Route path="/planificacion_dieta/:pacienteN/crear_ingesta" element={
+          <ProtectedRoute>
+            < IngestaNameForm />
+          </ProtectedRoute>
+        } />
+
+        <Route path="/planificacion_dieta/:pacienteN/crear_ingesta/:nombreIngesta" element={
           <ProtectedRoute>
             < CrearIngestaForm />
           </ProtectedRoute>
         } />
 
-        <Route path="/planificacion_dieta/crear_dieta/:pacienteN" element={
+        <Route path="/planificacion_dieta/:pacienteN/crear_dieta/" element={
           <ProtectedRoute>
             <CrearDietaForm />
           </ProtectedRoute>

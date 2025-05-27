@@ -10,6 +10,7 @@ import MuiCard from '@mui/material/Card';
 import { styled } from '@mui/material/styles';
 import MenuItem from '@mui/material/MenuItem';
 import Dashboard from '../Dashboard';
+import { fetchWithAuth } from '../components/api';
 
 const Card = styled(MuiCard)(({ theme }) => ({
   display: 'flex',
@@ -45,12 +46,8 @@ export default function PerfilPage(props) {
   React.useEffect(() => {
     const fetchNutricionistaInfo = async () => {
       try {
-        const token = localStorage.getItem('refreshToken');
-        const response = await fetch('http://localhost:8000/nutricionistas/nutricionista_info', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const response = await fetchWithAuth('/nutricionistas/nutricionista_info');
+
         if (response.ok) {
           const data = await response.json();
           setFormValues((prev) => ({
@@ -67,8 +64,10 @@ export default function PerfilPage(props) {
         console.error('Error al obtener información del perfil:', error);
       }
     };
+
     fetchNutricionistaInfo();
   }, []);
+
 
   const handleChange = (e) => {
     setFormValues((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -99,7 +98,8 @@ export default function PerfilPage(props) {
     if (!validateInputs()) return;
 
     try {
-      const token = localStorage.getItem('refreshToken');
+      const token = localStorage.getItem('refreshToken') || sessionStorage.getItem('refreshToken');
+
       const bodyData = {
         name: formValues.name,
         phone: formValues.phone,

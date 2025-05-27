@@ -4,8 +4,10 @@ import Dashboard from '../Dashboard';
 import CrearPacienteCard from '../components/pacientes/CrearPacienteCard';
 import CrearPacienteForm from '../components/pacientes/CrearPacienteForm';
 import PacienteCard from '../components/pacientes/PacienteCard';
+import { fetchWithAuth } from '../components/api';
+import { Box, Typography, Button, Stack } from '@mui/material';
 
-import { Box, Typography } from '@mui/material';
+const PACIENTES_POR_PAGINA = 5;
 
 export default function PacientesPage() {
   const navigate = useNavigate();
@@ -15,30 +17,34 @@ export default function PacientesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const openForm = location.pathname === '/paciente/crear_paciente';
+  const [pagina, setPagina] = useState(1);
 
-  // Paciente para editar, null si se crea nuevo
+  const totalPaginas = Math.ceil(pacientes.length / PACIENTES_POR_PAGINA);
+
+  const pacientesVisibles = pacientes.slice(
+    (pagina - 1) * PACIENTES_POR_PAGINA,
+    pagina * PACIENTES_POR_PAGINA
+  );
+
+  const openForm = location.pathname === '/paciente/crear_paciente';
   const [pacienteEditar, setPacienteEditar] = useState(null);
 
   const handleOpenForm = () => {
-    setPacienteEditar(null); // limpia antes de abrir
+    setPacienteEditar(null);
     navigate('/paciente/crear_paciente');
   };
 
   const handleCloseForm = () => {
-    setPacienteEditar(null); // limpia al cerrar
+    setPacienteEditar(null);
     navigate('/pacientes');
   };
 
-  // Cuando se crea o edita un paciente
   const handlePacienteCreado = (paciente) => {
     if (pacienteEditar) {
-      // Editamos: actualizar en la lista
       setPacientes((prev) =>
         prev.map((p) => (p.id === paciente.id ? paciente : p))
       );
     } else {
-      // Creamos: agregar al final
       setPacientes((prev) => [...prev, paciente]);
     }
     handleCloseForm();
@@ -53,18 +59,10 @@ export default function PacientesPage() {
     const fetchPacientes = async () => {
       try {
         setLoading(true);
-
-        const token = localStorage.getItem('accessToken') || localStorage.getItem('refreshToken');
-
-        if (!token) throw new Error('No token disponible');
-
-        const res = await fetch('http://localhost:8000/pacientes/mis_pacientes/', {
-          method: "GET",
-          headers: {
-            "Authorization": `Bearer ${token}`,
-            "Content-Type": "application/json"
-          },
+        const res = await fetchWithAuth('/pacientes/mis_pacientes', {
+          method: 'GET',
         });
+
         if (!res.ok) throw new Error('Error al cargar pacientes');
         const data = await res.json();
         setPacientes(data);
@@ -77,6 +75,14 @@ export default function PacientesPage() {
 
     fetchPacientes();
   }, []);
+
+  const handleSiguiente = () => {
+    if (pagina < totalPaginas) setPagina((prev) => prev + 1);
+  };
+
+  const handleAnterior = () => {
+    if (pagina > 1) setPagina((prev) => prev - 1);
+  };
 
   return (
     <Dashboard>
@@ -99,7 +105,7 @@ export default function PacientesPage() {
 
         {!loading &&
           !error &&
-          pacientes.map((paciente) => (
+          pacientesVisibles.map((paciente) => (
             <PacienteCard
               key={paciente.id}
               paciente={paciente}
@@ -107,6 +113,20 @@ export default function PacientesPage() {
             />
           ))}
       </Box>
+
+      {!loading && !error && pacientes.length > 0 && (
+        <Stack direction="row" spacing={2} mt={4} alignItems="center">
+          <Button onClick={handleAnterior} disabled={pagina === 1}>
+            Anterior
+          </Button>
+          <Typography>
+            Página {pagina} de {totalPaginas}
+          </Typography>
+          <Button onClick={handleSiguiente} disabled={pagina === totalPaginas}>
+            Siguiente
+          </Button>
+        </Stack>
+      )}
     </Dashboard>
   );
 }

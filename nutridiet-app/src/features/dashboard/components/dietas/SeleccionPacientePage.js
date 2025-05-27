@@ -9,9 +9,9 @@ import {
     ListItemText,
     Button,
 } from '@mui/material';
-import Dashboard from '../../Dashboard';
+import { fetchWithAuth } from '../api';
 
-export default function SeleccionPacientePage({ tipo }) {
+export default function SeleccionPacientePage() {
     const navigate = useNavigate();
     const [pacientes, setPacientes] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -22,9 +22,8 @@ export default function SeleccionPacientePage({ tipo }) {
         async function fetchPacientes() {
             try {
                 setLoading(true);
-                const token = localStorage.getItem('refreshToken');
-                const res = await fetch('http://localhost:8000/pacientes/mis_pacientes', {
-                    headers: { Authorization: `Bearer ${token}` },
+                const res = await fetchWithAuth('/pacientes/mis_pacientes', {
+                    method: 'GET',
                 });
                 if (!res.ok) throw new Error('Error al cargar pacientes');
                 const data = await res.json();
@@ -44,13 +43,13 @@ export default function SeleccionPacientePage({ tipo }) {
             return;
         }
         // Navega a la ruta con paciente id y tipo fijo en ruta
-        navigate(`/planificacion_dieta/crear_${tipo}/${pacienteSeleccionado.name}`);
+        navigate(`/planificacion_dieta/${pacienteSeleccionado.name}`);
     };
 
     return (
-        <Dashboard>
+        <Box>
             <Typography variant="h4">
-                Selecciona un paciente para crear {tipo}
+                Selecciona un paciente para crear dieta o ingesta
             </Typography>
 
             <Box sx={{ Width: '100%', textAlign: 'center' }}>
@@ -98,6 +97,6 @@ export default function SeleccionPacientePage({ tipo }) {
                     </Button>
                 </Box>
             </Box>
-        </Dashboard>
+        </Box>
     );
 }

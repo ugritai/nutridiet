@@ -33,11 +33,15 @@ async def crear_ingesta(
     if not paciente:
         raise HTTPException(status_code=404, detail="Paciente no encontrado")
 
-    # Guardar la ingesta en la colección intake_collection
+    recipes_dict = {
+        key: [receta.dict() for receta in recetas]
+        for key, recetas in ingesta.recipes.items()
+    }
+
     nuevo_documento = {
         "paciente": pacienteN,
         "intake_type": ingesta.intake_type,
-        "recipes": ingesta.recipes.dict(),  # Convierte a dict para Mongo
+        "recipes": recipes_dict,
         "nutricionista_email": email_nutri,
     }
 

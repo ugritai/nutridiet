@@ -1,7 +1,7 @@
 from pydantic import BaseModel, EmailStr, validator, Field
 from typing import Optional, List
 from datetime import date
-from typing import Optional
+from typing import Optional, Dict
 
 class NutritionistBase(BaseModel):
     name: str
@@ -97,20 +97,9 @@ class Receta(BaseModel):
     pro: Optional[float]
     car: Optional[float]
 
-class IntakePorTipo(BaseModel):
-    entrante: Optional[List[Receta]] = []
-    primer_plato: Optional[List[Receta]] = []
-    segundo_plato: Optional[List[Receta]] = []
-    postre: Optional[List[Receta]] = []
-    bebida: Optional[List[Receta]] = []
-
-    @validator('*', pre=True, always=True)
-    def ensure_list(cls, v):
-        return v or []
-
 class IntakeCreate(BaseModel):
-    intake_type: str 
-    recipes: IntakePorTipo
+    intake_type: str
+    recipes: Dict[str, List[Receta]]  # Cambiado aquí
     nutricionista_email: Optional[str] = None
     paciente: Optional[str] = None
     

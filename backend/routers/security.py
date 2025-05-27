@@ -1,4 +1,4 @@
-from jose import jwt
+from jose import jwt, JWTError, ExpiredSignatureError
 from datetime import datetime, timedelta
 import os
 
@@ -14,8 +14,12 @@ def create_jwt_token(data: dict, expires_delta: timedelta):
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
 def decode_jwt_token(token: str):
-    from jose import JWTError
     try:
-        return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-    except JWTError:
-        return None
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        print("✅ Payload decodificado:", payload)
+        return payload
+    except ExpiredSignatureError:
+        print("❌ Token expirado")
+    except JWTError as e:
+        print("❌ Error de token:", str(e))
+    return None

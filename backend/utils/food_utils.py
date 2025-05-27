@@ -164,12 +164,18 @@ def download_and_save_image(url: str, filename: str) -> bool:
 def extraer_cantidad_y_unidad(texto):
     texto = convertir_fracciones_a_decimal(texto)
     texto = texto.lower()
-    patron = r'([\d.]+)\s*(\w+)?'
+    patron = r'(\d+(?:[\.,]\d+)?)\s*([a-záéíóúüñ]+)?'
     match = re.search(patron, texto)
     if match:
-        cantidad = float(match.group(1))
+        numero_str = match.group(1).replace(',', '.')  # Aceptar "1,5" como "1.5"
+        try:
+            cantidad = float(numero_str)
+        except ValueError:
+            cantidad = 100.0  # valor por defecto si la conversión falla
         unidad = match.group(2) if match.group(2) else 'gramos'
         return cantidad, unidad
+
+    # Si no se encuentra coincidencia válida
     return 100.0, 'gramos'  # valor por defecto
 
 async def get_pixabay_image(search_term: str) -> str:

@@ -16,7 +16,7 @@ export default function Dashboard({ children, ...props }) {
   useEffect(() => {
     const fetchProtectedData = async () => {
       try {
-        const response = await fetchWithAuth('/auth/me'); 
+        const response = await fetchWithAuth('/api/auth/me'); 
         if (response.ok) {
           const data = await response.json();
           setUserInfo(data); 

@@ -10,7 +10,7 @@ import logging
 from fastapi import Body
 from bson import ObjectId
 from datetime import datetime, date
-
+import traceback
 
 router = APIRouter(tags=["Pacientes"])
 
@@ -58,7 +58,7 @@ async def crear_paciente(pacient: Pacient, token: str = Depends(oauth2_scheme)):
         "mensaje": "Paciente creado exitosamente"
     }
 
-@router.get("/mis_pacientes/", response_model=List[PacientOut])
+@router.get("/mis_pacientes", response_model=List[PacientOut])
 async def listar_pacientes(token: str = Depends(oauth2_scheme)):
     try:
         payload = decode_jwt_token(token)
@@ -83,12 +83,14 @@ async def listar_pacientes(token: str = Depends(oauth2_scheme)):
             pacientes.append(paciente)
 
         return pacientes
+
+    except HTTPException as http_exc:
+        raise http_exc  # 🔁 vuelve a lanzar errores esperados como 401 o 404
+
     except Exception as e:
-        import traceback
         logging.error(f"Error en listar_pacientes: {e}\n{traceback.format_exc()}")
         raise HTTPException(status_code=500, detail="Error interno del servidor")
-
-
+    
 @router.get("/paciente_info/{name}")
 async def obtener_info_paciente(name: str):
     paciente = pacient_collection.find_one({"name": name})

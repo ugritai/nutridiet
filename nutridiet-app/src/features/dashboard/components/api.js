@@ -1,6 +1,6 @@
 import { jwtDecode } from 'jwt-decode';
 
-const BASE_URL = 'http://localhost:8000/api';
+const BASE_URL = 'http://localhost:8000';
 
 const getAccessToken = () => sessionStorage.getItem('accessToken') || localStorage.getItem('accessToken');
 const getRefreshToken = () => sessionStorage.getItem('refreshToken') || localStorage.getItem('refreshToken');
@@ -23,7 +23,7 @@ const refreshAccessToken = async () => {
   const refreshToken = getRefreshToken();
   if (!refreshToken) throw new Error('No refresh token');
 
-  const res = await fetch(`${BASE_URL}/auth/refresh-token`, {
+  const res = await fetch(`${BASE_URL}/api/auth/refresh-token`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ refresh_token: refreshToken }),

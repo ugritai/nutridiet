@@ -140,23 +140,6 @@ export default function CrearDietaForm() {
         return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
     }
 
-    const [dietasExistentes, setDietasExistentes] = useState([]);
-
-    useEffect(() => {
-        const fetchDietas = async () => {
-            try {
-                const res = await fetch(`http://localhost:8000/planificacion_dietas/dietas_paciente/${pacienteN}`);
-                if (!res.ok) throw new Error('No se pudieron obtener las dietas existentes');
-                const data = await res.json();
-                setDietasExistentes(data);
-            } catch (err) {
-                console.error(err);
-            }
-        };
-        fetchDietas();
-    }, [pacienteN]);
-
-
     const guardarDieta = async () => {
         try {
             const payload = {
@@ -175,7 +158,7 @@ export default function CrearDietaForm() {
             // Mostrar en consola el objeto que se va a enviar
             console.log("Payload a enviar al backend:", JSON.stringify(payload, null, 2));
 
-            const token = localStorage.getItem('refreshToken');
+            const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
 
             const res = await fetch('http://localhost:8000/planificacion_dietas/crear_dieta/', {
                 method: 'POST',
@@ -224,27 +207,10 @@ export default function CrearDietaForm() {
                             />
                         </LocalizationProvider>
 
-                        {dietasExistentes.length > 0 && (
-                            <Box sx={{ mt: 4 }}>
-                                <Typography variant="h6">Dietas previas del paciente</Typography>
-                                {dietasExistentes.map((dieta, idx) => (
-                                    <Card key={idx} sx={{ p: 2, mt: 2 }}>
-                                        <Typography variant="subtitle1" fontWeight="bold">
-                                            {dieta.nombre_dieta}
-                                        </Typography>
-                                        <Typography variant="body2">
-                                            {dayjs(dieta.fecha_inicio).format('DD/MM/YYYY')} - {dayjs(dieta.fecha_final).format('DD/MM/YYYY')}
-                                        </Typography>
-                                    </Card>
-                                ))}
-                            </Box>
-                        )}
-
-
                         <Box sx={{ mt: 3, display: 'flex', gap: 5 }}>
                             <Button
                                 variant="outlined"
-                                onClick={() => navigate('/planificacion_dieta/crear_dieta')}
+                                onClick={() => navigate(`/planificacion_dieta/${pacienteN}`)}
                             >
                                 Atrás
                             </Button>

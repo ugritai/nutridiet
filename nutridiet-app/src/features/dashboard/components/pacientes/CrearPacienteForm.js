@@ -16,6 +16,7 @@ import MuiCard from '@mui/material/Card';
 import { styled } from '@mui/material/styles';
 import AppTheme from '../../../../assets/shared-theme/AppTheme';
 import ColorModeSelect from '../../../../assets/shared-theme/ColorModeSelect';
+import { fetchWithAuth } from '../api';
 
 const Card = styled(MuiCard)(({ theme }) => ({
     display: 'flex',
@@ -103,53 +104,48 @@ export default function CrearPacienteForm({ open, onClose, onPacienteCreado, pac
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!validate()) return;
-
+      
         try {
-            const token = localStorage.getItem('refreshToken');
-
-            const url = isEdit
-                ? `http://localhost:8000/pacientes/actualizar_paciente/${(pacienteInicial.id)}`  // o el campo real de ID
-                : 'http://localhost:8000/pacientes/crear_paciente/';
-
-            const method = isEdit ? 'PUT' : 'POST';
-
-            const { id, tmb, restrictionsKcal, dailyProIntake, dailyCalIntake, ...rest } = formValues;
-
-            const payload = {
-                ...rest,
-                height: Number(formValues.height),
-                weight: Number(formValues.weight),
-                activityLevel: Number(formValues.activityLevel),
-                bornDate: formValues.bornDate,
-            };
-
-            if (isEdit && !formValues.password) delete payload.password;
-
-            const response = await fetch(url, {
-                method,
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify(payload),
-            });
-            console.log('Payload enviado:', JSON.stringify(payload, null, 2));
-
-
-            if (response.ok) {
-                const paciente = await response.json();
-                onPacienteCreado?.(paciente);
-                onClose();
-                window.location.reload();
-            } else {
-                const error = await response.json();
-                alert(error.detail || 'Error al guardar paciente');
-            }
+          const url = isEdit
+            ? `/pacientes/actualizar_paciente/${pacienteInicial.id}`
+            : '/pacientes/crear_paciente/';
+      
+          const method = isEdit ? 'PUT' : 'POST';
+      
+          const { id, tmb, restrictionsKcal, dailyProIntake, dailyCalIntake, ...rest } = formValues;
+      
+          const payload = {
+            ...rest,
+            height: Number(formValues.height),
+            weight: Number(formValues.weight),
+            activityLevel: Number(formValues.activityLevel),
+            bornDate: formValues.bornDate,
+          };
+      
+          if (isEdit && !formValues.password) delete payload.password;
+      
+          const response = await fetchWithAuth(url, {
+            method,
+            body: JSON.stringify(payload),
+          });
+      
+          console.log('Payload enviado:', JSON.stringify(payload, null, 2));
+      
+          if (response.ok) {
+            const paciente = await response.json();
+            onPacienteCreado?.(paciente);
+            onClose();
+            window.location.reload();
+          } else {
+            const error = await response.json();
+            alert(error.detail || 'Error al guardar paciente');
+          }
         } catch (err) {
-            console.error('Error:', err);
-            alert('No se pudo conectar al servidor');
+          console.error('Error:', err);
+          alert('No se pudo conectar al servidor');
         }
-    };
+      };
+      
 
 
     return (
