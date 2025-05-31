@@ -20,27 +20,46 @@ export default function PorcentajeCircular({ label, valor, maximo }) {
                 minWidth: 90,
             }}
         >
-            <CircularProgress
-                variant="determinate"
-                value={porcentaje > 100 ? 100 : porcentaje}
-                size={70}
-                thickness={5}
-                sx={{ color }}
-            />
-            <Box
-                sx={{
-                    position: 'relative',
-                    top: '-58px',
-                    textAlign: 'center',
-                    fontWeight: 'bold',
-                    fontSize: '1.1rem',
-                    color,
-                    userSelect: 'none',
-                }}
-            >
-                {porcentaje.toFixed(1)}%
+            {/* Círculo contenedor con posición relativa */}
+            <Box sx={{ position: 'relative', display: 'inline-flex' }}>
+                {/* Fondo gris claro */}
+                <CircularProgress
+                    variant="determinate"
+                    value={100}
+                    size={70}
+                    thickness={5}
+                    sx={{ color: 'grey.300' }}
+                />
+                {/* Progreso real */}
+                <CircularProgress
+                    variant="determinate"
+                    value={porcentaje > 100 ? 100 : porcentaje}
+                    size={70}
+                    thickness={5}
+                    sx={{ 
+                        color,
+                        position: 'absolute',
+                        left: 0,
+                    }}
+                />
+                {/* Texto centrado */}
+                <Box
+                    sx={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        fontWeight: 'bold',
+                        fontSize: '1.1rem',
+                        color,
+                        userSelect: 'none',
+                    }}
+                >
+                    {porcentaje.toFixed(1)}%
+                </Box>
             </Box>
-            <Typography variant="body2" sx={{ userSelect: 'none', textAlign: 'center' }}>
+
+            <Typography variant="body2" sx={{ userSelect: 'none', textAlign: 'center', mt: 1 }}>
                 {label}: {esNumero(valor) ? valor.toFixed(2) : '--'}
             </Typography>
         </Box>

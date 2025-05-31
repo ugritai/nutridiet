@@ -1,69 +1,65 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import {
-    Box, Card, Typography, Button, CircularProgress, Alert,
-    IconButton, FormControl, InputLabel, Select, MenuItem
+    Box, Card, Typography, Button, CircularProgress, Alert, FormControl, InputLabel, Select, MenuItem, Slider, FormControlLabel, Checkbox
 } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
 import Dashboard from '../../Dashboard';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { fetchWithAuth } from '../api';
 import Search from '../../components/Search';
 import FoodSearch from '../../components/FoodSearch';
 import PorcentajeCircular from './PorcentajeCircular';
+import { obtenerEstructuraIngesta } from './ingestas/EstructuraIngestas';
+import { normalizeRecipes } from './ingestas/normalizarRecetas';
+import TipoIngestaGrid from './ingestas/TipoIngestaGrid';
+import RecetaCard from './ingestas/RecetaCard';
 
 export default function CrearIngestaForm() {
     const { pacienteN, nombreIngesta } = useParams();
     const navigate = useNavigate();
     const location = useLocation();
     const tipo = location.state?.tipo || '';
+    const modoEdicion = location.state?.modo === 'editar'; // nuevo
+    const ingestaOriginal = location.state?.ingesta || null; // contiene la ingesta original
 
     const [enviando, setEnviando] = useState(false);
     const [error, setError] = useState(null);
     const [nutricion, setNutricion] = useState(null);
     const [recetasBuscadas, setRecetasBuscadas] = useState([]);
     const [recetasPorTipo, setRecetasPorTipo] = useState({});
+    const [recetasFiltradas, setRecetasFiltradas] = useState([]);
+    const [categoriaFiltro, setCategoriaFiltro] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [ingestaUniversal, setIngestaUniversal] = useState(false);
 
-    // Obtener estructura de la ingesta basada en el tipo
-    const obtenerEstructuraIngesta = useCallback(() => {
-        const estructuras = {
-            '3 comidas': {
-                Desayuno: ['primer_plato', 'bebida'],
-                Almuerzo: ['entrante', 'primer_plato', 'segundo_plato', 'postre', 'bebida'],
-                Cena: ['entrante', 'primer_plato', 'segundo_plato', 'postre', 'bebida'],
-            },
-            '5 comidas': {
-                Desayuno: ['primer_plato', 'bebida'],
-                'Media mañana': ['primer_plato', 'bebida'],
-                Almuerzo: ['entrante', 'primer_plato', 'segundo_plato', 'postre', 'bebida'],
-                Merienda: ['primer_plato', 'bebida'],
-                Cena: ['entrante', 'primer_plato', 'segundo_plato', 'postre', 'bebida'],
-            }
-        };
-        return estructuras[tipo] || {};
-    }, [tipo]);
 
-    // Inicializar estado cuando cambia el tipo
+    const [filtrosNutricionales, setFiltrosNutricionales] = useState({
+        kcal: [0, 1000],
+        pro: [0, 100],
+        car: [0, 100]
+    });
+    const [maximosNutricionales, setMaximosNutricionales] = useState({
+        kcal: 1000,
+        pro: 100,
+        car: 100
+    });
+
     useEffect(() => {
         if (!tipo) {
             navigate(`/planificacion_dieta/${encodeURIComponent(pacienteN)}/crear_ingesta`);
             return;
         }
-
-        const estructura = obtenerEstructuraIngesta();
+        const estructura = obtenerEstructuraIngesta(tipo);
         const estadoInicial = {};
-
         Object.entries(estructura).forEach(([ingesta, subtipos]) => {
             subtipos.forEach(subtipo => {
                 const key = `${ingesta}::${subtipo}`;
                 estadoInicial[key] = [];
             });
         });
-
         setRecetasPorTipo(estadoInicial);
-    }, [tipo, navigate, pacienteN, obtenerEstructuraIngesta]);
+    }, [tipo, navigate, pacienteN]);
 
-    // Obtener información del paciente
     useEffect(() => {
         const fetchInfoPaciente = async () => {
             try {
@@ -77,26 +73,21 @@ export default function CrearIngestaForm() {
         fetchInfoPaciente();
     }, [pacienteN]);
 
-    // Manejar selección de receta
     const handleSelectReceta = async (nombre) => {
         if (recetasBuscadas.some(r => r.nombre === nombre)) return;
-
         try {
             const res = await fetch(`http://localhost:8000/recetas/${encodeURIComponent(nombre)}/nutricion`);
             if (!res.ok) throw new Error('No se pudo obtener la nutrición de la receta');
-
             const data = await res.json();
             const raciones = data.raciones || 1;
-            const valores = data.valores_nutricionales;
-
+            const valores = data.nutritional_info;
             const receta = {
                 id: nombre,
                 nombre,
-                kcal: (valores.energy_kcal / raciones).toFixed(2) || '0.00',
-                pro: (valores.pro / raciones).toFixed(2) || '0.00',
-                car: (valores.car / raciones).toFixed(2) || '0.00',
+                kcal: (valores.energy_kcal / raciones).toFixed(2),
+                pro: (valores.pro / raciones).toFixed(2),
+                car: (valores.car / raciones).toFixed(2),
             };
-
             setRecetasBuscadas(prev => [...prev, receta]);
         } catch (err) {
             console.error(err);
@@ -107,47 +98,20 @@ export default function CrearIngestaForm() {
 
     const buscador = FoodSearch({
         type: 'recetas',
-        onSelect: handleSelectReceta
+        onSelect: (item) => {
+            const nombre = typeof item === 'string' ? item : item?.value || item?.label;
+            handleSelectReceta(nombre);
+        }
     });
 
-    const [categoriaFiltro, setCategoriaFiltro] = useState("");
-    const [recetasFiltradas, setRecetasFiltradas] = useState([]);
-
-    useEffect(() => {
-        if (!categoriaFiltro) {
-            setRecetasFiltradas([]);
-            return;
-        }
-
-        const fetchRecetasFiltradas = async () => {
-            try {
-                const res = await fetch(`http://localhost:8000/recetas/categoria/${categoriaFiltro}/nutricion_simplificada`);
-                if (!res.ok) throw new Error("Error al obtener recetas");
-                const data = await res.json();
-                setRecetasFiltradas(data.resultados || []);
-            } catch (error) {
-                console.error("Error:", error);
-                setRecetasFiltradas([]);
-            }
-        };
-
-        fetchRecetasFiltradas();
-    }, [categoriaFiltro]);
-
-
-    // Calcular totales de nutrición
     const total = useMemo(() => {
-        const sumarCampo = (arr, campo) =>
-            arr.reduce((acc, r) => acc + parseFloat(r[campo] || 0), 0);
-
+        const sumarCampo = (arr, campo) => arr.reduce((acc, r) => acc + parseFloat(r[campo] || 0), 0);
         const resultado = { kcal: 0, pro: 0, car: 0 };
-
-        Object.values(recetasPorTipo).forEach(recetasArray => {
-            resultado.kcal += sumarCampo(recetasArray, 'kcal');
-            resultado.pro += sumarCampo(recetasArray, 'pro');
-            resultado.car += sumarCampo(recetasArray, 'car');
+        Object.values(recetasPorTipo).forEach(arr => {
+            resultado.kcal += sumarCampo(arr, 'kcal');
+            resultado.pro += sumarCampo(arr, 'pro');
+            resultado.car += sumarCampo(arr, 'car');
         });
-
         return {
             kcal: resultado.kcal.toFixed(2),
             pro: resultado.pro.toFixed(2),
@@ -155,128 +119,146 @@ export default function CrearIngestaForm() {
         };
     }, [recetasPorTipo]);
 
-    // Manejar drag and drop
-    const onDragEnd = useCallback((result) => {
-        const { source, destination } = result;
-        if (!destination) return;
-
-        const estructura = obtenerEstructuraIngesta();
-        const validDroppables = new Set(['searchResults']);
-
-        Object.entries(estructura).forEach(([ingesta, subtipos]) => {
-            subtipos.forEach(subtipo => validDroppables.add(`${ingesta}::${subtipo}`));
-        });
-
-        if (!validDroppables.has(source.droppableId) || !validDroppables.has(destination.droppableId)) {
-            console.warn("Droppable inválido:", source.droppableId, destination.droppableId);
+    useEffect(() => {
+        if (!categoriaFiltro) {
+            setRecetasFiltradas([]);
             return;
         }
 
-        const getDraggedItem = () => {
-            return source.droppableId === 'searchResults'
-                ? recetasBuscadas[source.index]
-                : recetasPorTipo[source.droppableId]?.[source.index];
+        const fetchDatos = async () => {
+            setLoading(true);
+            try {
+                const [recetasRes, maximosRes] = await Promise.all([
+                    fetch(`http://localhost:8000/recetas/categoria/${encodeURIComponent(categoriaFiltro)}/nutricion_simplificada?por_porcion=true`),
+                    fetch(`http://localhost:8000/recetas/recetas/maximos_nutricionales`)
+                ]);
+
+                if (!recetasRes.ok) throw new Error('Error al obtener recetas');
+                if (!maximosRes.ok) throw new Error('Error al obtener valores máximos');
+
+                const recetasData = await recetasRes.json();
+                const maximosData = await maximosRes.json();
+
+                const recetasConDatos = recetasData.resultados || [];
+
+                setRecetasFiltradas(recetasConDatos);
+
+                setMaximosNutricionales({
+                    kcal: maximosData.kcal || 1000,
+                    pro: maximosData.pro || 100,
+                    car: maximosData.car || 100
+                });
+
+                setFiltrosNutricionales({
+                    kcal: [0, maximosData.kcal || 1000],
+                    pro: [0, maximosData.pro || 100],
+                    car: [0, maximosData.car || 100]
+                });
+            } catch (err) {
+                console.error('Error al obtener recetas por categoría:', err);
+                setRecetasFiltradas([]);
+            } finally {
+                setLoading(false);
+            }
         };
 
-        const draggedItem = getDraggedItem();
-        if (!draggedItem) return;
+        fetchDatos();
+    }, [categoriaFiltro]);
 
-        // Función para actualizar el estado según el tipo de movimiento
-        const updateState = (sourceId, destId, item) => {
-            // De buscador a tipo
-            if (sourceId === 'searchResults' && destId !== 'searchResults') {
-                if (recetasPorTipo[destId]?.some(r => r.nombre === item.nombre)) return;
+    useEffect(() => {
+        if (modoEdicion && ingestaOriginal) {
+            setIngestaUniversal(ingestaOriginal.ingesta_universal || false);
 
-                setRecetasBuscadas(prev => prev.filter((_, i) => i !== source.index));
-                setRecetasPorTipo(prev => ({
-                    ...prev,
-                    [destId]: [...(prev[destId] || []), item]
+            // Convertimos cada receta para tener campo `nombre` también
+            const recetasTransformadas = {};
+            for (const key in ingestaOriginal.recipes) {
+                recetasTransformadas[key] = (ingestaOriginal.recipes[key] || []).map(r => ({
+                    ...r,
+                    nombre: r.name || r.nombre || 'Sin nombre'
                 }));
             }
-            // De tipo a buscador
-            else if (sourceId !== 'searchResults' && destId === 'searchResults') {
+            setRecetasPorTipo(recetasTransformadas);
+        }
+    }, [modoEdicion, ingestaOriginal]);
+
+
+
+    const onDragEnd = useCallback(({ source, destination }) => {
+        if (!destination) return;
+        const estructura = obtenerEstructuraIngesta(tipo);
+        const validDroppables = new Set(['searchResults', 'categoriaResults']);
+        Object.entries(estructura).forEach(([ingesta, subtipos]) => {
+            subtipos.forEach(subtipo => validDroppables.add(`${ingesta}::${subtipo}`));
+        });
+        if (!validDroppables.has(source.droppableId) || !validDroppables.has(destination.droppableId)) return;
+
+        const getItem = () =>
+            source.droppableId === 'searchResults'
+                ? recetasBuscadas[source.index]
+                : recetasPorTipo[source.droppableId]?.[source.index];
+
+        const item = getItem();
+        if (!item) return;
+
+        const updateState = (sourceId, destId, item) => {
+            if (sourceId === 'searchResults' && destId !== 'searchResults') {
+                if (recetasPorTipo[destId]?.some(r => r.nombre === item.nombre)) return;
+                setRecetasBuscadas(prev => prev.filter((_, i) => i !== source.index));
+                setRecetasPorTipo(prev => ({ ...prev, [destId]: [...(prev[destId] || []), item] }));
+            } else if (sourceId !== 'searchResults' && destId === 'searchResults') {
                 setRecetasPorTipo(prev => ({
                     ...prev,
                     [sourceId]: prev[sourceId].filter((_, i) => i !== source.index)
                 }));
                 setRecetasBuscadas(prev => [...prev, item]);
-            }
-            // Entre tipos diferentes
-            else if (sourceId !== destId) {
+            } else if (sourceId !== destId) {
                 const sourceItems = [...(recetasPorTipo[sourceId] || [])];
                 const destItems = [...(recetasPorTipo[destId] || [])];
-
                 if (destItems.some(r => r.nombre === item.nombre)) return;
-
                 sourceItems.splice(source.index, 1);
                 destItems.splice(destination.index, 0, item);
-
-                setRecetasPorTipo(prev => ({
-                    ...prev,
-                    [sourceId]: sourceItems,
-                    [destId]: destItems
-                }));
-            }
-            // Reordenar dentro de la misma lista
-            else {
-                const items = sourceId === 'searchResults'
-                    ? [...recetasBuscadas]
-                    : [...(recetasPorTipo[sourceId] || [])];
-
+                setRecetasPorTipo(prev => ({ ...prev, [sourceId]: sourceItems, [destId]: destItems }));
+            } else {
+                const items = [...(recetasPorTipo[sourceId] || [])];
                 const [moved] = items.splice(source.index, 1);
                 items.splice(destination.index, 0, moved);
-
-                if (sourceId === 'searchResults') {
-                    setRecetasBuscadas(items);
-                } else {
-                    setRecetasPorTipo(prev => ({
-                        ...prev,
-                        [sourceId]: items
-                    }));
-                }
+                setRecetasPorTipo(prev => ({ ...prev, [sourceId]: items }));
             }
         };
 
-        updateState(source.droppableId, destination.droppableId, draggedItem);
-    }, [recetasBuscadas, recetasPorTipo, obtenerEstructuraIngesta]);
+        updateState(source.droppableId, destination.droppableId, item);
+    }, [recetasBuscadas, recetasPorTipo, tipo]);
 
-    // Normalizar recetas para el envío al backend
-    const normalizeRecipes = useCallback((recipesPorTipo) => {
-        const normalized = {};
-        for (const tipo in recipesPorTipo) {
-            normalized[tipo] = recipesPorTipo[tipo].map(receta => ({
-                name: receta.nombre,
-                kcal: parseFloat(receta.kcal),
-                pro: parseFloat(receta.pro),
-                car: parseFloat(receta.car),
-            }));
-        }
-        return normalized;
-    }, []);
-
-    // Enviar formulario
     const handleSubmit = async (e) => {
         e.preventDefault();
         setEnviando(true);
         setError(null);
-
         try {
             const body = {
                 intake_type: tipo,
+                intake_name: nombreIngesta,
+                ingesta_universal: ingestaUniversal,
                 recipes: normalizeRecipes(recetasPorTipo)
             };
+            console.log(JSON.stringify(body, null, 2));
 
-            const res = await fetchWithAuth(
-                `/planificacion_ingestas/crear_ingesta/${pacienteN}`,
-                {
-                    method: 'POST',
-                    body: JSON.stringify(body),
-                }
-            );
+
+            const url = modoEdicion
+                ? `/planificacion_ingestas/editar_ingesta/${pacienteN}/${encodeURIComponent(nombreIngesta)}`
+                : `/planificacion_ingestas/crear_ingesta/${pacienteN}`;
+
+            const method = modoEdicion ? 'PUT' : 'POST';
+
+            const res = await fetchWithAuth(url, {
+                method,
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(body),
+            });
+
 
             if (!res.ok) throw new Error('Error al crear la ingesta');
-
-            // Resetear estado después de éxito
             setRecetasPorTipo({});
             setRecetasBuscadas([]);
             alert('Ingesta creada correctamente');
@@ -287,7 +269,6 @@ export default function CrearIngestaForm() {
         }
     };
 
-    // Renderizado condicional para evitar errores
     if (!tipo) return null;
 
     return (
@@ -296,44 +277,18 @@ export default function CrearIngestaForm() {
                 {nutricion && (
                     <Box sx={{ display: 'flex', gap: 3, mb: 2, flexWrap: 'wrap' }}>
                         <Box sx={{ flex: { md: 1 }, maxWidth: { md: '33.3333%' } }}>
-                            <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-                                Nombre de Ingesta:
-                            </Typography>
+                            <Typography variant="subtitle1" fontWeight="bold">Nombre de Ingesta:</Typography>
                             <Typography>{nombreIngesta}</Typography>
-
-                            <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-                                Requerimientos diarios:
-                            </Typography>
+                            <Typography variant="subtitle1" fontWeight="bold" gutterBottom>Requerimientos diarios:</Typography>
                             <Typography>Calorías: {nutricion.kcal} kcal</Typography>
                             <Typography>Proteínas: {Number(nutricion.pro).toFixed(2)} g</Typography>
                             <Typography>Carbohidratos: {nutricion.car} g</Typography>
                         </Box>
-
-                        <Box sx={{
-                            maxWidth: { md: '66.6666%' },
-                            display: 'flex',
-                            gap: 2,
-                            alignItems: 'center',
-                            flexWrap: 'wrap',
-                        }}>
-                            <Typography variant="subtitle1" fontWeight="bold" sx={{ width: '100%' }}>
-                                Requerimientos completado:
-                            </Typography>
-                            <PorcentajeCircular
-                                label="Kcal"
-                                valor={parseFloat(total.kcal)}
-                                maximo={nutricion.kcal}
-                            />
-                            <PorcentajeCircular
-                                label="Proteínas"
-                                valor={parseFloat(total.pro)}
-                                maximo={nutricion.pro}
-                            />
-                            <PorcentajeCircular
-                                label="Carbohidratos"
-                                valor={parseFloat(total.car)}
-                                maximo={nutricion.car}
-                            />
+                        <Box sx={{ maxWidth: { md: '66.6666%' }, display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+                            <Typography variant="subtitle1" fontWeight="bold" sx={{ width: '100%' }}>Requerimientos completado:</Typography>
+                            <PorcentajeCircular label="Kcal" valor={parseFloat(total.kcal)} maximo={nutricion.kcal} />
+                            <PorcentajeCircular label="Proteínas" valor={parseFloat(total.pro)} maximo={nutricion.pro} />
+                            <PorcentajeCircular label="Carbohidratos" valor={parseFloat(total.car)} maximo={nutricion.car} />
                         </Box>
                     </Box>
                 )}
@@ -343,7 +298,6 @@ export default function CrearIngestaForm() {
                 <form onSubmit={handleSubmit}>
                     <DragDropContext onDragEnd={onDragEnd}>
                         <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 4, mt: 2 }}>
-                            {/* Columna izquierda: Buscador */}
                             <Box sx={{
                                 flex: { md: 1 },
                                 maxWidth: { md: '33.3333%' },
@@ -353,7 +307,7 @@ export default function CrearIngestaForm() {
                                 display: 'flex',
                                 flexDirection: 'column',
                                 gap: 2,
-                                backgroundColor: '#fafafa',
+                                backgroundColor: '#fafafa'
                             }}>
                                 <Search
                                     value={buscador.query}
@@ -372,225 +326,184 @@ export default function CrearIngestaForm() {
                                     showButton={false}
                                 />
 
-
-                                <Box sx={{ flexGrow: 1, overflowY: 'auto' }}>
-                                    <Typography variant="h6">Resultados por búsqueda</Typography>
-
-                                    <FormControl fullWidth sx={{ mb: 2 }}>
-                                        <InputLabel>Categoría</InputLabel>
-                                        <Select
-                                            value={categoriaFiltro}
-                                            label="Categoría"
-                                            onChange={(e) => setCategoriaFiltro(e.target.value)}
-                                        >
-                                            <MenuItem value="">Todas</MenuItem>
-                                            <MenuItem value="Sopas">Sopas</MenuItem>
-                                            <MenuItem value="Ensaladas">Ensaladas</MenuItem>
-                                            <MenuItem value="Arroz">Arroz</MenuItem>
-                                            <MenuItem value="Pasta">Pasta</MenuItem>
-                                            <MenuItem value="Guisos">Guisos</MenuItem>
-                                            <MenuItem value="Pescado">Pescado</MenuItem>
-                                            <MenuItem value="Carne">Carne</MenuItem>
-                                            <MenuItem value="Postre">Postre</MenuItem>
-                                            <MenuItem value="Fruta">Fruta</MenuItem>
-                                        </Select>
-                                    </FormControl>
-
-                                    <Typography variant="h6">Resultados por búsqueda</Typography>
-
-                                    <Droppable droppableId="searchResults">
-                                        {(provided) => (
-                                            <Box
-                                                ref={provided.innerRef}
-                                                {...provided.droppableProps}
-                                                sx={{
-                                                    maxHeight: '1000px',
-                                                    overflowY: 'auto',
-                                                    display: 'flex',
-                                                    flexDirection: 'column',
-                                                    gap: 2,
-                                                    border: '1px solid #ccc',
-                                                    borderRadius: 1,
-                                                    p: 1,
-                                                }}
-                                            >
-                                                <Droppable droppableId="filteredResults">
-                                                    {(provided) => (
-                                                        <Box
-                                                            ref={provided.innerRef}
-                                                            {...provided.droppableProps}
-                                                            sx={{ minHeight: 200 }}
-                                                        >
-                                                            {recetasFiltradas.length > 0 ? (
-                                                                recetasFiltradas.map((receta, index) => (
-                                                                    <Draggable
-                                                                        key={`${receta.receta}::filteredResults`}
-                                                                        draggableId={`${receta.receta}::filteredResults`}
-                                                                        index={index}
-                                                                    >
-                                                                        {(provided) => (
-                                                                            <Card
-                                                                                ref={provided.innerRef}
-                                                                                {...provided.draggableProps}
-                                                                                {...provided.dragHandleProps}
-                                                                                sx={{ mb: 2, p: 2 }}
-                                                                            >
-                                                                                <Typography variant="h6">{receta.receta}</Typography>
-                                                                                <Typography variant="body2">Kcal: {receta.kcal.toFixed(2)}</Typography>
-                                                                                <Typography variant="body2">Proteína: {receta.pro.toFixed(2)} g</Typography>
-                                                                                <Typography variant="body2">Carbohidratos: {receta.car.toFixed(2)} g</Typography>
-                                                                            </Card>
-                                                                        )}
-                                                                    </Draggable>
-                                                                ))
-                                                            ) : (
-                                                                <Typography variant="body2">No hay recetas en esta categoría</Typography>
-                                                            )}
-                                                            {provided.placeholder}
-                                                        </Box>
-                                                    )}
-                                                </Droppable>
-
-
-                                                {recetasBuscadas.length === 0 ? (
-                                                    <Typography variant="body2" color="textSecondary" sx={{ m: 'auto' }}>
-                                                        No hay recetas para esta categoría
-                                                    </Typography>
-                                                ) : (
-                                                    recetasBuscadas.map((receta, i) => (
-                                                        <Draggable
-                                                            key={`${receta.receta}::searchResults`}
-                                                            draggableId={`${receta.receta}::searchResults`}
-                                                            index={i}
-                                                        >
-                                                            {(provided) => (
-                                                                <Card
-                                                                    ref={provided.innerRef}
-                                                                    {...provided.draggableProps}
-                                                                    {...provided.dragHandleProps}
-                                                                    sx={{ p: 2, minHeight: '80px' }}
-                                                                >
-                                                                    <Typography>{receta.receta}</Typography>
-                                                                    <Typography variant="body2">
-                                                                        Kcal: {receta.kcal} | Pro: {receta.pro} | Carbs: {receta.car}
-                                                                    </Typography>
-                                                                </Card>
-                                                            )}
-                                                        </Draggable>
-                                                    ))
-                                                )}
-                                                {provided.placeholder}
-                                            </Box>
-                                        )}
-                                    </Droppable>
-                                </Box>
-                            </Box>
-
-                            {/* Columna derecha: Estructura de la ingesta */}
-                            <Box sx={{ flex: { md: 2 }, maxWidth: { md: '66.6666%' } }}>
-                                <Typography variant="h6" gutterBottom>
-                                    Tipo de Ingesta: {tipo}
-                                </Typography>
-
-                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                                    {Object.entries(obtenerEstructuraIngesta()).map(([ingesta, subtipos]) => (
-                                        <Box key={ingesta}>
-                                            <Typography variant="h5" sx={{ mb: 2 }}>
-                                                {ingesta}
-                                            </Typography>
-
-                                            <Box sx={{
-                                                display: 'grid',
+                                <Typography variant="h6">Resultados</Typography>
+                                <Typography variant="h6">Resultados de Búsqueda</Typography>
+                                <Droppable droppableId="searchResults">
+                                    {(provided) => (
+                                        <Box
+                                            ref={provided.innerRef}
+                                            {...provided.droppableProps}
+                                            sx={{
+                                                maxHeight: '400px',
+                                                overflowY: 'auto',
+                                                display: 'flex',
+                                                flexDirection: 'column',
                                                 gap: 2,
-                                                gridTemplateColumns: {
-                                                    xs: '1fr',
-                                                    sm: 'repeat(2, 1fr)',
-                                                    md: 'repeat(3, 1fr)',
-                                                    lg: 'repeat(5, 1fr)',
-                                                },
-                                            }}>
-                                                {subtipos.map((subtipo) => {
-                                                    const id = `${ingesta}::${subtipo}`;
+                                                border: '1px solid #ccc',
+                                                borderRadius: 1,
+                                                p: 1,
+                                                mb: 3,
+                                                backgroundColor: '#f0f0ff',
+                                            }}
+                                        >
+                                            {recetasBuscadas.map((receta, index) => (
+                                                <Draggable
+                                                    key={`${receta.nombre}::searchResults`}
+                                                    draggableId={`${receta.nombre}::searchResults`}
+                                                    index={index}
+                                                >
+                                                    {(provided) => (
+                                                        <RecetaCard receta={receta} provided={provided} />
+                                                    )}
+                                                </Draggable>
+                                            ))}
+                                            {provided.placeholder}
+                                        </Box>
+                                    )}
+                                </Droppable>
 
-                                                    return (
-                                                        <Droppable key={id} droppableId={id}>
-                                                            {(provided) => (
-                                                                <Box
-                                                                    ref={provided.innerRef}
-                                                                    {...provided.droppableProps}
-                                                                    sx={{
-                                                                        p: 2,
-                                                                        border: '1px solid #ccc',
-                                                                        borderRadius: 2,
-                                                                        minHeight: 200,
-                                                                        backgroundColor: '#fafafa',
-                                                                    }}
-                                                                >
-                                                                    <Typography variant="h6" gutterBottom>
-                                                                        {subtipo.replace('_', ' ').toUpperCase()}
-                                                                    </Typography>
+                                <Typography variant="h6">Resultados por Categoría</Typography>
+                                <FormControl fullWidth sx={{ mb: 2 }}>
+                                    <InputLabel>Categoría</InputLabel>
+                                    <Select
+                                        value={categoriaFiltro}
+                                        label="Categoría"
+                                        onChange={(e) => setCategoriaFiltro(e.target.value)}
+                                    >
+                                        <MenuItem value="">Todas</MenuItem>
+                                        <MenuItem value="Sopas">Sopas</MenuItem>
+                                        <MenuItem value="Ensaladas">Ensaladas</MenuItem>
+                                        <MenuItem value="Arroz">Arroz</MenuItem>
+                                        <MenuItem value="Pasta">Pasta</MenuItem>
+                                        <MenuItem value="Guisos">Guisos</MenuItem>
+                                        <MenuItem value="Pescado">Pescado</MenuItem>
+                                        <MenuItem value="Carne">Carne</MenuItem>
+                                        <MenuItem value="Postre">Postre</MenuItem>
+                                        <MenuItem value="Fruta">Fruta</MenuItem>
+                                    </Select>
+                                </FormControl>
 
-                                                                    {(recetasPorTipo[id] || []).map((receta, i) => (
-                                                                        <Draggable
-                                                                            key={`${receta.nombre}::${id}`}
-                                                                            draggableId={`${receta.nombre}::${id}`}
-                                                                            index={i}
-                                                                        >
-                                                                            {(provided) => (
-                                                                                <Card
-                                                                                    ref={provided.innerRef}
-                                                                                    {...provided.draggableProps}
-                                                                                    {...provided.dragHandleProps}
-                                                                                    sx={{ p: 1, mb: 1 }}
-                                                                                >
-                                                                                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                                                        <Box>
-                                                                                            <Typography>{receta.nombre}</Typography>
-                                                                                            <Typography variant="body2">
-                                                                                                Kcal: {receta.kcal} | Pro: {receta.pro} | Carbs: {receta.car}
-                                                                                            </Typography>
-                                                                                        </Box>
-                                                                                        <IconButton
-                                                                                            onClick={() => setRecetasPorTipo(prev => ({
-                                                                                                ...prev,
-                                                                                                [id]: prev[id].filter(r => r.nombre !== receta.nombre),
-                                                                                            }))}
-                                                                                        >
-                                                                                            <CloseIcon />
-                                                                                        </IconButton>
-                                                                                    </Box>
-                                                                                </Card>
-                                                                            )}
-                                                                        </Draggable>
-                                                                    ))}
-                                                                    {provided.placeholder}
-                                                                </Box>
-                                                            )}
-                                                        </Droppable>
-                                                    );
-                                                })}
-                                            </Box>
+                                {/* Filtros nutricionales */}
+                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                                    {['kcal', 'pro', 'car'].map((key) => (
+                                        <Box key={key}>
+                                            <Typography gutterBottom>
+                                                {key.toUpperCase()} ({filtrosNutricionales[key][0]} - {filtrosNutricionales[key][1]})
+                                            </Typography>
+                                            <Slider
+                                                value={filtrosNutricionales[key]}
+                                                min={0}
+                                                max={maximosNutricionales[key]}
+                                                onChange={(_, newValue) => {
+                                                    setFiltrosNutricionales(prev => ({ ...prev, [key]: newValue }));
+                                                }}
+                                                valueLabelDisplay="auto"
+                                            />
                                         </Box>
                                     ))}
+                                    <Button
+                                        variant="text"
+                                        color="secondary"
+                                        onClick={() => {
+                                            setFiltrosNutricionales({
+                                                kcal: [0, maximosNutricionales.kcal],
+                                                pro: [0, maximosNutricionales.pro],
+                                                car: [0, maximosNutricionales.car],
+                                            });
+                                        }}
+                                    >
+                                        Resetear filtros
+                                    </Button>
                                 </Box>
+
+
+                                <Droppable droppableId="categoriaResults">
+                                    {(provided) => (
+                                        <Box
+                                            ref={provided.innerRef}
+                                            {...provided.droppableProps}
+                                            sx={{
+                                                maxHeight: '400px',
+                                                overflowY: 'auto',
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                gap: 2,
+                                                border: '1px solid #ccc',
+                                                borderRadius: 1,
+                                                p: 1,
+                                                backgroundColor: '#fffaf0',
+                                            }}
+                                        >
+                                            {recetasFiltradas
+                                                .filter(rf => {
+                                                    const nombre = rf.nombre || rf.receta;
+                                                    const kcal = rf.kcal ?? rf.energy_kcal ?? 0;
+                                                    const pro = rf.pro ?? 0;
+                                                    const car = rf.car ?? 0;
+                                                    return !recetasBuscadas.some(rb => rb.nombre === nombre) &&
+                                                        kcal >= filtrosNutricionales.kcal[0] && kcal <= filtrosNutricionales.kcal[1] &&
+                                                        pro >= filtrosNutricionales.pro[0] && pro <= filtrosNutricionales.pro[1] &&
+                                                        car >= filtrosNutricionales.car[0] && car <= filtrosNutricionales.car[1];
+                                                })
+                                                .slice(0, 40)
+                                                .map((receta, index) => (
+                                                    <Draggable
+                                                        key={`${receta.nombre || receta.receta}::categoria`}
+                                                        draggableId={`${receta.nombre || receta.receta}::categoria`}
+                                                        index={index}
+                                                    >
+                                                        {(provided) => (
+                                                            <RecetaCard receta={receta} provided={provided} />
+                                                        )}
+                                                    </Draggable>
+                                                ))}
+                                            {provided.placeholder}
+                                        </Box>
+                                    )}
+                                </Droppable>
+
+                            </Box>
+
+                            <Box sx={{ flex: { md: 2 }, maxWidth: { md: '66.6666%' } }}>
+                                <Typography variant="h6" gutterBottom>Tipo de Ingesta: {tipo}</Typography>
+                                <TipoIngestaGrid
+                                    estructura={obtenerEstructuraIngesta(tipo)}
+                                    recetasPorTipo={recetasPorTipo}
+                                    setRecetasPorTipo={setRecetasPorTipo}
+                                />
                             </Box>
                         </Box>
 
                         <Box sx={{ mt: 3, display: 'flex', gap: 5 }}>
                             <Button
                                 variant="outlined"
-                                onClick={() => navigate(`/planificacion_dieta/${encodeURIComponent(pacienteN)}/crear_ingesta`)}
+                                onClick={() => {
+                                    if (modoEdicion) {
+                                        navigate(-1);
+                                    } else {
+                                        navigate(`/planificacion_dieta/${encodeURIComponent(pacienteN)}/crear_ingesta`);
+                                    }
+                                }}
                             >
                                 Atrás
                             </Button>
-                            <Button
-                                type="submit"
-                                variant="contained"
-                                color="primary"
-                                disabled={enviando}
-                            >
-                                {enviando ? <CircularProgress size={24} /> : 'Crear Ingesta'}
+                            <Button type="submit" variant="contained" color="primary" disabled={enviando}>
+                                {enviando
+                                    ? <CircularProgress size={24} />
+                                    : modoEdicion
+                                        ? 'Actualizar Ingesta'
+                                        : 'Crear Ingesta'}
                             </Button>
+
+                            <FormControlLabel
+                                control={
+                                    <Checkbox
+                                        checked={ingestaUniversal}
+                                        onChange={(e) => setIngestaUniversal(e.target.checked)}
+                                    />
+                                }
+                                label="Crear como ingesta universal"
+                            />
                         </Box>
                     </DragDropContext>
                 </form>

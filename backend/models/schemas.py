@@ -99,9 +99,12 @@ class Receta(BaseModel):
 
 class IntakeCreate(BaseModel):
     intake_type: str
-    recipes: Dict[str, List[Receta]]  # Cambiado aquí
+    intake_name: str             
+    recipes: Dict[str, List[Receta]]  
     nutricionista_email: Optional[str] = None
     paciente: Optional[str] = None
+    ingesta_universal: Optional[bool] = False  # ✅ Añadir este campo
+
     
 class IntakeInfo(BaseModel):
     intake_id: str

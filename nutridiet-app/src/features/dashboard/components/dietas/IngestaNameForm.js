@@ -1,14 +1,32 @@
-import React, { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Box, Button, FormControl, FormLabel, MenuItem, TextField, Typography } from '@mui/material';
 import Dashboard from '../../Dashboard';
+
 const tiposIngesta = ['3 comidas', '5 comidas'];
 
 export default function IngestaNameForm() {
     const { pacienteN } = useParams();
+    const location = useLocation();
     const navigate = useNavigate();
 
-    const [formData, setFormData] = useState({ tipo: '', nombreIngesta: '' });
+    const modoEdicion = location.state?.modo === 'editar';
+    const ingestaOriginal = location.state?.ingesta || null;
+
+    const [formData, setFormData] = useState({
+        tipo: '',
+        nombreIngesta: ''
+    });
+
+    // Prellenar en modo edición
+    useEffect(() => {
+        if (modoEdicion && ingestaOriginal) {
+            setFormData({
+                tipo: ingestaOriginal.tipo || '',
+                nombreIngesta: ingestaOriginal.nombre || ''
+            });
+        }
+    }, [modoEdicion, ingestaOriginal]);
 
     const handleChange = (e) => {
         setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
@@ -19,17 +37,21 @@ export default function IngestaNameForm() {
             alert('Por favor completa todos los campos');
             return;
         }
-        // Navegar a la página 2 con el nombre de ingesta en la URL
+
         navigate(`/planificacion_dieta/${encodeURIComponent(pacienteN)}/crear_ingesta/${encodeURIComponent(formData.nombreIngesta)}`, {
-            state: { tipo: formData.tipo } // También puedes pasar el tipo por estado
-        });
+            state: {
+                tipo: formData.tipo,
+                modo: modoEdicion ? 'editar' : 'crear',
+                ingesta: modoEdicion ? ingestaOriginal : null
+            }
+        });        
     };
 
     return (
         <Dashboard>
             <Box sx={{ mx: 'auto', mt: 5 }}>
                 <Typography variant="h5" gutterBottom>
-                    Crear nueva Ingesta
+                    {modoEdicion ? 'Editar Ingesta' : 'Crear nueva Ingesta'}
                 </Typography>
 
                 <FormControl fullWidth sx={{ mb: 2 }}>
@@ -38,6 +60,7 @@ export default function IngestaNameForm() {
                         name="nombreIngesta"
                         value={formData.nombreIngesta}
                         onChange={handleChange}
+                        disabled={modoEdicion} // Desactivar si estamos editando
                         placeholder="Ej. Ingesta del mediodía"
                         required
                     />
@@ -66,7 +89,7 @@ export default function IngestaNameForm() {
                     </Button>
 
                     <Button variant="contained" color="primary" onClick={manejarSiguiente}>
-                        Siguiente
+                        {modoEdicion ? 'Editar Ingesta' : 'Siguiente'}
                     </Button>
                 </Box>
             </Box>

@@ -18,6 +18,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import dayjs from 'dayjs';
+import { fetchWithAuth } from '../api';
 
 
 
@@ -64,23 +65,45 @@ export default function DietaIngePacienteCard() {
 
     const handleEditarDieta = (dieta) => {
         navigate(`/planificacion_dieta/${pacienteN}/editar_dieta/${dieta.id}`); // ajusta según tu ruta
-      };
-      
-      const handleEliminarDieta = async (dieta) => {
+    };
+
+    const handleEliminarDieta = async (dieta) => {
         if (window.confirm('¿Estás seguro de eliminar esta dieta?')) {
-          // llamada al backend para eliminar
+            // llamada al backend para eliminar
         }
-      };
-      
-      const handleEditarIngesta = (ingesta) => {
-        navigate(`/planificacion_dieta/${pacienteN}/editar_ingesta/${ingesta.id}`); // ajusta según tu ruta
-      };
-      
-      const handleEliminarIngesta = async (ingesta) => {
+    };
+
+    const handleEditarIngesta = async (ingesta) => {
+        try {
+            const res = await fetchWithAuth(
+                `/planificacion_ingestas/ver_ingesta/${encodeURIComponent(pacienteN)}/${encodeURIComponent(ingesta.intake_name)}`
+            );
+            if (!res.ok) throw new Error('No se pudo cargar la ingesta');
+    
+            const data = await res.json();
+    
+            navigate(`/planificacion_dieta/${encodeURIComponent(pacienteN)}/editar_ingesta_form`, {
+                state: {
+                    modo: 'editar',
+                    ingesta: {
+                        tipo: data.intake_type, // aquí si intake_type se mantiene para '3 comidas', lo puedes usar
+                        nombre: data.intake_name,
+                        recipes: data.recipes,
+                        ingesta_universal: data.ingesta_universal
+                    }
+                }
+            });
+        } catch (err) {
+            console.error('Error al cargar la ingesta:', err);
+            alert('No se pudo cargar la ingesta para editar');
+        }
+    };    
+    
+    const handleEliminarIngesta = async (ingesta) => {
         if (window.confirm('¿Estás seguro de eliminar esta ingesta?')) {
-          // llamada al backend para eliminar
+            // llamada al backend para eliminar
         }
-      };      
+    };
 
     return (
         <Dashboard>
@@ -101,7 +124,7 @@ export default function DietaIngePacienteCard() {
                         <Accordion key={idx} sx={{ mt: 2 }}>
                             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                                 <Typography sx={{ flexGrow: 1 }}>
-                                    {ingesta.intake_type}
+                                    {ingesta.intake_name}
                                 </Typography>
                                 <IconButton size="small" onClick={() => handleEditarIngesta(ingesta)}>
                                     <EditIcon fontSize="small" />

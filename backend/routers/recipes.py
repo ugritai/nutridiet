@@ -527,12 +527,12 @@ async def obtener_maximos_nutricionales():
         "car": ["carbohydrates_g", "car", "carbohidratos"]
     }
 
-    def obtener_maximo_para_campos(keys):
+    async def obtener_maximo_para_campos(keys):
         valor_max = 0
         for collection_name in collections:
             collection = recipe_db_host[collection_name]
             for key in keys:
-                doc = collection.find_one(
+                doc = await collection.find_one(
                     {f"nutritional_info.{key}": {"$exists": True}, "origin_ISO": "ESP"},
                     sort=[(f"nutritional_info.{key}", DESCENDING)]
                 )
@@ -542,8 +542,8 @@ async def obtener_maximos_nutricionales():
                         valor_max = valor
         return round(valor_max, 2)
 
-    return {
-        "kcal": obtener_maximo_para_campos(campos_nutricionales["kcal"]),
-        "pro": obtener_maximo_para_campos(campos_nutricionales["pro"]),
-        "car": obtener_maximo_para_campos(campos_nutricionales["car"])
-    }
+    kcal = await obtener_maximo_para_campos(campos_nutricionales["kcal"])
+    pro = await obtener_maximo_para_campos(campos_nutricionales["pro"])
+    car = await obtener_maximo_para_campos(campos_nutricionales["car"])
+
+    return {"kcal": kcal, "pro": pro, "car": car}
