@@ -1,28 +1,39 @@
-from fastapi import APIRouter, HTTPException
-from database.connection import recipe_db_host, bedca_collection
+from fastapi import APIRouter, HTTPException, Query
+from database.connection import recipe_db_host, bedca_collection, embeddings_recipe_collection
 from utils.food_utils import remove_stop_words, convert_objectid, convertir_a_gramos, extraer_cantidad_y_unidad
 from unidecode import unidecode
 from fastapi.encoders import jsonable_encoder
 from bson import ObjectId
+from typing import Optional
+
+import re
 
 router = APIRouter(tags=["Recipes"])
 
 #collections = ['abuela', 'food.com', 'mealrec', 'recipe1m', 'recipenlg', 'recipeQA']
-collections = ['abuela']
+collections = ['abuela_bedca', 'GNHD_24_25']
 recetas_collection = recipe_db_host['abuela_bedca']
 
 # Mapa de categorías a palabras clave
 PALABRAS_CLAVE = {
     'sopas': ['sopa', 'crema'],
-    'ensaladas': ['ensalada'],
+    'ensaladas': ['ensalada', 'ensaladas', 'Ensaladas'],
+    'verduras': ['1. Verduras y Hortalizas', 'Verduras y Hortalizas', 'Verduras', '1. verduras y hortalizas'],
+    'otros': ['desconocidos'],
     'arroz': ['paella', 'risotto', 'arroz'],
     'pasta': ['espaguetis', 'macarrones', 'ravioli', 'lasaña', 'pizza', 'tortellini', 'spaghetti', 'ramen'],
     'guisos': ['guiso', 'puré', 'pure', 'lentejas', 'garbanzos', 'estofado', 'cocido'],
-    'pescado': ['bonito', 'atún', 'sardina', 'dorada', 'bacalao', 'salmón'],
+    'pescado': ['bonito', 'atún', 'sardina', 'dorada', 'bacalao', 'salmón', '2. pescados y mariscos'],
     'carne': ['pollo', 'ternera', 'cerdo', 'pavo', 'jamón', 'conejo', 'redondo'],
     'postre': ['postre', 'helado', 'tarta', 'galleta', 'bizcocho', 'mousse', 'chocolate', 'dulce', 'brownie', 'pudin', 'batido', 'pancakes', 'porridge'],
     'fruta': ['manzana', 'plátano', 'pera', 'naranja', 'pomelo', 'kiwi', 'sandía', 'melón', 'cereza', 'ciruela', 'fresa', 'mandarina']
 }
+
+def capitalizar_primera_letra(texto: str) -> str:
+    if not texto:
+        return texto
+    return texto[0].upper() + texto[1:].lower()
+
 
 @router.get("/all_categories")
 async def get_all_categories():
@@ -60,7 +71,8 @@ async def buscar_recetas(nombre: str, limit: int = 5):
                 title_sin_tildes = unidecode(title.lower())
 
                 if palabra in title_sin_tildes:
-                    sugerencias.add(title)
+                    # Añadimos título capitalizado
+                    sugerencias.add(capitalizar_primera_letra(title))
 
                 if len(sugerencias) >= limit:
                     break
@@ -71,48 +83,90 @@ async def buscar_recetas(nombre: str, limit: int = 5):
     else:
         raise HTTPException(status_code=404, detail="Receta no encontrada")
 
-@router.get("/por_categoria/{categoria}")
-async def get_recetas_por_categoria(categoria: str):
-    categoria_normalizada = unidecode(categoria.lower().strip())
-    resultados = {}
+from fastapi import Query
+from typing import Optional
+import re
 
-    # Primero, buscar si hay recetas donde category == categoria (caso directo)
+@router.get("/por_categoria/{categoria}")
+async def get_recetas_por_categoria(
+    categoria: str,
+    por_porcion: bool = True,
+    kcal_min: Optional[float] = Query(None),
+    kcal_max: Optional[float] = Query(None),
+    pro_min: Optional[float] = Query(None),
+    pro_max: Optional[float] = Query(None),
+    car_min: Optional[float] = Query(None),
+    car_max: Optional[float] = Query(None),
+):
+    categoria_normalizada = unidecode(categoria.lower().strip())
+    print (categoria_normalizada)
+    resultados = set()
+
+    def get_nutri_field(valores: dict, *keys):
+        for key in keys:
+            if key in valores:
+                return valores[key]
+        return 0
+
+    def pasa_filtros(valores):
+        if por_porcion:
+            kcal = get_nutri_field(valores, "energy_kcal_porcion", "kcal_porcion", "kcal_racion", "energy_kcal")
+            pro = get_nutri_field(valores, "proteins_porcion", "pro_porcion", "proteinas_porcion", "proteins_g", "pro")
+            car = get_nutri_field(valores, "carbohydrates_porcion", "car_porcion", "carbohidratos_porcion", "carbohydrates_g", "car")
+        else:
+            kcal = get_nutri_field(valores, "energy_kcal", "kcal", "kcal_100g")
+            pro = get_nutri_field(valores, "proteins_g", "pro", "proteinas")
+            car = get_nutri_field(valores, "carbohydrates_g", "car", "carbohidratos")
+
+        if (
+            (kcal_min is not None and kcal < kcal_min) or
+            (kcal_max is not None and kcal > kcal_max) or
+            (pro_min is not None and pro < pro_min) or
+            (pro_max is not None and pro > pro_max) or
+            (car_min is not None and car < car_min) or
+            (car_max is not None and car > car_max)
+        ):
+            return False
+        return True
+
+    # 1. Buscar coincidencia exacta en 'category'
     for collection_name in collections:
         collection = recipe_db_host[collection_name]
         cursor = collection.find({
             'origin_ISO': 'ESP',
-            'category': {'$regex': f'^{categoria}$', '$options': 'i'}
-        }, {'title': 1})
+            'category': {'$regex': f'^{re.escape(categoria_normalizada)}$', '$options': 'i'}
+        }, {'title': 1, 'nutritional_info': 1})
 
         async for doc in cursor:
-            titulo = doc.get("title", "")
-            resultados[titulo.lower()] = titulo  # Guardar el original
+            if pasa_filtros(doc.get("nutritional_info", {})):
+                resultados.add(doc.get("title", ""))
 
-    if resultados:
-        return {"recetas": list(resultados.values())}
-
-    # Si no hay coincidencias por category exacto, buscar por palabras clave
+    # 2. Buscar por palabras clave si la categoría es válida
     if categoria_normalizada not in PALABRAS_CLAVE:
-        raise HTTPException(status_code=404, detail="Categoría no válida")
+        if not resultados:
+            raise HTTPException(status_code=404, detail="Categoría no válida y sin resultados")
+        return {"recetas": list(resultados)}
 
     palabras_clave = [unidecode(p.lower()) for p in PALABRAS_CLAVE[categoria_normalizada]]
 
     for collection_name in collections:
         collection = recipe_db_host[collection_name]
-        cursor = collection.find({'origin_ISO': 'ESP'}, {'title': 1})
+        cursor = collection.find({'origin_ISO': 'ESP'}, {'title': 1, 'nutritional_info': 1})
 
         async for doc in cursor:
             titulo = doc.get("title", "")
             titulo_sin_tildes = unidecode(titulo.lower())
 
             if any(palabra in titulo_sin_tildes for palabra in palabras_clave):
-                resultados[titulo.lower()] = titulo  # Guardar el original
+                if pasa_filtros(doc.get("nutritional_info", {})):
+                    resultados.add(titulo)
 
     if not resultados:
         raise HTTPException(status_code=404, detail="No se encontraron recetas para esta categoría")
 
-    return {"recetas": list(resultados.values())}
- 
+    return {"recetas": list(resultados)}
+
+
 @router.get("/por_categoria_nutri/{categoria}")
 async def get_recetas_por_categoria_nutri(categoria: str):
     categoria_normalizada = unidecode(categoria.lower().strip())
@@ -224,116 +278,99 @@ async def get_receta_detalle(nombre: str):
             if nombre_normalizado == titulo_normalizado:
                 result = doc
                 result = convert_objectid(result)
-                
-                # Determinar la categoría usando el mapa de palabras clave
-                categoria = "desconocida"  # Valor por defecto en caso de no encontrar ninguna categoría
+
+                # Determinar categoría según palabras clave
+                categoria = "desconocida"
                 for cat, palabras in PALABRAS_CLAVE.items():
                     if any(palabra in unidecode(titulo.lower()) for palabra in palabras):
                         categoria = cat
                         break
-                
-                # Añadir la categoría a la respuesta
+
                 result["categoria"] = categoria.capitalize()
 
+                if "title" in result:
+                    result["title"] = capitalizar_primera_letra(result["title"])
+
+                # Buscar sugerencias relacionadas
+                sugeridos = await sugerir_recetas(nombre)
+
                 return {
-                    "receta": jsonable_encoder(result)
+                    "receta": jsonable_encoder(result),
+                    "sugeridos": sugeridos
                 }
+
+    # Si no se encontró, intentar sugerencias
+    sugeridos = await sugerir_recetas(nombre)
+    if sugeridos:
+        suggested_titles = [r["titulo"] for r in sugeridos]
+        return {
+            "message": "No se encontró la receta exacta. Pero puede que le interese alguna de estas recetas:",
+            "sugeridos": suggested_titles
+        }
 
     raise HTTPException(status_code=404, detail="Receta no encontrada")
 
 @router.get("/{receta}/nutricion")
-async def calcular_nutricion(
-    receta: str,  # Usamos 'receta' como título de la receta
-    por_porcion: bool = True
+async def obtener_nutricion(
+    receta: str,
+    por_porcion: bool = Query(True)
 ):
-    # Busca la receta usando el título directamente
-    receta_obj = await recetas_collection.find_one({"title": receta})
+    nombre_normalizado = unidecode(receta.strip().lower())
+    receta_obj = None
+    raciones = 1
+    total_nutricion = {}
+
+    for collection_name in collections:
+        collection = recipe_db_host[collection_name]
+        cursor = collection.find({})
+
+        async for doc in cursor:
+            titulo = doc.get("title", "")
+            titulo_normalizado = unidecode(titulo.strip().lower())
+
+            if titulo_normalizado == nombre_normalizado:
+                receta_obj = doc
+                raciones = receta_obj.get("n_diners", 1)
+                total_nutricion = receta_obj.get("nutritional_info", {})
+                # Capitalizar título con solo primera letra en mayúscula
+                if "title" in receta_obj:
+                    receta_obj["title"] = capitalizar_primera_letra(receta_obj["title"])
+                break
+
+        if receta_obj:
+            break
+
     if not receta_obj:
         raise HTTPException(status_code=404, detail="Receta no encontrada")
 
-    total_nutricion = {}
-    ingredientes = receta_obj.get("ingredients", [])  # Cambié receta por receta_obj
-    if not isinstance(ingredientes, list):
-        raise HTTPException(status_code=400, detail="Formato de ingredientes incorrecto")
-
-    # Iteramos sobre los ingredientes
-    # Buscar y procesar cada ingrediente de la receta
-# Iteramos sobre los ingredientes
-    for ing in ingredientes:
-        ingrediente_texto = ing.get("ingredient")  # Obtenemos el nombre del ingrediente
-        ingrediente_id = ing.get("ingredientID")  # Obtenemos el ObjectId del ingrediente
-
-        if ingrediente_id is None:
-            continue  # Si no hay ID, pasamos al siguiente ingrediente
-
-        # Verificamos si el ID es un ObjectId
-        if not isinstance(ingrediente_id, ObjectId):
-            try:
-                ingrediente_id = ObjectId(ingrediente_id)  # Convertimos el ID a ObjectId si es necesario
-            except Exception as e:
-                print(f"Error al convertir {ingrediente_id}: {e}")
-                continue  # Si el ID no es válido, lo ignoramos
-
-        # Extraemos la cantidad y unidad del ingrediente
-        cantidad, unidad = extraer_cantidad_y_unidad(ingrediente_texto)
-        gramos_estimados = convertir_a_gramos(cantidad, unidad)  # Convertimos a gramos
-
-        # Buscamos el alimento en la colección de BEDCA
-        alimento = await bedca_collection.find_one({"_id": ingrediente_id})
-
-        if not alimento:
-            continue  # Si no encontramos el alimento, pasamos al siguiente
-
-        # Obtenemos la información nutricional del alimento
-        info = alimento.get("nutritional_info_100g", {})
-
-        # Sumamos la información nutricional al total
-        for clave, valor in info.items():
-            if valor in ('', None):  # Si el valor es vacío o None, lo ignoramos
-                continue
-            if isinstance(valor, dict):
-                for subclave, subvalor in valor.items():
-                    if subvalor in ('', None):  # Ignoramos valores vacíos o None
-                        continue
-                    clave_compuesta = f"{clave}.{subclave}"
-                    total_nutricion[clave_compuesta] = total_nutricion.get(clave_compuesta, 0) + float(subvalor) * gramos_estimados / 100
-            else:
-                total_nutricion[clave] = total_nutricion.get(clave, 0) + float(valor) * gramos_estimados / 100
-
-    # Si la nutrición es por porción, ajustamos según el número de raciones
-    raciones = receta_obj.get("n_diners", 1)  # Usamos receta_obj aquí también
     if por_porcion:
-        total_nutricion = {k: round(v / raciones, 2) for k, v in total_nutricion.items()}
+        total_nutricion = {k: round((v if v is not None else 0) / raciones, 2) for k, v in total_nutricion.items()}
     else:
-        total_nutricion = {k: round(v, 2) for k, v in total_nutricion.items()}
+        total_nutricion = {k: round((v if v is not None else 0), 2) for k, v in total_nutricion.items()}
 
     return {
         "receta": receta_obj.get("title"),
         "por_porcion": por_porcion,
         "raciones": raciones,
-        "valores_nutricionales": total_nutricion
+        "nutritional_info": total_nutricion
     }
-
-
-from fastapi import Query
 
 @router.get("/categoria/{categoria}/nutricion_simplificada")
 async def obtener_kcal_pro_car_por_categoria(
     categoria: str,
     por_porcion: bool = True,
-    kcal_min: float = Query(None),
-    kcal_max: float = Query(None),
-    pro_min: float = Query(None),
-    pro_max: float = Query(None),
-    car_min: float = Query(None),
-    car_max: float = Query(None),
+    kcal_min: Optional[float] = Query(None),
+    kcal_max: Optional[float] = Query(None),
+    pro_min: Optional[float] = Query(None),
+    pro_max: Optional[float] = Query(None),
+    car_min: Optional[float] = Query(None),
+    car_max: Optional[float] = Query(None),
 ):
-    from unidecode import unidecode
-
     categoria_normalizada = unidecode(categoria.lower().strip())
+    print(categoria_normalizada)
     recetas_encontradas = {}
 
-    # Buscar recetas por categoría exacta
+    # Buscar por categoría exacta
     for collection_name in collections:
         collection = recipe_db_host[collection_name]
         cursor = collection.find({
@@ -345,11 +382,8 @@ async def obtener_kcal_pro_car_por_categoria(
             titulo = doc.get("title", "")
             recetas_encontradas[titulo.lower()] = doc
 
-    # Buscar por palabras clave si no se encontró ninguna
-    if not recetas_encontradas:
-        if categoria_normalizada not in PALABRAS_CLAVE:
-            raise HTTPException(status_code=404, detail="Categoría no válida")
-
+    # Buscar por palabras clave
+    if categoria_normalizada in PALABRAS_CLAVE:
         palabras_clave = [unidecode(p.lower()) for p in PALABRAS_CLAVE[categoria_normalizada]]
 
         for collection_name in collections:
@@ -359,48 +393,61 @@ async def obtener_kcal_pro_car_por_categoria(
             async for doc in cursor:
                 titulo = doc.get("title", "")
                 titulo_sin_tildes = unidecode(titulo.lower())
-
                 if any(p in titulo_sin_tildes for p in palabras_clave):
                     recetas_encontradas[titulo.lower()] = doc
 
     if not recetas_encontradas:
         raise HTTPException(status_code=404, detail="No se encontraron recetas para esta categoría")
 
-    # Calcular nutrición por receta y aplicar filtros
     resultados = []
 
     for receta_doc in recetas_encontradas.values():
-        titulo = receta_doc.get("title")
-        try:
-            nutricion = await calcular_nutricion(titulo, por_porcion=por_porcion)
-            valores = nutricion.get("valores_nutricionales", {})
+        titulo = receta_doc.get("title", "")
+        valores = receta_doc.get("nutritional_info", {})
 
-            kcal = round(valores.get("energy_kcal", 0), 2)
-            pro = round(valores.get("pro", 0), 2)
-            car = round(valores.get("car", 0), 2)
+        # Acceso inteligente a los campos por porción o por 100g
+        def get_nutri_field(*keys):
+            for key in keys:
+                valor = valores.get(key)
+                if valor is not None:
+                    return valor
+            return 0
 
-            # Aplicar filtros
-            if (
-                (kcal_min is not None and kcal < kcal_min) or
-                (kcal_max is not None and kcal > kcal_max) or
-                (pro_min is not None and pro < pro_min) or
-                (pro_max is not None and pro > pro_max) or
-                (car_min is not None and car < car_min) or
-                (car_max is not None and car > car_max)
-            ):
-                continue
 
-            resultados.append({
-                "receta": titulo,
-                "kcal": kcal,
-                "pro": pro,
-                "car": car
-            })
+        def safe_round(val):
+            try:
+                return round(float(val), 2)
+            except (TypeError, ValueError):
+                return 0.0
 
-        except Exception as e:
-            print(f"Error al calcular nutrición para '{titulo}': {e}")
+        if por_porcion:
+            kcal = safe_round(get_nutri_field("energy_kcal_porcion", "kcal_porcion", "kcal_racion", "energy_kcal"))
+            pro = safe_round(get_nutri_field("proteins_porcion", "pro_porcion", "proteinas_porcion", "proteins_g", "pro"))
+            car = safe_round(get_nutri_field("carbohydrates_porcion", "car_porcion", "carbohidratos_porcion", "carbohydrates_g", "car"))
+        else:
+            kcal = safe_round(get_nutri_field("energy_kcal", "kcal", "kcal_100g"))
+            pro = safe_round(get_nutri_field("proteins_g", "pro", "proteinas"))
+            car = safe_round(get_nutri_field("carbohydrates_g", "car", "carbohidratos"))
+
+
+        # Filtros
+        if (
+            (kcal_min is not None and kcal < kcal_min) or
+            (kcal_max is not None and kcal > kcal_max) or
+            (pro_min is not None and pro < pro_min) or
+            (pro_max is not None and pro > pro_max) or
+            (car_min is not None and car < car_min) or
+            (car_max is not None and car > car_max)
+        ):
             continue
 
+        resultados.append({
+            "receta": titulo,
+            "kcal": kcal,
+            "pro": pro,
+            "car": car
+        })
+    resultados.sort(key=lambda x: x["receta"].lower())
     return {
         "categoria": categoria,
         "por_porcion": por_porcion,
@@ -410,4 +457,93 @@ async def obtener_kcal_pro_car_por_categoria(
             "car_min": car_min, "car_max": car_max
         },
         "resultados": resultados
+    }
+
+    
+from sentence_transformers import SentenceTransformer, util
+import torch
+
+model = SentenceTransformer('sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2')
+
+@router.get("/sugerir_recetas/{nombre}")
+async def sugerir_recetas(nombre: str, limit: int = 10):
+    nombre_normalizado = unidecode(nombre.strip().lower())
+    embedding_input = model.encode(nombre_normalizado)
+    embedding_input = torch.tensor(embedding_input, dtype=torch.float32)
+
+    # Obtener todos los embeddings
+    docs = list(embeddings_recipe_collection.find({}, {"_id": 0, "title": 1, "category": 1, "embedding": 1}))
+
+    similarities = []
+    for doc in docs:
+        doc_title_normalizado = unidecode(doc["title"].strip().lower())
+        if doc_title_normalizado == nombre_normalizado:
+            continue
+
+        categoria_doc = doc.get("category", "")
+        emb = torch.tensor(doc["embedding"], dtype=torch.float32)
+        sim = util.cos_sim(embedding_input, emb)[0][0].item()
+
+        similarities.append((sim, doc, categoria_doc))
+
+    if not similarities:
+        raise HTTPException(status_code=404, detail="No se encontraron sugerencias")
+
+    # Ordenar por similitud
+    top = sorted(similarities, key=lambda x: x[0], reverse=True)[:limit]
+
+    # Obtener la categoría de la receta objetivo (si existe)
+    categoria_objetivo = None
+    for doc in docs:
+        if unidecode(doc["title"].strip().lower()) == nombre_normalizado:
+            categoria_objetivo = doc.get("category", "")
+            break
+
+    # Ordenar para dar preferencia a la misma categoría
+    top_ordenado = sorted(top, key=lambda x: x[2] != categoria_objetivo)
+
+    # Formatear resultados
+    resultados = [
+        {
+            "titulo": doc["title"],
+            "categoria": categoria_doc,
+            "similitud": round(sim, 4)
+        }
+        for sim, doc, categoria_doc in top_ordenado
+    ]
+
+    if not resultados:
+        raise HTTPException(status_code=404, detail="No se encontraron recetas distintas al término de búsqueda")
+
+    return resultados
+
+from pymongo import DESCENDING
+
+@router.get("/recetas/maximos_nutricionales")
+async def obtener_maximos_nutricionales():
+    campos_nutricionales = {
+        "kcal": ["energy_kcal", "kcal", "kcal_100g"],
+        "pro": ["proteins_g", "pro", "proteinas"],
+        "car": ["carbohydrates_g", "car", "carbohidratos"]
+    }
+
+    def obtener_maximo_para_campos(keys):
+        valor_max = 0
+        for collection_name in collections:
+            collection = recipe_db_host[collection_name]
+            for key in keys:
+                doc = collection.find_one(
+                    {f"nutritional_info.{key}": {"$exists": True}, "origin_ISO": "ESP"},
+                    sort=[(f"nutritional_info.{key}", DESCENDING)]
+                )
+                if doc:
+                    valor = doc["nutritional_info"].get(key)
+                    if isinstance(valor, (int, float)) and valor > valor_max:
+                        valor_max = valor
+        return round(valor_max, 2)
+
+    return {
+        "kcal": obtener_maximo_para_campos(campos_nutricionales["kcal"]),
+        "pro": obtener_maximo_para_campos(campos_nutricionales["pro"]),
+        "car": obtener_maximo_para_campos(campos_nutricionales["car"])
     }

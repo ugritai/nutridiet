@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link as RouterLink } from 'react-router-dom';
+import { useParams, Link as RouterLink, data } from 'react-router-dom';
 import {
   Accordion,
   AccordionSummary,
@@ -9,6 +9,7 @@ import {
   CardContent,
   Typography,
   CircularProgress,
+  Divider,
   Chip,
   Box,
   List,
@@ -43,13 +44,15 @@ const ListSection = ({ title, icon: Icon, items, filterFn }) => {
           {filteredItems.map((item, index) => (
             <ListItem key={index} sx={{ alignItems: 'flex-start', py: 1.5 }}>
               <ListItemIcon sx={{ mt: '4px', minWidth: 32 }}>
-                <Avatar sx={{
-                  width: 24,
-                  height: 24,
-                  bgcolor: theme.palette.primary.main,
-                  color: theme.palette.primary.contrastText,
-                  fontSize: '0.75rem'
-                }}>
+                <Avatar
+                  sx={{
+                    width: 24,
+                    height: 24,
+                    bgcolor: theme.palette.primary.main,
+                    color: theme.palette.primary.contrastText,
+                    fontSize: '0.75rem'
+                  }}
+                >
                   {index + 1}
                 </Avatar>
               </ListItemIcon>
@@ -58,6 +61,8 @@ const ListSection = ({ title, icon: Icon, items, filterFn }) => {
                   item.ingredient
                     ? item.ingredient.replace(/^'+|'+$/g, '').trim()
                     : item
+                      .replace(/^\s*\d+\.\s*/, '')
+                      .replace(/^\s*([\d]+[\.\)]?|[·•])+\s*/g, '')  // Elimina números + punto/paréntesis o símbolos · • al inicio
                       .replace(/\bPaso\s*\d+\b/gi, '')
                       .replace(/(?:^|,)\s*'?\d+'?(?=\s|$)/g, '')
                       .replace(/(^|[\s])[,]+(?=[\s]|$)/g, ' ')
@@ -74,7 +79,6 @@ const ListSection = ({ title, icon: Icon, items, filterFn }) => {
   );
 };
 
-
 const getDomainFromUrl = (url) => {
   try {
     return new URL(url).hostname.replace('www.', '');
@@ -86,11 +90,10 @@ const getDomainFromUrl = (url) => {
 const DietaryChip = ({ label }) => {
   const theme = useTheme();
 
-  // Mapa de categorías y colores asociados
   const colorMap = {
-    'Alto en': 'error',  // Todos los "Alto en" tendrán color error
-    'Bajo en': 'success', // Todos los "Bajo en" tendrán color success
-    'Sin': 'success',  // Sin tendrá color primario
+    'Alto en': 'error',
+    'Bajo en': 'success',
+    'Sin': 'success',
   };
 
   const colorKey = Object.keys(colorMap).find(key => label.startsWith(key)) || 'default';
@@ -114,13 +117,12 @@ const DietaryChip = ({ label }) => {
 const DifficultyChip = ({ label }) => {
   const theme = useTheme();
 
-  // Mapa de colores para las dificultades
   const colorMap = {
-    'Dificultad muy baja': 'success', // Baja dificultad
-    'Dificultad baja': 'success',     // Baja dificultad
-    'Dificultad media': 'warning',   // Dificultad media
-    'Dificultad alta': 'error',      // Alta dificultad
-    'Dificultad muy alta': 'error',  // Muy alta dificultad
+    'Dificultad muy baja': 'success',
+    'Dificultad baja': 'success',
+    'Dificultad media': 'warning',
+    'Dificultad alta': 'error',
+    'Dificultad muy alta': 'error',
   };
 
   return (
@@ -144,28 +146,71 @@ export default function RecipeDetailCard() {
   const { nombre } = useParams();
   const [recipe, setRecipe] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [sugeridos, setSugeridos] = useState([]);
 
-  console.log(nombre);
+
   useEffect(() => {
     setLoading(true);
     fetch(`http://localhost:8000/recetas/detalle_receta/${encodeURIComponent(nombre)}`)
       .then(res => res.json())
       .then(data => {
-        console.log("Recipe data:", data);
-        setRecipe(data.receta);
+        // Aseguramos que dietary_preferences y nutritional_reviw son arrays
+        setSugeridos(data.sugeridos || []);
+        setRecipe({
+          ...data.receta,
+          dietary_preferences: Array.isArray(data.receta.dietary_preferences) ? data.receta.dietary_preferences : [],
+          nutritional_reviw: Array.isArray(data.receta.nutritional_reviw) ? data.receta.nutritional_reviw : []
+        });
       })
       .catch(err => console.error("Error:", err))
       .finally(() => setLoading(false));
   }, [nombre]);
-
+  console.log(recipe)
+  console.log(sugeridos)
   if (loading) return <CircularProgress sx={{ mt: 4 }} />;
 
   if (!recipe) {
+    // Si no hay alimento mostrar sugerencias 
     return (
-      <Card sx={{ maxWidth: 1200, mx: 'auto', mt: 4, p: 3 }}>
-        <Typography variant="h6" color="textSecondary">
-          Receta no encontrada
-        </Typography>
+      <Card sx={{
+        maxWidth: '100%',
+        mx: 'auto',
+        mt: 4,
+        boxShadow: 3,
+        borderRadius: 4
+      }}>
+        <CardContent>
+          <Typography variant="h6" gutterBottom>
+            No se encontró información para el receta solicitado.
+          </Typography>
+
+          {sugeridos.length > 0 && (
+            <Box sx={{ mt: 3 }}>
+              <Divider sx={{ mb: 3 }} />
+              <Typography variant="h6" gutterBottom>
+                Recetas relacionados
+              </Typography>
+              <Box sx={{
+                display: 'flex',
+                gap: 2,
+                flexWrap: 'wrap'
+              }}>
+                {sugeridos.map((item, index) => {
+                  const nombreSugerido = typeof item === 'string' ? item : item.titulo;
+                  return (
+                    <Chip
+                      key={index}
+                      label={nombreSugerido}
+                      component={RouterLink}
+                      to={`/recetas/detalle_receta/${encodeURIComponent(nombreSugerido)}`}
+                      clickable
+                    />
+                  );
+                })}
+              </Box>
+            </Box>
+          )}
+        </CardContent>
       </Card>
     );
   }
@@ -208,24 +253,29 @@ export default function RecipeDetailCard() {
               icon={<People />}
               label={`${recipe.n_diners} personas`}
             />
-            <Chip
-              icon={<AccessTime />}
-              label={`${recipe.minutes} minutos`}
-            />
-
+            {recipe.minutes != null && (
+              <Chip
+                icon={<AccessTime />}
+                label={`${recipe.minutes} minutos`}
+              />
+            )}
           </Box>
 
-          <Box sx={{ display: 'flex', flexWrap: 'wrap' }}>
-            {recipe.dietary_preferences.map((pref, index) => (
-              <DietaryChip key={index} label={pref} />
-            ))}
-          </Box>
+          {recipe.dietary_preferences.length > 0 && (
+            <Box sx={{ display: 'flex', flexWrap: 'wrap' }}>
+              {recipe.dietary_preferences.map((pref, index) => (
+                <DietaryChip key={index} label={pref} />
+              ))}
+            </Box>
+          )}
 
-          <Box sx={{ display: 'flex', flexWrap: 'wrap' }}>
-            {difficulties.map((difficulty, index) => (
-              <DifficultyChip key={index} label={difficulty} />
-            ))}
-          </Box>
+          {difficulties.length > 0 && (
+            <Box sx={{ display: 'flex', flexWrap: 'wrap' }}>
+              {difficulties.map((difficulty, index) => (
+                <DifficultyChip key={index} label={difficulty} />
+              ))}
+            </Box>
+          )}
         </Box>
 
         <Grid container spacing={3}>
@@ -246,34 +296,120 @@ export default function RecipeDetailCard() {
               icon={AccessTime}
               items={recipe.steps}
               filterFn={(step) => {
-                // Filtra los pasos vacíos y también elimina "Paso X", comas, comillas y otros caracteres no deseados
                 return step
+                  .replace(/^\s*\d+\.\s*/, '')  // elimina "1. ", "2. " al inicio del paso
+                  .replace(/^\s*([\d]+[\.\)]?|[·•])+\s*/g, '')  // Elimina números + punto/paréntesis o símbolos · • al inicio
                   .replace(/(Paso\s*\d+|,\s*|'?\d+|'?\s*\d+)/gi, '')  // Eliminar "Paso X", comas y números extra
                   .replace(/^'+|'+$/g, '')  // Eliminar comillas al inicio y final
-                  .replace(/(^|[\s])[,]+(?=[\s]|$)/g, ' ')
-                  .trim() !== "";  // Filtrar pasos vacíos después de limpiar
+                  .replace(/(^|[\s])[,]+(?=[\s]|$)/g, ' ')  // Eliminar comas sueltas
+                  .trim() !== "";
               }}
             />
           </Grid>
         </Grid>
 
         <Box sx={{ mt: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <RecipeNutritionTable />
+          <RecipeNutritionTable
+            nutritionalInfo={recipe.nutritional_info}
+            raciones={recipe.n_diners}
+          />
         </Box>
 
-        {/* Source & Additional Info */}
+        {(recipe.nutritional_reviw?.length > 0 || recipe.descripcion) && (
+          <Box sx={{ mt: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Accordion sx={{ borderRadius: 3, boxShadow: 1, width: '100%' }}>
+              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center' }}>
+                  Comentario Nutricional
+                </Typography>
+              </AccordionSummary>
+              <AccordionDetails>
+                <List dense>
+                  {/* Si hay array de reviews */}
+                  {recipe.nutritional_reviw?.map((review, index) => (
+                    <ListItem key={index}>
+                      <Typography variant="body2">{review}</Typography>
+                    </ListItem>
+                  ))}
+                  {/* Si hay un comentario único en 'descripcion' */}
+                  {recipe.descripcion && (
+                    <ListItem>
+                      <Typography variant="body2">{recipe.descripcion}</Typography>
+                    </ListItem>
+                  )}
+                </List>
+              </AccordionDetails>
+            </Accordion>
+          </Box>
+        )}
+
+
         <Box sx={{ mt: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Typography variant="body2" color="textSecondary">
-            Fuente: <Chip
-              component="a"
-              href={recipe.url}
-              label={getDomainFromUrl(recipe.url)}
-              clickable
-              size="small"
-              sx={{ ml: 1 }}
-            />
+          <Typography variant="body2" color="textSecondary" sx={{ mt: 2 }}>
+            Fuente:{" "}
+            {recipe.url ? (
+              <Chip
+                component="a"
+                href={recipe.url}
+                label={getDomainFromUrl(recipe.url)}
+                clickable
+                size="small"
+                sx={{ ml: 1 }}
+              />
+            ) : recipe.source ? (
+              <Chip
+                label={recipe.source}
+                size="small"
+                sx={{ ml: 1, maxWidth: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+              />
+            ) : (
+              <Chip
+                label="Desconocida"
+                size="small"
+                sx={{ ml: 1 }}
+              />
+            )}
           </Typography>
         </Box>
+
+        {/* Recetas relacionados */}
+        {
+          sugeridos.length > 0 && (
+            <Box sx={{ mt: 3 }}>
+              <Divider sx={{ mb: 3 }} />
+              <Typography variant="h6" gutterBottom>
+                Recetas relacionados
+              </Typography>
+              <Box sx={{
+                display: 'flex',
+                gap: 2,
+                flexWrap: 'wrap'
+              }}>
+                {sugeridos.map((item, index) => {
+                  const nombreSugerido = typeof item === 'string' ? item : item.titulo;
+                  return (
+                    <Chip
+                      key={index}
+                      label={nombreSugerido}
+                      component={RouterLink}
+                      to={`/recetas/detalle_receta/${encodeURIComponent(nombreSugerido)}`}
+                      clickable
+                      sx={{
+                        borderRadius: 1,
+                        px: 2,
+                        transition: 'all 0.3s',
+                        '&:hover': {
+                          transform: 'translateY(-2px)',
+                          boxShadow: 2
+                        }
+                      }}
+                    />
+                  );
+                })}
+              </Box>
+            </Box>
+          )
+        }
       </CardContent>
     </Card>
   );

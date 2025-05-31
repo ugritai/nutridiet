@@ -126,7 +126,7 @@ export default function FoodDetailCard() {
         // Si no hay alimento mostrar sugerencias 
         return (
             <Card sx={{
-                maxWidth:'100%' ,
+                maxWidth: '100%',
                 mx: 'auto',
                 mt: 4,
                 boxShadow: 3,
@@ -170,7 +170,7 @@ export default function FoodDetailCard() {
 
     return (
         <Card sx={{
-            maxWidth:'100%' ,
+            maxWidth: '100%',
             mx: 'auto',
             mt: 4,
             boxShadow: 3,
@@ -295,14 +295,14 @@ export default function FoodDetailCard() {
                                                 category: 'Macronutrientes',
                                                 values: [
                                                     { nutrient: 'Energía (kcal)', value: alimento.nutritional_info_100g.energy_kcal ?? 'N/D' },
-                                                    { nutrient: 'Proteínas (g)', value: alimento.nutritional_info_100g.pro ?? 'N/D'},
+                                                    { nutrient: 'Proteínas (g)', value: alimento.nutritional_info_100g.pro ?? 'N/D' },
                                                     { nutrient: 'Carbohidratos (g)', value: alimento.nutritional_info_100g.car ?? 'N/D' }
                                                 ]
                                             },
                                             {
                                                 category: 'Grasas',
                                                 values: [
-                                                    { nutrient: 'Totales (g)', value: alimento.nutritional_info_100g.fats.total_fat ?? 'N/D'},
+                                                    { nutrient: 'Totales (g)', value: alimento.nutritional_info_100g.fats.total_fat ?? 'N/D' },
                                                     { nutrient: 'Saturadas (g)', value: alimento.nutritional_info_100g.fats.sat ?? 'N/D' },
                                                     { nutrient: 'Trans (g)', value: alimento.nutritional_info_100g.fats.trans ?? 'N/D' }
                                                 ]
@@ -310,17 +310,17 @@ export default function FoodDetailCard() {
                                             {
                                                 category: 'Minerales',
                                                 values: [
-                                                    { nutrient: 'Sodio (mg)', value: alimento.nutritional_info_100g.sod ?? 'N/D'},
-                                                    { nutrient: 'Potasio (mg)', value: alimento.nutritional_info_100g.pot ?? 'N/D'},
-                                                    { nutrient: 'Calcio (mg)', value: alimento.nutritional_info_100g.cal ?? 'N/D'},
-                                                    { nutrient: 'Hierro (mg)', value: alimento.nutritional_info_100g.iron ?? 'N/D'}
+                                                    { nutrient: 'Sodio (mg)', value: alimento.nutritional_info_100g.sod ?? 'N/D' },
+                                                    { nutrient: 'Potasio (mg)', value: alimento.nutritional_info_100g.pot ?? 'N/D' },
+                                                    { nutrient: 'Calcio (mg)', value: alimento.nutritional_info_100g.cal ?? 'N/D' },
+                                                    { nutrient: 'Hierro (mg)', value: alimento.nutritional_info_100g.iron ?? 'N/D' }
                                                 ]
                                             },
                                             {
                                                 category: 'Otros Componentes',
                                                 values: [
-                                                    { nutrient: 'Fibra (g)', value: alimento.nutritional_info_100g.fiber ?? 'N/D'},
-                                                    { nutrient: 'Colesterol (mg)', value: alimento.nutritional_info_100g.cholesterol ?? 'N/D'}
+                                                    { nutrient: 'Fibra (g)', value: alimento.nutritional_info_100g.fiber ?? 'N/D' },
+                                                    { nutrient: 'Colesterol (mg)', value: alimento.nutritional_info_100g.cholesterol ?? 'N/D' }
                                                 ]
                                             }
                                         ].map((categoryData, index) => (

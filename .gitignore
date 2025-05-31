@@ -7,3 +7,5 @@ backend/*/static/
 backend/imagenes_filtradas
 backend/*.pt
 backend/*.pt
+backend/utils/*.json
+backend/utils/*.xlsx

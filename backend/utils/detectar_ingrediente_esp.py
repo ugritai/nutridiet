@@ -22,7 +22,7 @@ client = MongoClient(MONGO_URI)
 
 db = client['nutridiet']
 collection_ingredientes = db['bedca']
-collection_recetas = db['abuela']
+collection_recetas = db['GNHD_24_25']
 
 # Carga del modelo de lenguaje
 
