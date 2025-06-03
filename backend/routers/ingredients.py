@@ -1,12 +1,12 @@
 # routers/ingredients.py
-import os
-import requests
+from fastapi.responses import JSONResponse
 from fastapi import APIRouter, HTTPException
-from database.connection import recipe_db_host, bedca_collection,embeddings_collection,images_collection
+from database.connection import recipe_db_host, bedca_collection,embeddings_collection,images_collection,food_portions_collection
 from unidecode import unidecode
 from fastapi.encoders import jsonable_encoder
-from pathlib import Path
 from fastapi import Query
+from bson.json_util import dumps
+import re
 
 
 from utils.food_utils import remove_stop_words, convert_objectid, get_pixabay_image_api, actualizar_imagen_alimento
@@ -252,3 +252,52 @@ async def buscar_alimentos(nombre: str, limit: int = 5):
         return [{"nombre": nombre} for nombre in alimentos_sugeridos[:limit]] 
     else:
         raise HTTPException(status_code=404, detail="Alimento no encontrado")
+
+import unicodedata
+
+def normalizar_texto(texto: str) -> str:
+    texto = texto.lower().strip()
+    texto = unicodedata.normalize("NFD", texto)
+    return ''.join(c for c in texto if unicodedata.category(c) != "Mn")
+
+@router.get("/porcion_estandar/{food}")
+async def obtener_porciones(food: str):
+    food_normalizado = food.strip().lower()
+    print(f"\n🔍 Buscando por: '{food_normalizado}'")
+
+    palabras = [p.strip() for p in food_normalizado.replace(',', ' ').split() if p]
+    regex = re.compile(r'.*' + r'.*'.join(palabras) + r'.*', re.IGNORECASE)
+
+    posibles = list(food_portions_collection.find(
+        { "food": { "$regex": regex } },
+        { "_id": 0, "food": 1, "standard_portion": 1, "units": 1, "household_measures": 1 }
+    ))
+
+    print(f"✅ Posibles encontrados ({len(posibles)}): {[d['food'] for d in posibles]}")
+
+    if not posibles:
+        return {
+            "food": food,
+            "standard_portion": [],
+            "units": [],
+            "household_measures": []
+        }
+
+    def score(doc):
+        nombre = doc["food"].lower()
+        puntuacion = 0
+        if food_normalizado in nombre:
+            puntuacion += 2
+        if doc.get("standard_portion"):
+            puntuacion += 1
+        return puntuacion
+
+    mejor_match = max(posibles, key=score)
+    print(f"🏆 Mejor coincidencia: {mejor_match['food']}")
+
+    return {
+        "food": mejor_match.get("food", food),
+        "standard_portion": mejor_match.get("standard_portion", []),
+        "units": mejor_match.get("units", []),
+        "household_measures": mejor_match.get("household_measures", [])
+    }

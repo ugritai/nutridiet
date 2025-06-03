@@ -3,7 +3,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Box, Button, FormControl, FormLabel, MenuItem, TextField, Typography } from '@mui/material';
 import Dashboard from '../../Dashboard';
 
-const tiposIngesta = ['3 comidas', '5 comidas'];
+const tiposIngestaDiarios = ['3 comidas', '5 comidas'];
 
 export default function IngestaNameForm() {
     const { pacienteN } = useParams();
@@ -14,7 +14,7 @@ export default function IngestaNameForm() {
     const ingestaOriginal = location.state?.ingesta || null;
 
     const [formData, setFormData] = useState({
-        tipo: '',
+        tipo_diario: '',
         nombreIngesta: ''
     });
 
@@ -22,7 +22,7 @@ export default function IngestaNameForm() {
     useEffect(() => {
         if (modoEdicion && ingestaOriginal) {
             setFormData({
-                tipo: ingestaOriginal.tipo || '',
+                tipo_diario: ingestaOriginal.tipo_diario || '',
                 nombreIngesta: ingestaOriginal.nombre || ''
             });
         }
@@ -33,18 +33,24 @@ export default function IngestaNameForm() {
     };
 
     const manejarSiguiente = () => {
-        if (!formData.tipo || !formData.nombreIngesta) {
+        if (!formData.tipo_diario || !formData.nombreIngesta) {
             alert('Por favor completa todos los campos');
             return;
         }
 
-        navigate(`/planificacion_dieta/${encodeURIComponent(pacienteN)}/crear_ingesta/${encodeURIComponent(formData.nombreIngesta)}`, {
+        const ruta = modoEdicion
+            ? `/planificacion_dieta/${encodeURIComponent(pacienteN)}/editar_ingesta/${encodeURIComponent(formData.nombreIngesta)}`
+            : `/planificacion_dieta/${encodeURIComponent(pacienteN)}/crear_ingesta/${encodeURIComponent(formData.nombreIngesta)}`;
+
+        navigate(ruta, {
             state: {
-                tipo: formData.tipo,
+                tipo_diario: formData.tipo_diario,
                 modo: modoEdicion ? 'editar' : 'crear',
-                ingesta: modoEdicion ? ingestaOriginal : null
+                ingesta: modoEdicion
+                    ? { ...ingestaOriginal, tipo_diario: formData.tipo_diario, nombre: formData.nombreIngesta }
+                    : null
             }
-        });        
+        });
     };
 
     return (
@@ -67,15 +73,15 @@ export default function IngestaNameForm() {
                 </FormControl>
 
                 <FormControl fullWidth sx={{ mb: 2 }}>
-                    <FormLabel>Tipo de Ingesta</FormLabel>
+                    <FormLabel>Tipo de Ingesta diaria</FormLabel>
                     <TextField
                         select
-                        name="tipo"
-                        value={formData.tipo}
+                        name="tipo_diario"
+                        value={formData.tipo_diario}
                         onChange={handleChange}
                         required
                     >
-                        {tiposIngesta.map((tipo) => (
+                        {tiposIngestaDiarios.map((tipo) => (
                             <MenuItem key={tipo} value={tipo}>
                                 {tipo}
                             </MenuItem>

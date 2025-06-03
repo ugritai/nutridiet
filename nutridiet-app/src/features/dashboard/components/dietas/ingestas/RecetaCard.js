@@ -5,8 +5,6 @@ import { Box, Typography } from '@mui/material';
 const RecetaCard = ({ receta, provided }) => {
     const nombre = receta.nombre || receta.name || 'Sin nombre';
 
-    console.log('📦 Receta renderizada:', receta);  // ⬅️ Aquí ves el contenido de la receta
-
     return (
         <Box
             ref={provided.innerRef}

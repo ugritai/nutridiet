@@ -120,7 +120,7 @@ function App() {
         } />
 
         <Route
-          path="/planificacion_dieta/:pacienteN/editar_ingesta_form"
+          path="/planificacion_dieta/:pacienteN/editar_ingesta"
           element={
             <ProtectedRoute>
               <IngestaNameForm />
@@ -129,6 +129,12 @@ function App() {
 
 
         <Route path="/planificacion_dieta/:pacienteN/crear_ingesta/:nombreIngesta" element={
+          <ProtectedRoute>
+            < CrearIngestaForm />
+          </ProtectedRoute>
+        } />
+
+        <Route path="/planificacion_dieta/:pacienteN/editar_ingesta/:nombreIngesta" element={
           <ProtectedRoute>
             < CrearIngestaForm />
           </ProtectedRoute>

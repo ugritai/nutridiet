@@ -10,7 +10,6 @@ import Search from '../../components/Search';
 import FoodSearch from '../../components/FoodSearch';
 import PorcentajeCircular from './PorcentajeCircular';
 import { obtenerEstructuraIngesta } from './ingestas/EstructuraIngestas';
-import { normalizeRecipes } from './ingestas/normalizarRecetas';
 import TipoIngestaGrid from './ingestas/TipoIngestaGrid';
 import RecetaCard from './ingestas/RecetaCard';
 
@@ -18,8 +17,11 @@ export default function CrearIngestaForm() {
     const { pacienteN, nombreIngesta } = useParams();
     const navigate = useNavigate();
     const location = useLocation();
-    const tipo = location.state?.tipo || '';
-    const modoEdicion = location.state?.modo === 'editar'; // nuevo
+    const modoEdicion = location.state?.modo === 'editar';
+    const tipo = modoEdicion
+    ? location.state?.ingesta?.tipo_diario || ''
+    : location.state?.tipo_diario || '';
+
     const ingestaOriginal = location.state?.ingesta || null; // contiene la ingesta original
 
     const [enviando, setEnviando] = useState(false);
@@ -45,20 +47,26 @@ export default function CrearIngestaForm() {
     });
 
     useEffect(() => {
-        if (!tipo) {
-            navigate(`/planificacion_dieta/${encodeURIComponent(pacienteN)}/crear_ingesta`);
-            return;
-        }
-        const estructura = obtenerEstructuraIngesta(tipo);
-        const estadoInicial = {};
-        Object.entries(estructura).forEach(([ingesta, subtipos]) => {
-            subtipos.forEach(subtipo => {
-                const key = `${ingesta}::${subtipo}`;
-                estadoInicial[key] = [];
+        if (modoEdicion && ingestaOriginal?.subingestas) {
+            const transformadas = {};
+            ingestaOriginal.subingestas.forEach(subingesta => {
+                const ingesta = subingesta.intake_type.toLowerCase();
+                (subingesta.recipes || []).forEach(receta => {
+                    const subtipo = (receta.recipe_type || 'Desconocido').toLowerCase();
+                    const key = `${ingesta}::${subtipo}`;
+                    if (!transformadas[key]) transformadas[key] = [];
+                    transformadas[key].push({
+                        ...receta,
+                        nombre: receta.name || receta.nombre || 'Sin nombre'
+                    });
+                });
             });
-        });
-        setRecetasPorTipo(estadoInicial);
-    }, [tipo, navigate, pacienteN]);
+    
+            setRecetasPorTipo(transformadas);
+            setIngestaUniversal(ingestaOriginal.ingesta_universal || false);
+        }
+    }, [modoEdicion, ingestaOriginal]);
+    
 
     useEffect(() => {
         const fetchInfoPaciente = async () => {
@@ -165,24 +173,6 @@ export default function CrearIngestaForm() {
         fetchDatos();
     }, [categoriaFiltro]);
 
-    useEffect(() => {
-        if (modoEdicion && ingestaOriginal) {
-            setIngestaUniversal(ingestaOriginal.ingesta_universal || false);
-
-            // Convertimos cada receta para tener campo `nombre` también
-            const recetasTransformadas = {};
-            for (const key in ingestaOriginal.recipes) {
-                recetasTransformadas[key] = (ingestaOriginal.recipes[key] || []).map(r => ({
-                    ...r,
-                    nombre: r.name || r.nombre || 'Sin nombre'
-                }));
-            }
-            setRecetasPorTipo(recetasTransformadas);
-        }
-    }, [modoEdicion, ingestaOriginal]);
-
-
-
     const onDragEnd = useCallback(({ source, destination }) => {
         if (!destination) return;
         const estructura = obtenerEstructuraIngesta(tipo);
@@ -234,40 +224,71 @@ export default function CrearIngestaForm() {
         setEnviando(true);
         setError(null);
         try {
-            const body = {
-                intake_type: tipo,
-                intake_name: nombreIngesta,
-                ingesta_universal: ingestaUniversal,
-                recipes: normalizeRecipes(recetasPorTipo)
-            };
-            console.log(JSON.stringify(body, null, 2));
-
-
-            const url = modoEdicion
-                ? `/planificacion_ingestas/editar_ingesta/${pacienteN}/${encodeURIComponent(nombreIngesta)}`
-                : `/planificacion_ingestas/crear_ingesta/${pacienteN}`;
-
-            const method = modoEdicion ? 'PUT' : 'POST';
-
-            const res = await fetchWithAuth(url, {
-                method,
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(body),
+            const recetasPorIngesta = {};
+    
+            const formatear = (str) =>
+                str
+                    .split('_')
+                    .map(p => p.charAt(0).toUpperCase() + p.slice(1))
+                    .join(' ');
+    
+            Object.entries(recetasPorTipo).forEach(([key, recetasLista]) => {
+                if (!recetasLista || recetasLista.length === 0) return;
+    
+                const [ingesta, subtipo] = key.split('::');
+                const ingestaKey = formatear(ingesta);
+                const tipoReceta = formatear(subtipo);
+    
+                if (!recetasPorIngesta[ingestaKey]) recetasPorIngesta[ingestaKey] = [];
+    
+                recetasLista.forEach((receta) => {
+                    recetasPorIngesta[ingestaKey].push({
+                        recipe_type: tipoReceta,
+                        name: receta.nombre || receta.name,
+                        kcal: parseFloat(receta.kcal),
+                        pro: parseFloat(receta.pro),
+                        car: parseFloat(receta.car),
+                    });
+                });
             });
-
-
-            if (!res.ok) throw new Error('Error al crear la ingesta');
+    
+            const cuerpos = Object.entries(recetasPorIngesta)
+                .filter(([_, recetas]) => recetas.length > 0) // solo con recetas
+                .map(([ingesta, recetas]) => ({
+                    intake_type: ingesta,
+                    intake_name: nombreIngesta,
+                    ingesta_universal: ingestaUniversal,
+                    recipes: recetas,
+                }));
+    
+            for (const cuerpo of cuerpos) {
+                const url = modoEdicion
+                    ? `/planificacion_ingestas/editar_ingesta/${pacienteN}/${encodeURIComponent(cuerpo.intake_name)}`
+                    : `/planificacion_ingestas/crear_ingesta/${pacienteN}`;
+    
+                const method = modoEdicion ? 'PUT' : 'POST';
+    
+                const res = await fetchWithAuth(url, {
+                    method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(cuerpo),
+                });
+    
+                if (!res.ok) throw new Error(`Error al guardar la ingesta: ${cuerpo.intake_type}`);
+            }
+    
             setRecetasPorTipo({});
             setRecetasBuscadas([]);
-            alert('Ingesta creada correctamente');
+            alert('Ingestas guardadas correctamente');
+            navigate(`/planificacion_dieta/${encodeURIComponent(pacienteN)}`);
+
         } catch (err) {
             setError(err.message);
         } finally {
             setEnviando(false);
         }
     };
+    
 
     if (!tipo) return null;
 

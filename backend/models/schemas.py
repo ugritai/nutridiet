@@ -93,18 +93,16 @@ class PatientInfo(BaseModel):
   
 class Receta(BaseModel):
     name: str
-    kcal: Optional[float]
-    pro: Optional[float]
-    car: Optional[float]
+    recipe_type: str
+    kcal: float
+    pro: float
+    car: float
 
 class IntakeCreate(BaseModel):
     intake_type: str
-    intake_name: str             
-    recipes: Dict[str, List[Receta]]  
-    nutricionista_email: Optional[str] = None
-    paciente: Optional[str] = None
-    ingesta_universal: Optional[bool] = False  # ✅ Añadir este campo
-
+    intake_name: str
+    ingesta_universal: bool
+    recipes: List[Receta]
     
 class IntakeInfo(BaseModel):
     intake_id: str

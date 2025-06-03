@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import {
-    Card, Typography, Button, Box
+    Card, Typography, Button, Box, IconButton
 } from '@mui/material';
 import Dashboard from '../../Dashboard';
 import dayjs from 'dayjs';
@@ -11,6 +11,8 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { useNavigate } from 'react-router-dom';
+import CloseIcon from '@mui/icons-material/Close';
+
 
 dayjs.extend(isSameOrBefore);
 
@@ -58,14 +60,46 @@ export default function CrearDietaForm() {
                 const res = await fetch(`http://localhost:8000/planificacion_ingestas/ingestas/${pacienteN}`);
                 if (!res.ok) throw new Error('No se pudieron cargar las ingestas');
                 const data = await res.json();
-                console.log(data);
-                setIngestasDisponibles(data);
+
+                // Agrupar subingestas por intake_name
+                const agrupadas = {};
+
+                for (const ingesta of data) {
+                    for (const sub of ingesta.subingestas || []) {
+                        const key = sub.nombre_ingesta;
+                        if (!agrupadas[key]) {
+                            agrupadas[key] = {
+                                intake_name: key,
+                                _id: sub._id, // uno cualquiera
+                                subingestas: [],
+                            };
+                        }
+
+                        // Agrupar recetas por tipo
+                        const recetasPorTipo = {};
+                        for (const receta of sub.recipes || []) {
+                            const tipo = receta.recipe_type?.toLowerCase().replace(/\s/g, '_') || 'otro';
+                            if (!recetasPorTipo[tipo]) recetasPorTipo[tipo] = [];
+                            recetasPorTipo[tipo].push(receta);
+                        }
+
+                        agrupadas[key].subingestas.push({
+                            intake_type: sub.intake_type,
+                            recipes: recetasPorTipo,
+                        });
+                    }
+                }
+
+                setIngestasDisponibles(Object.values(agrupadas));
+
             } catch (err) {
                 console.error(err);
             }
         };
+
         fetchIngestas();
     }, [pacienteN]);
+
 
     const generarFechasPlanificacion = () => {
         if (!fechaInicio || !fechaFin) return [];
@@ -91,9 +125,7 @@ export default function CrearDietaForm() {
             return;
         }
 
-        // EXTRAER el _id real
-        // Si viene con formato "fecha-_id", sacar solo _id
-        const realId = draggableId.includes('-') ? draggableId.split('-').slice(1).join('-') : draggableId;
+        const realId = draggableId;
 
         if (source.droppableId === 'disponibles') {
             const ingesta = ingestasDisponibles.find(i => i._id === realId);
@@ -101,11 +133,13 @@ export default function CrearDietaForm() {
 
             setDiasPlanificados(prev => {
                 const diaActual = prev[destination.droppableId] || [];
-                // Evitar duplicados en el mismo día
-                if (diaActual.find(i => i._id === realId)) return prev;
+
+                // Permitir duplicación usando un _id único
+                const nuevaIngesta = { ...ingesta, _id: `${realId}-${Date.now()}` };
+
                 return {
                     ...prev,
-                    [destination.droppableId]: [...diaActual, ingesta]
+                    [destination.droppableId]: [...diaActual, nuevaIngesta]
                 };
             });
             return;
@@ -134,12 +168,6 @@ export default function CrearDietaForm() {
         }
     };
 
-    // Convierte 'DD/MM/YYYY' a 'YYYY-MM-DD'
-    function convertDateFormat(dateStr) {
-        const [day, month, year] = dateStr.split('/');
-        return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-    }
-
     const guardarDieta = async () => {
         try {
             const payload = {
@@ -147,15 +175,19 @@ export default function CrearDietaForm() {
                 name: `Dieta ${pacienteN} - ${fechaInicio.format('DD/MM/YYYY')} al ${fechaFin.format('DD/MM/YYYY')}`,
                 start_date: fechaInicio.format('YYYY-MM-DD'),
                 end_date: fechaFin.format('YYYY-MM-DD'),
-                dias: Object.entries(diasPlanificados).map(([fecha, ingestas]) => ({
-                    fecha: convertDateFormat(fecha), // debe devolver 'YYYY-MM-DD'
-                    ingestas: ingestas.map((ing) => ({
-                        intake_id: ing._id,
-                    })),
-                })),
+                dias: Object.entries(diasPlanificados)
+                    .map(([fecha, ingestas]) => {
+                        const fechaFormateada = dayjs(fecha, ['DD/MM/YYYY', 'YYYY-MM-DD'], true);
+                        return fechaFormateada.isValid()
+                            ? {
+                                fecha: fechaFormateada.format('YYYY-MM-DD'),
+                                ingestas: ingestas.map((ing) => ({ intake_id: ing._id })),
+                            }
+                            : null; // si es inválido, lo descartamos
+                    })
+                    .filter(Boolean), // elimina los `null` del array
             };
 
-            // Mostrar en consola el objeto que se va a enviar
             console.log("Payload a enviar al backend:", JSON.stringify(payload, null, 2));
 
             const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
@@ -175,11 +207,13 @@ export default function CrearDietaForm() {
             setDiasPlanificados({});
             setPaso(1);
             alert('Dieta guardada con éxito');
+            navigate(`/planificacion_dieta/${encodeURIComponent(pacienteN)}`);
         } catch (err) {
             console.error(err);
             alert('Hubo un error al guardar la dieta');
         }
     };
+
 
     return (
         <Dashboard>
@@ -247,38 +281,52 @@ export default function CrearDietaForm() {
                                             minHeight: 100,
                                         }}
                                     >
-                                        {ingestasDisponibles.map((ing, index) => (
-                                            <Draggable key={ing._id} draggableId={ing._id} index={index}>
+                                        {ingestasDisponibles.map((grupo, index) => (
+                                            <Draggable key={grupo._id} draggableId={grupo._id} index={index}>
                                                 {(provided) => (
                                                     <Box
                                                         ref={provided.innerRef}
                                                         {...provided.draggableProps}
                                                         {...provided.dragHandleProps}
                                                         sx={{
-                                                            p: 1,
-                                                            mb: 2,
-                                                            bgcolor: 'background.paper',
+                                                            p: 2,
+                                                            mb: 3,
                                                             border: '1px solid #ccc',
-                                                            borderRadius: 1,
-                                                            ...provided.draggableProps.style,
+                                                            borderRadius: 2,
+                                                            bgcolor: '#fdfdfd',
+                                                            width: '100%',
+                                                            maxWidth: 500,
+                                                            boxShadow: 2,
+                                                            position: 'relative'
                                                         }}
                                                     >
-                                                        <Typography variant="subtitle1" fontWeight="bold">{ing.intake_type}</Typography>
-                                                        {Object.entries(ing.recipes).map(([tipo, recetasArray]) =>
-                                                            recetasArray.length > 0 ? (
-                                                                <Box key={tipo} sx={{ ml: 2, mb: 1 }}>
-                                                                    {recetasArray.map((rec, i) => (
-                                                                        <Typography key={i} variant="body2">
-                                                                            - {rec.name}
-                                                                        </Typography>
+                                                        <Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 1 }}>
+                                                            {grupo.intake_name}
+                                                        </Typography>
+
+                                                        {(grupo.subingestas || []).map((sub, subIdx) => (
+                                                            <Box key={subIdx} sx={{ mb: 2 }}>
+                                                                <Typography fontWeight="bold" sx={{ mb: 1 }}>
+                                                                    {sub.intake_type}
+                                                                </Typography>
+
+                                                                {typeof sub.recipes === 'object' && sub.recipes !== null &&
+                                                                    Object.entries(sub.recipes).map(([tipo, recetasArray]) => (
+                                                                        <Box key={tipo} sx={{ ml: 2, mb: 1 }}>
+                                                                            {recetasArray.map((rec, i) => (
+                                                                                <Typography key={i} variant="body2">
+                                                                                    - <strong>{rec.recipe_type || tipo}:</strong> {rec.name}
+                                                                                </Typography>
+                                                                            ))}
+                                                                        </Box>
                                                                     ))}
-                                                                </Box>
-                                                            ) : null
-                                                        )}
+                                                            </Box>
+                                                        ))}
                                                     </Box>
                                                 )}
                                             </Draggable>
                                         ))}
+
                                         {provided.placeholder}
                                     </Box>
                                 )}
@@ -288,7 +336,7 @@ export default function CrearDietaForm() {
                             <Typography variant="h6" mt={4}>Planificación por día</Typography>
                             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
                                 {generarFechasPlanificacion().map((fecha, idx) => (
-                                    <Box key={fecha} sx={{ width: 200 }}>
+                                    <Box key={fecha} sx={{ width: "49%" }}>
                                         <Typography variant="subtitle1" gutterBottom>
                                             Día {idx + 1}<br />{fecha}
                                         </Typography>
@@ -305,7 +353,7 @@ export default function CrearDietaForm() {
                                                             draggableId={`${fecha}-${ing._id}`}
                                                             index={index}
                                                         >
-                                                            {(provided) => (
+                                                            {(provided, snapshot) => (
                                                                 <Box
                                                                     ref={provided.innerRef}
                                                                     {...provided.draggableProps}
@@ -313,28 +361,44 @@ export default function CrearDietaForm() {
                                                                     sx={{
                                                                         p: 1,
                                                                         mb: 1,
-                                                                        bgcolor: 'background.paper',
+                                                                        bgcolor: snapshot.isDragging ? '#e0f7fa' : 'background.paper',
                                                                         border: '1px solid #ccc',
                                                                         borderRadius: 1,
+                                                                        boxShadow: snapshot.isDragging ? 4 : 0,
                                                                         ...provided.draggableProps.style,
                                                                     }}
                                                                 >
-                                                                    <Typography variant="subtitle2" fontWeight="bold">{ing.intake_type}</Typography>
-                                                                    {Object.entries(ing.recipes).map(([tipo, recetasArray]) =>
-                                                                        recetasArray.length > 0 ? (
-                                                                            <Box key={tipo} sx={{ ml: 2, mb: 1 }}>
-                                                                                {recetasArray.map((rec, i) => (
-                                                                                    <Typography key={i} variant="body2">
-                                                                                        - {rec.name}
-                                                                                    </Typography>
-                                                                                ))}
-                                                                            </Box>
-                                                                        ) : null
+                                                                    {/* MIENTRAS SE ARRASTRA: solo nombre */}
+                                                                    {snapshot.isDragging ? (
+                                                                        <Typography variant="subtitle2" fontWeight="bold">
+                                                                            {ing.intake_name}
+                                                                        </Typography>
+                                                                    ) : (
+                                                                        // AL SOLTAR: nombre con botón eliminar
+                                                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                                            <Typography variant="subtitle2" fontWeight="bold">
+                                                                                {ing.intake_name}
+                                                                            </Typography>
+                                                                            <IconButton
+                                                                                size="small"
+                                                                                onClick={() => {
+                                                                                    setDiasPlanificados(prev => ({
+                                                                                        ...prev,
+                                                                                        [fecha]: prev[fecha].filter(i => i._id !== ing._id)
+                                                                                    }));
+                                                                                }}
+                                                                            >
+                                                                                <CloseIcon fontSize="small" />
+                                                                            </IconButton>
+                                                                        </Box>
                                                                     )}
                                                                 </Box>
                                                             )}
                                                         </Draggable>
+
+
                                                     ))}
+
                                                     {provided.placeholder}
                                                 </Box>
                                             )}

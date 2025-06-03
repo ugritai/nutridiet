@@ -100,6 +100,12 @@ export default function FoodDetailCard() {
     const [sugeridos, setSugeridos] = useState([]);
     const [image_url, setImage_url] = useState('');
     const [loading, setLoading] = useState(true);
+    const [porcionInfo, setPorcionInfo] = useState({
+        food: '',
+        standard_portion: [],
+        units: [],
+        household_measures: []
+    });
 
     useEffect(() => {
         setLoading(true);
@@ -109,9 +115,6 @@ export default function FoodDetailCard() {
                 return res.json();
             })
             .then(data => {
-                console.log("API 返回的完整数据:", data); // 1. 打印完整响应
-                console.log("imagen_url 原始值:", data.image_url);
-                console.log("imagen_url 原始值:", data.sugeridos);
                 setAlimento(data.alimento || null);
                 setSugeridos(data.sugeridos || []);
                 setImage_url(data.image_url || '');
@@ -119,6 +122,25 @@ export default function FoodDetailCard() {
             .catch(err => console.error("Error:", err))
             .finally(() => setLoading(false));
     }, [nombre]);
+
+    useEffect(() => {
+        if (!alimento?.name_esp) return;
+
+        fetch(`http://localhost:8000/alimentos/porcion_estandar/${encodeURIComponent(alimento.name_esp)}`)
+            .then(res => res.json())
+            .then(data => {
+                setPorcionInfo(data);
+            })
+            .catch(err => {
+                console.error('Error al obtener porciones:', err);
+                setPorcionInfo({
+                    food: alimento.name_esp,
+                    standard_portion: [],
+                    units: [],
+                    household_measures: []
+                });
+            });
+    }, [alimento?.name_esp]);
 
     if (loading) return <CircularProgress sx={{ mt: 4 }} />;
 
@@ -167,6 +189,17 @@ export default function FoodDetailCard() {
             </Card>
         );
     }
+
+    const porcionesStandard = porcionInfo.standard_portion?.map(p => ({ ...p, tipo: 'standard_portion' })) || [];
+    const porcionesUnits = porcionInfo.units?.map(p => ({ ...p, tipo: 'units' })) || [];
+    const porcionesHousehold = porcionInfo.household_measures?.map(p => ({ ...p, tipo: 'household_measures' })) || [];
+
+    const porcionesTotales = [...porcionesStandard, ...porcionesUnits, ...porcionesHousehold];
+
+
+
+
+
 
     return (
         <Card sx={{
@@ -268,7 +301,7 @@ export default function FoodDetailCard() {
                                                 fontWeight: 600
                                             }
                                         }}>
-                                            <TableCell colSpan={alimento.edible === 100 ? 3 : 4} align="center">
+                                            <TableCell colSpan={(alimento.edible === 100 ? 3 : 4) + porcionesTotales.length} align="center">
                                                 Composición Nutricional
                                             </TableCell>
                                         </TableRow>
@@ -282,11 +315,30 @@ export default function FoodDetailCard() {
                                                 py: 1.5
                                             }
                                         }}>
-                                            <TableCell sx={{ pl: 3, width: '30%' }}>Nutriente</TableCell>
-                                            <TableCell align="center" sx={{ width: '30%' }}>Componente</TableCell>
-                                            <TableCell align="center" sx={{ width: '30%' }}>Por 100g</TableCell>
+                                            <TableCell sx={{ pl: 3, width: '20%' }}>Nutriente</TableCell>
+                                            <TableCell align="center" sx={{ width: '20%' }}>Componente</TableCell>
+                                            <TableCell align="center" sx={{ width: '20%' }}>Por 100g</TableCell>
                                             {alimento.edible !== 100 &&
-                                                <TableCell align="center" sx={{ width: '30%' }}>Porción comestible {alimento.edible}g</TableCell>}
+                                                <TableCell align="center" sx={{ width: '20%' }}>Porción comestible {alimento.edible}g</TableCell>}
+                                            {porcionesTotales.map((p, i) => (
+                                                <TableCell key={i} align="center">
+                                                    {p.tipo === 'standard_portion' && (
+                                                        p.description
+                                                            ? `Porción estándar (${p.description}, ${p.weight}g)`
+                                                            : `Porción estándar (${p.weight}g)`
+                                                    )}
+                                                    {p.tipo === 'units' && (
+                                                        p.description
+                                                            ? `Unidad (${p.description}, ${p.weight}g)`
+                                                            : `Unidad (${p.weight}g)`
+                                                    )}
+                                                    {p.tipo === 'household_measures' && (
+                                                        p.description
+                                                            ? `Medida casera (${p.description}, ${p.weight}g)`
+                                                            : `Medida casera (${p.weight}g)`
+                                                    )}
+                                                </TableCell>
+                                            ))}
                                         </TableRow>
 
                                         {/* 数据行 */}
@@ -364,6 +416,11 @@ export default function FoodDetailCard() {
                                                                 : Number((row.value * alimento.edible / 100).toFixed(2))}
                                                         </TableCell>
                                                     )}
+                                                    {porcionesTotales.map((p, j) => (
+                                                        <TableCell key={j} align="center">
+                                                            {row.value === 'N/D' ? 'N/D' : (row.value * p.weight / 100).toFixed(2)}
+                                                        </TableCell>
+                                                    ))}
                                                 </TableRow>
                                             ))
                                         ))}

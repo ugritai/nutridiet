@@ -76,20 +76,19 @@ export default function DietaIngePacienteCard() {
     const handleEditarIngesta = async (ingesta) => {
         try {
             const res = await fetchWithAuth(
-                `/planificacion_ingestas/ver_ingesta/${encodeURIComponent(pacienteN)}/${encodeURIComponent(ingesta.intake_name)}`
+                `/planificacion_ingestas/ver_ingesta/${encodeURIComponent(pacienteN)}/${encodeURIComponent(ingesta)}`
             );
             if (!res.ok) throw new Error('No se pudo cargar la ingesta');
-    
+
             const data = await res.json();
-    
-            navigate(`/planificacion_dieta/${encodeURIComponent(pacienteN)}/editar_ingesta_form`, {
+            console.log(data)
+            navigate(`/planificacion_dieta/${encodeURIComponent(pacienteN)}/editar_ingesta`, {
                 state: {
                     modo: 'editar',
                     ingesta: {
-                        tipo: data.intake_type, // aquí si intake_type se mantiene para '3 comidas', lo puedes usar
+                        tipo_diario: data.tipo_diario,
                         nombre: data.intake_name,
-                        recipes: data.recipes,
-                        ingesta_universal: data.ingesta_universal
+                        subingestas: data.subingestas
                     }
                 }
             });
@@ -97,8 +96,8 @@ export default function DietaIngePacienteCard() {
             console.error('Error al cargar la ingesta:', err);
             alert('No se pudo cargar la ingesta para editar');
         }
-    };    
-    
+    };
+
     const handleEliminarIngesta = async (ingesta) => {
         if (window.confirm('¿Estás seguro de eliminar esta ingesta?')) {
             // llamada al backend para eliminar
@@ -116,44 +115,44 @@ export default function DietaIngePacienteCard() {
                 <CrearIngestaCard onClick={() => navigate(`/planificacion_dieta/${pacienteN}/crear_ingesta`)} />
             </Box>
 
-            {ingestasExistentes.length > 0 && (
-                <Box sx={{ mt: 4, width: '100%' }}>
-                    <Typography variant="h6">Ingestas del paciente</Typography>
 
-                    {ingestasExistentes.map((ingesta, idx) => (
-                        <Accordion key={idx} sx={{ mt: 2 }}>
-                            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                                <Typography sx={{ flexGrow: 1 }}>
-                                    {ingesta.intake_name}
-                                </Typography>
-                                <IconButton size="small" onClick={() => handleEditarIngesta(ingesta)}>
-                                    <EditIcon fontSize="small" />
-                                </IconButton>
-                                <IconButton size="small" onClick={() => handleEliminarIngesta(ingesta)}>
-                                    <DeleteIcon fontSize="small" />
-                                </IconButton>
-                            </AccordionSummary>
+            <Box sx={{ mt: 4, width: '100%' }}>
+                <Typography variant="h6">Ingestas diarias del paciente</Typography>
+                {ingestasExistentes.map((grupo, idx) => (
+                    <Accordion key={idx} sx={{ mt: 2 }}>
+                        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                            <Typography sx={{ flexGrow: 1 }}>
+                                {grupo.intake_name}
+                            </Typography>
+                            <IconButton size="small" onClick={() => handleEditarIngesta(grupo.intake_name)}>
+                                <EditIcon fontSize="small" />
+                            </IconButton>
+                            <IconButton size="small" onClick={() => handleEditarIngesta(grupo.intake_name)}>
+                                <DeleteIcon fontSize="small" />
+                            </IconButton>
+                        </AccordionSummary>
 
-                            <AccordionDetails>
-                                {Object.entries(ingesta.recipes).map(([tipo, recetasArray]) =>
-                                    recetasArray.length > 0 ? (
-                                        <Box key={tipo} sx={{ ml: 2, mt: 1 }}>
-                                            <Typography variant="body2" fontWeight="bold" sx={{ textTransform: 'capitalize' }}>
-                                                {tipo}:
-                                            </Typography>
-                                            {recetasArray.map((rec, i) => (
-                                                <Typography key={i} variant="body2" sx={{ ml: 1 }}>
-                                                    - {rec.name}
-                                                </Typography>
-                                            ))}
-                                        </Box>
-                                    ) : null
-                                )}
-                            </AccordionDetails>
-                        </Accordion>
-                    ))}
-                </Box>
-            )}
+                        <AccordionDetails>
+                            {(grupo.subingestas || []).map((ingesta, subIdx) => (
+                                <Box key={subIdx} sx={{ mb: 2 }}>
+                                    <Typography fontWeight="bold" sx={{ mb: 1 }}>
+                                        {ingesta.intake_type}
+                                    </Typography>
+
+                                    {(Array.isArray(ingesta.recipes)
+                                        ? ingesta.recipes
+                                        : Object.values(ingesta.recipes || {}).flat()
+                                    ).map((receta, i) => (
+                                        <Typography key={i} variant="body2" sx={{ ml: 2 }}>
+                                            - <strong>{receta.recipe_type || "Sin tipo"}:</strong> {receta.name}
+                                        </Typography>
+                                    ))}
+                                </Box>
+                            ))}
+                        </AccordionDetails>
+                    </Accordion>))}
+            </Box>
+
 
             {dietasExistentes.length > 0 && (
                 <Box sx={{ mt: 4, width: '100%' }}>

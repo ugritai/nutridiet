@@ -12,6 +12,7 @@ embeddings_recipe_collection = db_host['recetas_embeddings']
 images_collection = db_host['ingredient_image']
 intake_collection = db_host['intake']
 diet_collection = db_host['diet']
+food_portions_collection = db_host['food_portions']
 
 recipe_host = AsyncIOMotorClient('mongodb://localhost:27018')
 recipe_db_host = recipe_host['nutridiet']
