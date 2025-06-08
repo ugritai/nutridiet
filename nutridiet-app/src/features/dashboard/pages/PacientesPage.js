@@ -55,6 +55,30 @@ export default function PacientesPage() {
     navigate('/paciente/crear_paciente');
   };
 
+  const handleDeletePaciente = async (paciente) => {
+    const confirmar = window.confirm(`¿Seguro que deseas eliminar a ${paciente.name}?`);
+    if (!confirmar) return;
+  
+    try {
+      const res = await fetchWithAuth(`/pacientes/delete/${paciente.id}`, {
+        method: 'DELETE',
+      });
+  
+      if (!res.ok) {
+        const error = await res.json();
+        alert(error.detail || 'Error al eliminar el paciente');
+        return;
+      }
+  
+      setPacientes((prev) => prev.filter((p) => p.id !== paciente.id));
+      alert('Paciente eliminado correctamente');
+    } catch (err) {
+      console.error('Error al eliminar paciente:', err);
+      alert('No se pudo conectar al servidor');
+    }
+  };
+  
+
   useEffect(() => {
     const fetchPacientes = async () => {
       try {
@@ -110,6 +134,7 @@ export default function PacientesPage() {
               key={paciente.id}
               paciente={paciente}
               onEdit={handleEditPaciente}
+              onDelete={handleDeletePaciente}  
             />
           ))}
       </Box>

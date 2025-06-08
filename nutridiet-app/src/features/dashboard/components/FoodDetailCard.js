@@ -249,23 +249,27 @@ export default function FoodDetailCard() {
                         </Box>
 
                         <Grid container spacing={3}>
-                            {/* Imagen */}
                             <Grid item xs={12} md={4}>
-                                <Box sx={{
-                                    borderRadius: 3,
-                                    overflow: 'hidden',
-                                    boxShadow: 2,
-                                    height: 300,
-                                    bgcolor: 'background.paper'
-                                }}>
-                                    {image_url && (
+                                <Box
+                                    sx={{
+                                        borderRadius: 3,
+                                        overflow: 'hidden',
+                                        boxShadow: 2,
+                                        height: 300,
+                                        bgcolor: 'background.paper',
+                                    }}
+                                >
+                                    {image_url && image_url.trim() !== '' && (
                                         <img
                                             src={image_url}
                                             alt={alimento.name_esp}
                                             style={{
                                                 width: '100%',
                                                 height: '100%',
-                                                objectFit: 'cover'
+                                                objectFit: 'cover',
+                                            }}
+                                            onError={(e) => {
+                                                e.target.style.display = 'none';
                                             }}
                                         />
                                     )}

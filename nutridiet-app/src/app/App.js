@@ -146,6 +146,12 @@ function App() {
           </ProtectedRoute>
         } />
 
+        <Route path="/planificacion_dieta/:pacienteN/editar_dieta/:nombreDieta" element={
+          <ProtectedRoute>
+            <CrearDietaForm />
+          </ProtectedRoute>
+        } />
+
         <Route path="/mi_cuenta" element={
           <ProtectedRoute>
             <PerfilPage />

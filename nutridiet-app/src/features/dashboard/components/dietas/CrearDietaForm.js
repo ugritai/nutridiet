@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useLocation } from 'react-router-dom';
 import {
     Card, Typography, Button, Box, IconButton
 } from '@mui/material';
@@ -12,18 +12,58 @@ import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { useNavigate } from 'react-router-dom';
 import CloseIcon from '@mui/icons-material/Close';
+import FoodSearch from '../../components/FoodSearch';
+import Search from '../Search';
+import { Accordion, AccordionSummary, AccordionDetails } from '@mui/material';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+
+
 
 
 dayjs.extend(isSameOrBefore);
 
 export default function CrearDietaForm() {
-    const { pacienteN } = useParams();
+    const { pacienteN, nombreDieta } = useParams();
+    const location = useLocation();
+    const idDieta = location.state?.dietaId;
     const navigate = useNavigate();
     const [nutricion, setNutricion] = useState(null);
     const [fechaInicio, setFechaInicio] = useState(null);
     const [fechaFin, setFechaFin] = useState(null);
 
     const [paso, setPaso] = useState(1);
+
+    useEffect(() => {
+        console.log("iddd" + idDieta)
+        if (!idDieta) return;
+        const fetchDieta = async () => {
+            try {
+                const res = await fetch(`http://localhost:8000/planificacion_dietas/dieta_por_id/${idDieta}`);
+                if (!res.ok) throw new Error('No se pudo cargar la dieta');
+
+                const data = await res.json();
+
+                setFechaInicio(dayjs(data.fecha_inicio));
+                setFechaFin(dayjs(data.fecha_final));
+
+                const nuevoPlan = {};
+                for (const dia of data.dias) {
+                    const fecha = dayjs(dia.fecha).format('DD/MM/YYYY');
+                    nuevoPlan[fecha] = dia.ingestas.map((ing) => ({
+                        _id: ing.intake_id,
+                        intake_name: ing.detalles?.nombre_ingesta || 'Sin nombre',
+                    }));
+                }
+                setDiasPlanificados(nuevoPlan);
+            } catch (err) {
+                console.error('Error al cargar la dieta:', err);
+                alert('No se pudo cargar la dieta');
+            }
+        };
+
+        fetchDieta();
+    }, [idDieta]);
+
 
     useEffect(() => {
         const fetchInfoPaciente = async () => {
@@ -50,6 +90,8 @@ export default function CrearDietaForm() {
         }
         setPaso(2);
     };
+
+    const buscadorIngestas = FoodSearch({ type: 'ingestas' });
 
     const [ingestasDisponibles, setIngestasDisponibles] = useState([]);
     const [diasPlanificados, setDiasPlanificados] = useState({}); // { fecha: [ingestaObj, ...] }
@@ -99,6 +141,42 @@ export default function CrearDietaForm() {
 
         fetchIngestas();
     }, [pacienteN]);
+
+    const handleAgregarIngesta = async (nombreIngesta) => {
+        try {
+            const res = await fetch(`http://localhost:8000/planificacion_ingestas/ver_ingesta_detalle/${encodeURIComponent(nombreIngesta)}`);
+            if (!res.ok) throw new Error('No se pudo cargar la ingesta');
+            const data = await res.json();
+
+            // Agrupar recetas por tipo
+            const recetasPorTipo = {};
+            for (const receta of data.recipes || []) {
+                const tipo = receta.recipe_type?.toLowerCase().replace(/\s/g, '_') || 'otro';
+                if (!recetasPorTipo[tipo]) recetasPorTipo[tipo] = [];
+                recetasPorTipo[tipo].push(receta);
+            }
+
+            // Construir estructura como en fetchIngestas
+            const nuevaIngesta = {
+                intake_name: data.nombre_ingesta,
+                _id: data._id,
+                subingestas: [{
+                    intake_type: data.intake_type,
+                    recipes: recetasPorTipo,
+                }],
+            };
+
+            setIngestasDisponibles(prev => [...prev, nuevaIngesta]);
+            buscador.setQuery('');
+            buscador.setSuggestions([]);
+
+        } catch (err) {
+            console.error('❌ Error al añadir ingesta:', err);
+            alert('No se pudo añadir la ingesta');
+        }
+    };
+
+
 
 
     const generarFechasPlanificacion = () => {
@@ -172,7 +250,9 @@ export default function CrearDietaForm() {
         try {
             const payload = {
                 paciente: pacienteN,
-                name: `Dieta ${pacienteN} - ${fechaInicio.format('DD/MM/YYYY')} al ${fechaFin.format('DD/MM/YYYY')}`,
+                name: idDieta
+                    ? nombreDieta || 'Dieta sin nombre'
+                    : `Dieta ${pacienteN} - ${fechaInicio.format('DD/MM/YYYY')} al ${fechaFin.format('DD/MM/YYYY')}`,
                 start_date: fechaInicio.format('YYYY-MM-DD'),
                 end_date: fechaFin.format('YYYY-MM-DD'),
                 dias: Object.entries(diasPlanificados)
@@ -183,17 +263,21 @@ export default function CrearDietaForm() {
                                 fecha: fechaFormateada.format('YYYY-MM-DD'),
                                 ingestas: ingestas.map((ing) => ({ intake_id: ing._id })),
                             }
-                            : null; // si es inválido, lo descartamos
+                            : null;
                     })
-                    .filter(Boolean), // elimina los `null` del array
+                    .filter(Boolean),
             };
-
-            console.log("Payload a enviar al backend:", JSON.stringify(payload, null, 2));
 
             const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
 
-            const res = await fetch('http://localhost:8000/planificacion_dietas/crear_dieta/', {
-                method: 'POST',
+            const url = idDieta
+                ? `http://localhost:8000/planificacion_dietas/editar_dieta/${idDieta}`
+                : 'http://localhost:8000/planificacion_dietas/crear_dieta/';
+
+            const method = idDieta ? 'PUT' : 'POST';
+
+            const res = await fetch(url, {
+                method,
                 headers: {
                     'Content-Type': 'application/json',
                     Authorization: `Bearer ${token}`,
@@ -202,11 +286,8 @@ export default function CrearDietaForm() {
             });
 
             if (!res.ok) throw new Error('Error al guardar la dieta');
-            setFechaInicio(null);
-            setFechaFin(null);
-            setDiasPlanificados({});
-            setPaso(1);
-            alert('Dieta guardada con éxito');
+
+            alert(idDieta ? 'Dieta actualizada con éxito' : 'Dieta guardada con éxito');
             navigate(`/planificacion_dieta/${encodeURIComponent(pacienteN)}`);
         } catch (err) {
             console.error(err);
@@ -214,10 +295,19 @@ export default function CrearDietaForm() {
         }
     };
 
-
     return (
         <Dashboard>
-            <Typography variant="h4" mb={2}>Crear dieta para paciente: {pacienteN}</Typography>
+            <Box mb={2}>
+                <Typography variant="h4">
+                    {idDieta ? 'Editar dieta' : 'Crear dieta'} para paciente: {pacienteN}
+                </Typography>
+
+                {idDieta && (
+                    <Typography variant="subtitle1" color="text.secondary">
+                        Nombre de la dieta: <strong>{nombreDieta}</strong>
+                    </Typography>
+                )}
+            </Box>
 
             <Card sx={{ p: 3, mt: 2, width: '100%' }}>
 
@@ -226,19 +316,23 @@ export default function CrearDietaForm() {
                         <Typography variant="h6" gutterBottom>Selecciona el rango de fechas</Typography>
                         <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="es">
                             <DatePicker
+                                key={fechaInicio?.toString()}
                                 label="Fecha inicio"
                                 value={fechaInicio}
                                 onChange={(newValue) => setFechaInicio(newValue)}
                                 format="DD/MM/YYYY"
                                 sx={{ mb: 2, mt: 2 }}
                             />
+
                             <DatePicker
+                                key={fechaFin?.toString()}
                                 label="Fecha fin"
                                 value={fechaFin}
                                 onChange={(newValue) => setFechaFin(newValue)}
                                 format="DD/MM/YYYY"
                                 sx={{ mb: 2, mt: 2 }}
                             />
+
                         </LocalizationProvider>
 
                         <Box sx={{ mt: 3, display: 'flex', gap: 5 }}>
@@ -260,6 +354,26 @@ export default function CrearDietaForm() {
                         <Typography variant="h6" gutterBottom>Confirmar creación de dieta</Typography>
                         <Typography>Desde: {fechaInicio?.format('DD/MM/YYYY')}</Typography>
                         <Typography>Hasta: {fechaFin?.format('DD/MM/YYYY')}</Typography>
+
+                        <Search
+                            value={buscadorIngestas.query}
+                            onChange={(val) => {
+                                buscadorIngestas.setQuery(val);
+                                buscadorIngestas.handleSuggestions(val);
+                            }}
+                            onSubmit={(val) => {
+                                handleAgregarIngesta(val);
+                                buscadorIngestas.setQuery('');
+                                buscadorIngestas.setSuggestions([]);
+                            }}
+                            suggestions={buscadorIngestas.suggestions}
+                            placeholder="Buscar ingesta"
+                            suggestionClick={handleAgregarIngesta}
+                            showButton={false}
+                        />
+
+
+
 
                         <DragDropContext onDragEnd={onDragEnd}>
 
@@ -287,45 +401,48 @@ export default function CrearDietaForm() {
                                                     <Box
                                                         ref={provided.innerRef}
                                                         {...provided.draggableProps}
-                                                        {...provided.dragHandleProps}
-                                                        sx={{
-                                                            p: 2,
-                                                            mb: 3,
-                                                            border: '1px solid #ccc',
-                                                            borderRadius: 2,
-                                                            bgcolor: '#fdfdfd',
-                                                            width: '100%',
-                                                            maxWidth: 500,
-                                                            boxShadow: 2,
-                                                            position: 'relative'
-                                                        }}
+                                                        sx={{ width: '100%', maxWidth: 500 }}
                                                     >
-                                                        <Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 1 }}>
-                                                            {grupo.intake_name}
-                                                        </Typography>
+                                                        <Accordion elevation={3}>
+                                                            <AccordionSummary
+                                                                expandIcon={<ExpandMoreIcon />}
+                                                                {...provided.dragHandleProps} // Aquí se permite arrastrar desde el resumen
+                                                                sx={{
+                                                                    backgroundColor: '#f5f5f5',
+                                                                    cursor: 'grab',
+                                                                    userSelect: 'none'
+                                                                }}
+                                                            >
+                                                                <Typography fontWeight="bold">{grupo.intake_name}</Typography>
+                                                            </AccordionSummary>
 
-                                                        {(grupo.subingestas || []).map((sub, subIdx) => (
-                                                            <Box key={subIdx} sx={{ mb: 2 }}>
-                                                                <Typography fontWeight="bold" sx={{ mb: 1 }}>
-                                                                    {sub.intake_type}
-                                                                </Typography>
+                                                            <AccordionDetails>
+                                                                {(grupo.subingestas || []).map((sub, subIdx) => (
+                                                                    <Box key={subIdx} sx={{ mb: 2 }}>
+                                                                        <Typography fontWeight="bold" sx={{ mb: 1 }}>
+                                                                            {sub.intake_type}
+                                                                        </Typography>
 
-                                                                {typeof sub.recipes === 'object' && sub.recipes !== null &&
-                                                                    Object.entries(sub.recipes).map(([tipo, recetasArray]) => (
-                                                                        <Box key={tipo} sx={{ ml: 2, mb: 1 }}>
-                                                                            {recetasArray.map((rec, i) => (
-                                                                                <Typography key={i} variant="body2">
-                                                                                    - <strong>{rec.recipe_type || tipo}:</strong> {rec.name}
-                                                                                </Typography>
+                                                                        {typeof sub.recipes === 'object' && sub.recipes !== null &&
+                                                                            Object.entries(sub.recipes).map(([tipo, recetasArray]) => (
+                                                                                <Box key={tipo} sx={{ ml: 2, mb: 1 }}>
+                                                                                    {recetasArray.map((rec, i) => (
+                                                                                        <Typography key={i} variant="body2">
+                                                                                            - <strong>{rec.recipe_type || tipo}:</strong> {rec.name}
+                                                                                        </Typography>
+                                                                                    ))}
+                                                                                </Box>
                                                                             ))}
-                                                                        </Box>
-                                                                    ))}
-                                                            </Box>
-                                                        ))}
+                                                                    </Box>
+                                                                ))}
+                                                            </AccordionDetails>
+                                                        </Accordion>
                                                     </Box>
                                                 )}
                                             </Draggable>
                                         ))}
+
+
 
                                         {provided.placeholder}
                                     </Box>

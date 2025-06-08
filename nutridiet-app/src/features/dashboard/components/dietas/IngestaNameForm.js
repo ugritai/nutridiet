@@ -3,7 +3,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Box, Button, FormControl, FormLabel, MenuItem, TextField, Typography } from '@mui/material';
 import Dashboard from '../../Dashboard';
 
-const tiposIngestaDiarios = ['3 comidas', '5 comidas'];
+const tiposIngesta = ['Desayuno', 'Media mañana', 'Almuerzo', 'Merienda', 'Cena'];
 
 export default function IngestaNameForm() {
     const { pacienteN } = useParams();
@@ -73,7 +73,7 @@ export default function IngestaNameForm() {
                 </FormControl>
 
                 <FormControl fullWidth sx={{ mb: 2 }}>
-                    <FormLabel>Tipo de Ingesta diaria</FormLabel>
+                    <FormLabel>Tipo de Ingesta</FormLabel>
                     <TextField
                         select
                         name="tipo_diario"
@@ -81,7 +81,7 @@ export default function IngestaNameForm() {
                         onChange={handleChange}
                         required
                     >
-                        {tiposIngestaDiarios.map((tipo) => (
+                        {tiposIngesta.map((tipo) => (
                             <MenuItem key={tipo} value={tipo}>
                                 {tipo}
                             </MenuItem>

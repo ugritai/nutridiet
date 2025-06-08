@@ -104,48 +104,50 @@ export default function CrearPacienteForm({ open, onClose, onPacienteCreado, pac
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!validate()) return;
-      
+
         try {
-          const url = isEdit
-            ? `/pacientes/actualizar_paciente/${pacienteInicial.id}`
-            : '/pacientes/crear_paciente/';
-      
-          const method = isEdit ? 'PUT' : 'POST';
-      
-          const { id, tmb, restrictionsKcal, dailyProIntake, dailyCalIntake, ...rest } = formValues;
-      
-          const payload = {
-            ...rest,
-            height: Number(formValues.height),
-            weight: Number(formValues.weight),
-            activityLevel: Number(formValues.activityLevel),
-            bornDate: formValues.bornDate,
-          };
-      
-          if (isEdit && !formValues.password) delete payload.password;
-      
-          const response = await fetchWithAuth(url, {
-            method,
-            body: JSON.stringify(payload),
-          });
-      
-          console.log('Payload enviado:', JSON.stringify(payload, null, 2));
-      
-          if (response.ok) {
-            const paciente = await response.json();
-            onPacienteCreado?.(paciente);
-            onClose();
-            window.location.reload();
-          } else {
-            const error = await response.json();
-            alert(error.detail || 'Error al guardar paciente');
-          }
+            const url = isEdit
+                ? `/pacientes/actualizar_paciente/${pacienteInicial.id}`
+                : '/pacientes/crear_paciente/';
+
+            const method = isEdit ? 'PUT' : 'POST';
+
+            const { id, tmb, restrictionsKcal, dailyProIntake, dailyCalIntake, ...rest } = formValues;
+
+            const payload = {
+                ...rest,
+                height: Number(formValues.height),
+                weight: Number(formValues.weight),
+                activityLevel: Number(formValues.activityLevel),
+                bornDate: formValues.bornDate,
+            };
+
+            if (isEdit && !formValues.password) delete payload.password;
+
+            const response = await fetchWithAuth(url, {
+                method,
+                body: JSON.stringify(payload),
+            });
+
+            if (response.ok) {
+                const paciente = await response.json();
+                onPacienteCreado?.(paciente);
+                onClose();
+
+                alert(isEdit ? 'Datos de paciente actualizado' : 'Peciente creado con exito!');
+
+                window.location.reload();
+            }
+            else {
+                const error = await response.json();
+                alert(error.detail || 'Error al guardar paciente');
+            }
         } catch (err) {
-          console.error('Error:', err);
-          alert('No se pudo conectar al servidor');
+            console.error('Error:', err);
+            alert('No se pudo conectar al servidor');
         }
-      };
-      
+    };
+
 
 
     return (

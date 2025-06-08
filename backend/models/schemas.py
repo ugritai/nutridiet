@@ -58,8 +58,8 @@ class Pacient(BaseModel):
     dailyCalIntake: Optional[float] = None
 
     # Relación con el nutricionista
-    nutricionista_id: Optional[str] = None
-    nutricionista_email: Optional[str] = None
+    nutritionist_id: Optional[str] = None
+    nutritionist_email: Optional[str] = None
     
 class PacienteUpdate(BaseModel):
     name: Optional[str]
@@ -91,30 +91,38 @@ class PatientInfo(BaseModel):
     id: str
     name: str
   
-class Receta(BaseModel):
+class Recipe(BaseModel):
+    id: str
     name: str
     recipe_type: str
     kcal: float
-    pro: float
-    car: float
+    protein: float
+    carbs: float
 
 class IntakeCreate(BaseModel):
     intake_type: str
     intake_name: str
-    ingesta_universal: bool
-    recipes: List[Receta]
-    
+    intake_universal: bool
+    recipes: List[Recipe]
+       # Relación con el nutricionista
+    nutritionist_id: Optional[str] = None
+    nutritionist_email: Optional[str] = None
+    patient_id: Optional[str] = None
+    patient_name: Optional[str] = None
+
 class IntakeInfo(BaseModel):
     intake_id: str
-    
-class DiaDieta(BaseModel):
-    fecha: date
-    ingestas: List[IntakeInfo]
 
-class DietaCreate(BaseModel):
-    paciente: str
+class DietDay(BaseModel):
+    date: date
+    intakes: List[IntakeInfo]
+
+class DietCreate(BaseModel):
+    patient: str
     name: str
     start_date: date
     end_date: date
-    dias: List[DiaDieta]
-    nutricionista_email: Optional[str] = None
+    days: List[DietDay]
+     # Relación con el nutricionista
+    nutritionist_id: Optional[str] = None
+    nutritionist_email: Optional[str] = None

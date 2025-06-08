@@ -12,7 +12,7 @@ import {
     IconButton,
     Card,
     Typography,
-    Box
+    Box, Divider
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import EditIcon from '@mui/icons-material/Edit';
@@ -54,7 +54,6 @@ export default function DietaIngePacienteCard() {
                 if (!res.ok) throw new Error('No se pudieron obtener las dietas existentes');
                 const data = await res.json();
                 setIngestasExistentes(data);
-                console.log(data)
             } catch (err) {
                 console.error(err);
             }
@@ -64,8 +63,12 @@ export default function DietaIngePacienteCard() {
 
 
     const handleEditarDieta = (dieta) => {
-        navigate(`/planificacion_dieta/${pacienteN}/editar_dieta/${dieta.id}`); // ajusta según tu ruta
+        console.log(dieta)
+        navigate(`/planificacion_dieta/${encodeURIComponent(pacienteN)}/editar_dieta/${encodeURIComponent(dieta.nombre_dieta)}`, {
+            state: { dietaId: dieta._id }
+        });
     };
+
 
     const handleEliminarDieta = async (dieta) => {
         if (window.confirm('¿Estás seguro de eliminar esta dieta?')) {
@@ -81,7 +84,6 @@ export default function DietaIngePacienteCard() {
             if (!res.ok) throw new Error('No se pudo cargar la ingesta');
 
             const data = await res.json();
-            console.log(data)
             navigate(`/planificacion_dieta/${encodeURIComponent(pacienteN)}/editar_ingesta`, {
                 state: {
                     modo: 'editar',
@@ -162,7 +164,7 @@ export default function DietaIngePacienteCard() {
                         <Accordion key={idx} sx={{ mt: 2 }}>
                             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                                 <Typography sx={{ flexGrow: 1 }}>
-                                    {dieta.nombre_dieta} ({dayjs(dieta.fecha_inicio).format('DD/MM/YYYY')} - {dayjs(dieta.fecha_final).format('DD/MM/YYYY')})
+                                    {dieta.nombre_dieta}
                                 </Typography>
                                 <IconButton size="small" onClick={() => handleEditarDieta(dieta)}>
                                     <EditIcon fontSize="small" />
@@ -173,8 +175,39 @@ export default function DietaIngePacienteCard() {
                             </AccordionSummary>
 
                             <AccordionDetails>
-                                {/* Aquí puedes mostrar más detalles si lo deseas */}
-                                <Typography variant="body2">Detalles adicionales aquí si los hay...</Typography>
+                                {dieta.dias.map((dia, diaIdx) => (
+                                    <Box key={diaIdx} sx={{ mb: 2 }}>
+                                        <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>
+                                            Día {diaIdx + 1} - {dayjs(dia.fecha).format('DD/MM/YYYY')}
+                                        </Typography>
+
+                                        {dia.ingestas.length > 0 ? (
+                                            dia.ingestas.map((ingesta, i) => {
+                                                const detalles = ingesta.detalles;
+                                                return (
+                                                    detalles && (
+                                                        <Box key={i} sx={{ pl: 2, mb: 2 }}>
+                                                            <Typography variant="subtitle2" sx={{ fontWeight: 500 }}>
+                                                                {detalles.intake_type}
+                                                            </Typography>
+                                                            {detalles.recipes.map((receta, rIdx) => (
+                                                                <Typography key={rIdx} variant="body2" sx={{ pl: 2 }}>
+                                                                    - {receta.recipe_type}: {receta.name}
+                                                                </Typography>
+                                                            ))}
+                                                        </Box>
+                                                    )
+                                                );
+                                            })
+                                        ) : (
+                                            <Typography variant="body2" sx={{ fontStyle: 'italic', color: 'text.secondary', pl: 2 }}>
+                                                No hay ingestas para este día.
+                                            </Typography>
+                                        )}
+
+                                        {diaIdx < dieta.dias.length - 1 && <Divider sx={{ my: 2 }} />}
+                                    </Box>
+                                ))}
                             </AccordionDetails>
                         </Accordion>
                     ))}

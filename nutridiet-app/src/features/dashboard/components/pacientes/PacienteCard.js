@@ -10,8 +10,10 @@ import {
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import DeleteIcon from '@mui/icons-material/Delete';
 
-export default function PacienteCard({ paciente, onEdit }) {
+
+export default function PacienteCard({ paciente, onEdit, onDelete }) {
   const [expanded, setExpanded] = useState(false);
 
   const handleExpandClick = () => setExpanded(!expanded);
@@ -22,6 +24,14 @@ export default function PacienteCard({ paciente, onEdit }) {
   };
 
   if (!paciente) return null;
+
+  const genderLabels = {
+    male: "Hombre",
+    female: "Mujer",
+    other: "Otro"
+  };
+
+  const genderText = genderLabels[paciente.gender] || paciente.gender;
 
   return (
     <Card sx={{ width: '100%', marginBottom: 2 }}>
@@ -38,6 +48,15 @@ export default function PacienteCard({ paciente, onEdit }) {
             >
               <EditIcon />
             </IconButton>
+
+            <IconButton
+              onClick={() => onDelete?.(paciente)}
+              aria-label="eliminar paciente"
+              size="small"
+            >
+              <DeleteIcon />
+            </IconButton>
+
             <IconButton
               onClick={handleExpandClick}
               aria-expanded={expanded}
@@ -59,13 +78,16 @@ export default function PacienteCard({ paciente, onEdit }) {
             Email: {paciente.email}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Género: {paciente.gender}
+            Dieta actual:
           </Typography>
         </Stack>
 
         <Collapse in={expanded} timeout="auto" unmountOnExit>
           <Divider sx={{ my: 1 }} />
           <Stack spacing={0.7}>
+            <Typography variant="body2" color="text.secondary">
+              Género: {genderText}
+            </Typography>
             <Typography variant="body2" color="text.secondary">
               Fecha de nacimiento: {new Date(paciente.bornDate).toLocaleDateString()}
             </Typography>

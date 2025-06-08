@@ -13,14 +13,23 @@ import { obtenerEstructuraIngesta } from './ingestas/EstructuraIngestas';
 import TipoIngestaGrid from './ingestas/TipoIngestaGrid';
 import RecetaCard from './ingestas/RecetaCard';
 
+const porcentajeEsperadoPorTipo = {
+    desayuno: 0.20,
+    'media mañana': 0.075,
+    almuerzo: 0.30,
+    merienda: 0.075,
+    cena: 0.275
+};
+
+
 export default function CrearIngestaForm() {
     const { pacienteN, nombreIngesta } = useParams();
     const navigate = useNavigate();
     const location = useLocation();
     const modoEdicion = location.state?.modo === 'editar';
     const tipo = modoEdicion
-    ? location.state?.ingesta?.tipo_diario || ''
-    : location.state?.tipo_diario || '';
+        ? location.state?.ingesta?.tipo_diario || ''
+        : location.state?.tipo_diario || '';
 
     const ingestaOriginal = location.state?.ingesta || null; // contiene la ingesta original
 
@@ -61,12 +70,12 @@ export default function CrearIngestaForm() {
                     });
                 });
             });
-    
+
             setRecetasPorTipo(transformadas);
             setIngestaUniversal(ingestaOriginal.ingesta_universal || false);
         }
     }, [modoEdicion, ingestaOriginal]);
-    
+
 
     useEffect(() => {
         const fetchInfoPaciente = async () => {
@@ -90,12 +99,13 @@ export default function CrearIngestaForm() {
             const raciones = data.raciones || 1;
             const valores = data.nutritional_info;
             const receta = {
-                id: nombre,
+                id: data._id,
                 nombre,
                 kcal: (valores.energy_kcal / raciones).toFixed(2),
                 pro: (valores.pro / raciones).toFixed(2),
                 car: (valores.car / raciones).toFixed(2),
             };
+            console.log(receta)
             setRecetasBuscadas(prev => [...prev, receta]);
         } catch (err) {
             console.error(err);
@@ -138,7 +148,7 @@ export default function CrearIngestaForm() {
             try {
                 const [recetasRes, maximosRes] = await Promise.all([
                     fetch(`http://localhost:8000/recetas/categoria/${encodeURIComponent(categoriaFiltro)}/nutricion_simplificada?por_porcion=true`),
-                    fetch(`http://localhost:8000/recetas/recetas/maximos_nutricionales`)
+                    fetch(`http://localhost:8000/recetas/recetas/maximos_nutricionales?categoria=${encodeURIComponent(categoriaFiltro)}`)
                 ]);
 
                 if (!recetasRes.ok) throw new Error('Error al obtener recetas');
@@ -173,8 +183,10 @@ export default function CrearIngestaForm() {
         fetchDatos();
     }, [categoriaFiltro]);
 
-    const onDragEnd = useCallback(({ source, destination }) => {
-        if (!destination) return;
+    const onDragEnd = useCallback((resultado) => {
+        const { source, destination, draggableId } = resultado;
+        if (!destination || !draggableId) return;
+
         const estructura = obtenerEstructuraIngesta(tipo);
         const validDroppables = new Set(['searchResults', 'categoriaResults']);
         Object.entries(estructura).forEach(([ingesta, subtipos]) => {
@@ -182,10 +194,15 @@ export default function CrearIngestaForm() {
         });
         if (!validDroppables.has(source.droppableId) || !validDroppables.has(destination.droppableId)) return;
 
-        const getItem = () =>
-            source.droppableId === 'searchResults'
-                ? recetasBuscadas[source.index]
-                : recetasPorTipo[source.droppableId]?.[source.index];
+        const getItem = () => {
+            const [nombre] = draggableId.split('::');
+            const todasLasRecetas = [
+                ...recetasBuscadas,
+                ...recetasFiltradas,
+                ...Object.values(recetasPorTipo).flat()
+            ];
+            return todasLasRecetas.find(r => r.nombre === nombre);
+        };
 
         const item = getItem();
         if (!item) return;
@@ -193,21 +210,18 @@ export default function CrearIngestaForm() {
         const updateState = (sourceId, destId, item) => {
             if (sourceId === 'searchResults' && destId !== 'searchResults') {
                 if (recetasPorTipo[destId]?.some(r => r.nombre === item.nombre)) return;
-                setRecetasBuscadas(prev => prev.filter((_, i) => i !== source.index));
+                setRecetasBuscadas(prev => prev.filter((r) => r.nombre !== item.nombre));
                 setRecetasPorTipo(prev => ({ ...prev, [destId]: [...(prev[destId] || []), item] }));
-            } else if (sourceId !== 'searchResults' && destId === 'searchResults') {
-                setRecetasPorTipo(prev => ({
-                    ...prev,
-                    [sourceId]: prev[sourceId].filter((_, i) => i !== source.index)
-                }));
-                setRecetasBuscadas(prev => [...prev, item]);
+            } else if (sourceId === 'categoriaResults' && destId !== 'categoriaResults') {
+                if (recetasPorTipo[destId]?.some(r => r.nombre === item.nombre)) return;
+                setRecetasPorTipo(prev => ({ ...prev, [destId]: [...(prev[destId] || []), item] }));
             } else if (sourceId !== destId) {
                 const sourceItems = [...(recetasPorTipo[sourceId] || [])];
                 const destItems = [...(recetasPorTipo[destId] || [])];
                 if (destItems.some(r => r.nombre === item.nombre)) return;
-                sourceItems.splice(source.index, 1);
+                const filtrados = sourceItems.filter((r) => r.nombre !== item.nombre);
                 destItems.splice(destination.index, 0, item);
-                setRecetasPorTipo(prev => ({ ...prev, [sourceId]: sourceItems, [destId]: destItems }));
+                setRecetasPorTipo(prev => ({ ...prev, [sourceId]: filtrados, [destId]: destItems }));
             } else {
                 const items = [...(recetasPorTipo[sourceId] || [])];
                 const [moved] = items.splice(source.index, 1);
@@ -217,7 +231,7 @@ export default function CrearIngestaForm() {
         };
 
         updateState(source.droppableId, destination.droppableId, item);
-    }, [recetasBuscadas, recetasPorTipo, tipo]);
+    }, [recetasBuscadas, recetasFiltradas, recetasPorTipo, tipo]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -225,24 +239,26 @@ export default function CrearIngestaForm() {
         setError(null);
         try {
             const recetasPorIngesta = {};
-    
+
             const formatear = (str) =>
                 str
                     .split('_')
                     .map(p => p.charAt(0).toUpperCase() + p.slice(1))
                     .join(' ');
-    
+
             Object.entries(recetasPorTipo).forEach(([key, recetasLista]) => {
                 if (!recetasLista || recetasLista.length === 0) return;
-    
+
                 const [ingesta, subtipo] = key.split('::');
                 const ingestaKey = formatear(ingesta);
                 const tipoReceta = formatear(subtipo);
-    
+
                 if (!recetasPorIngesta[ingestaKey]) recetasPorIngesta[ingestaKey] = [];
-    
+                console.log(recetasLista);
+
                 recetasLista.forEach((receta) => {
                     recetasPorIngesta[ingestaKey].push({
+                        id: receta.id,
                         recipe_type: tipoReceta,
                         name: receta.nombre || receta.name,
                         kcal: parseFloat(receta.kcal),
@@ -251,7 +267,7 @@ export default function CrearIngestaForm() {
                     });
                 });
             });
-    
+
             const cuerpos = Object.entries(recetasPorIngesta)
                 .filter(([_, recetas]) => recetas.length > 0) // solo con recetas
                 .map(([ingesta, recetas]) => ({
@@ -260,23 +276,23 @@ export default function CrearIngestaForm() {
                     ingesta_universal: ingestaUniversal,
                     recipes: recetas,
                 }));
-    
+
             for (const cuerpo of cuerpos) {
                 const url = modoEdicion
                     ? `/planificacion_ingestas/editar_ingesta/${pacienteN}/${encodeURIComponent(cuerpo.intake_name)}`
                     : `/planificacion_ingestas/crear_ingesta/${pacienteN}`;
-    
+
                 const method = modoEdicion ? 'PUT' : 'POST';
-    
+
                 const res = await fetchWithAuth(url, {
                     method,
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(cuerpo),
                 });
-    
+
                 if (!res.ok) throw new Error(`Error al guardar la ingesta: ${cuerpo.intake_type}`);
             }
-    
+
             setRecetasPorTipo({});
             setRecetasBuscadas([]);
             alert('Ingestas guardadas correctamente');
@@ -288,7 +304,7 @@ export default function CrearIngestaForm() {
             setEnviando(false);
         }
     };
-    
+
 
     if (!tipo) return null;
 
@@ -297,7 +313,7 @@ export default function CrearIngestaForm() {
             <Card sx={{ p: 3, mt: 2, width: '100%' }}>
                 {nutricion && (
                     <Box sx={{ display: 'flex', gap: 3, mb: 2, flexWrap: 'wrap' }}>
-                        <Box sx={{ flex: { md: 1 }, maxWidth: { md: '33.3333%' } }}>
+                        <Box sx={{ flex: { md: 1 }, maxWidth: { md: '60.9999%' } }}>
                             <Typography variant="subtitle1" fontWeight="bold">Nombre de Ingesta:</Typography>
                             <Typography>{nombreIngesta}</Typography>
                             <Typography variant="subtitle1" fontWeight="bold" gutterBottom>Requerimientos diarios:</Typography>
@@ -305,11 +321,26 @@ export default function CrearIngestaForm() {
                             <Typography>Proteínas: {Number(nutricion.pro).toFixed(2)} g</Typography>
                             <Typography>Carbohidratos: {nutricion.car} g</Typography>
                         </Box>
-                        <Box sx={{ maxWidth: { md: '66.6666%' }, display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
-                            <Typography variant="subtitle1" fontWeight="bold" sx={{ width: '100%' }}>Requerimientos completado:</Typography>
-                            <PorcentajeCircular label="Kcal" valor={parseFloat(total.kcal)} maximo={nutricion.kcal} />
-                            <PorcentajeCircular label="Proteínas" valor={parseFloat(total.pro)} maximo={nutricion.pro} />
-                            <PorcentajeCircular label="Carbohidratos" valor={parseFloat(total.car)} maximo={nutricion.car} />
+                        <Box sx={{ maxWidth: { md: '39.9999%' }, display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+                            {(() => {
+                                const tipoNorm = tipo.toLowerCase();
+                                const porcentaje = porcentajeEsperadoPorTipo[tipoNorm] || 1;
+
+                                const kcalObjetivo = nutricion.kcal * porcentaje;
+                                const proObjetivo = nutricion.pro * porcentaje;
+                                const carObjetivo = nutricion.car * porcentaje;
+
+                                return (
+                                    <>
+                                        <Typography variant="subtitle1" fontWeight="bold" sx={{ width: '100%' }}>
+                                            Requerimientos completados ({(porcentaje * 100).toFixed(0)}%):
+                                        </Typography>
+                                        <PorcentajeCircular label="Kcal" valor={parseFloat(total.kcal)} maximo={kcalObjetivo} />
+                                        <PorcentajeCircular label="Proteínas" valor={parseFloat(total.pro)} maximo={proObjetivo} />
+                                        <PorcentajeCircular label="Carbohidratos" valor={parseFloat(total.car)} maximo={carObjetivo} />
+                                    </>
+                                );
+                            })()}
                         </Box>
                     </Box>
                 )}
@@ -321,7 +352,7 @@ export default function CrearIngestaForm() {
                         <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 4, mt: 2 }}>
                             <Box sx={{
                                 flex: { md: 1 },
-                                maxWidth: { md: '33.3333%' },
+                                maxWidth: { md: '60.99999%' },
                                 border: '1px dashed gray',
                                 borderRadius: 2,
                                 p: 2,
@@ -369,8 +400,8 @@ export default function CrearIngestaForm() {
                                         >
                                             {recetasBuscadas.map((receta, index) => (
                                                 <Draggable
-                                                    key={`${receta.nombre}::searchResults`}
-                                                    draggableId={`${receta.nombre}::searchResults`}
+                                                    key={`${receta.name}::categoria`}
+                                                    draggableId={`${receta.name}::categoria`}
                                                     index={index}
                                                 >
                                                     {(provided) => (
@@ -469,8 +500,8 @@ export default function CrearIngestaForm() {
                                                 .slice(0, 40)
                                                 .map((receta, index) => (
                                                     <Draggable
-                                                        key={`${receta.nombre || receta.receta}::categoria`}
-                                                        draggableId={`${receta.nombre || receta.receta}::categoria`}
+                                                        key={`${receta.name}::categoria`}
+                                                        draggableId={`${receta.name}::categoria`}
                                                         index={index}
                                                     >
                                                         {(provided) => (
@@ -485,7 +516,7 @@ export default function CrearIngestaForm() {
 
                             </Box>
 
-                            <Box sx={{ flex: { md: 2 }, maxWidth: { md: '66.6666%' } }}>
+                            <Box sx={{ flex: { md: 2 }, maxWidth: { md: '39.9999%' } }}>
                                 <Typography variant="h6" gutterBottom>Tipo de Ingesta: {tipo}</Typography>
                                 <TipoIngestaGrid
                                     estructura={obtenerEstructuraIngesta(tipo)}

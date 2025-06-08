@@ -4,7 +4,8 @@ from database.connection import intake_collection, nutritionist_collection, paci
 from fastapi.security import OAuth2PasswordBearer 
 from .security import decode_jwt_token
 from typing import List
-
+from unidecode import unidecode
+from utils.food_utils import remove_stop_words
 
 router = APIRouter(tags=["Intakes"])
 
@@ -35,19 +36,18 @@ async def crear_ingesta(
 
     recipes_list = [receta.dict() for receta in ingesta.recipes]
 
-
     nuevo_documento = {
-    "paciente": pacienteN,
-    "nombre_ingesta": ingesta.intake_name, 
+    "pacient": pacienteN,
+    "intake_name": ingesta.intake_name, 
     "intake_type": ingesta.intake_type,
-    "ingesta_universal": ingesta.ingesta_universal, 
+    "universal_intake": ingesta.ingesta_universal, 
     "recipes": recipes_list, 
     "nutricionista_email": email_nutri,
     }
 
     result = intake_collection.insert_one(nuevo_documento)
 
-    return {"mensaje": "Ingesta creada correctamente", "id": str(result.inserted_id)}
+    return {"mensaje": "Ingesta creada correctamente", "nombre": str(result.inserted_id)}
 
 @router.get("/ingestas/{pacienteN}", response_model=List[dict])
 async def obtener_ingestas_paciente(
@@ -164,3 +164,72 @@ async def ver_ingesta_agrupada(
         "tipo_diario": tipo_diario,
         "subingestas": ingestas
     }
+
+def capitalizar_primera_letra(texto: str) -> str:
+    return texto.strip().capitalize()
+
+@router.get("/buscar_ingestas/{nombre}")
+async def buscar_ingestas(nombre: str, limit: int = 5):
+    nombre = unidecode(nombre.lower())
+    sugerencias = set()
+
+    cursor = intake_collection.find({})
+    for doc in cursor:
+        intake_name = doc.get("nombre_ingesta", "")
+        if not intake_name:
+            continue
+
+        intake_sin_tildes = unidecode(intake_name.lower())
+        if nombre in intake_sin_tildes:
+            sugerencias.add(capitalizar_primera_letra(intake_name))
+
+        if len(sugerencias) >= limit:
+            break
+
+    if sugerencias:
+        return [{"intake_name": s} for s in list(sugerencias)[:limit]]
+    else:
+        raise HTTPException(status_code=404, detail="Ingesta no encontrada")
+    
+@router.get("/ver_ingesta_detalle/{nombre_ingesta}")
+async def ver_ingesta_detalle(nombre_ingesta: str):
+    doc = intake_collection.find_one({
+        "$or": [
+            {"nombre_ingesta": nombre_ingesta},
+            {"intake_name": nombre_ingesta}
+        ]
+    })
+
+    if not doc:
+        raise HTTPException(status_code=404, detail="Ingesta no encontrada")
+
+    # Convertir _id a string para evitar problemas de serialización
+    doc["_id"] = str(doc["_id"])
+    return doc
+
+@router.delete("/eliminar_ingesta/{pacienteN}/{nombre_ingesta}")
+async def eliminar_ingesta(
+    pacienteN: str = Path(...),
+    nombre_ingesta: str = Path(...),
+    token: str = Depends(oauth2_scheme)
+):
+    payload = decode_jwt_token(token)
+    if not payload:
+        raise HTTPException(status_code=401, detail="Token inválido")
+
+    email = payload.get("sub")
+    if not email:
+        raise HTTPException(status_code=401, detail="Token inválido")
+
+    resultado = intake_collection.delete_many({
+        "paciente": pacienteN,
+        "$or": [
+            {"intake_name": nombre_ingesta}
+        ],
+        "nutricionista_email": email
+    })
+
+    if resultado.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="No se encontraron ingestas para eliminar")
+
+    return {"mensaje": f"{resultado.deleted_count} ingesta(s) eliminadas correctamente"}

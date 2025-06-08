@@ -347,9 +347,11 @@ async def obtener_nutricion(
         total_nutricion = {k: round((v if v is not None else 0) / raciones, 2) for k, v in total_nutricion.items()}
     else:
         total_nutricion = {k: round((v if v is not None else 0), 2) for k, v in total_nutricion.items()}
-
+    
+    receta_obj["_id"] = str(receta_obj["_id"])
     return {
         "receta": receta_obj.get("title"),
+        "_id": receta_obj["_id"],
         "por_porcion": por_porcion,
         "raciones": raciones,
         "nutritional_info": total_nutricion
@@ -402,9 +404,11 @@ async def obtener_kcal_pro_car_por_categoria(
     resultados = []
 
     for receta_doc in recetas_encontradas.values():
+
         titulo = receta_doc.get("title", "")
         valores = receta_doc.get("nutritional_info", {})
-
+        receta_doc["_id"] = str(receta_doc["_id"])
+        
         # Acceso inteligente a los campos por porción o por 100g
         def get_nutri_field(*keys):
             for key in keys:
@@ -440,14 +444,16 @@ async def obtener_kcal_pro_car_por_categoria(
             (car_max is not None and car > car_max)
         ):
             continue
-
+        
         resultados.append({
-            "receta": titulo,
+            "_id": receta_doc["_id"],
+            "name": titulo,
             "kcal": kcal,
             "pro": pro,
             "car": car
         })
-    resultados.sort(key=lambda x: x["receta"].lower())
+    resultados.sort(key=lambda x: x["name"].lower())
+    
     return {
         "categoria": categoria,
         "por_porcion": por_porcion,
@@ -520,30 +526,75 @@ async def sugerir_recetas(nombre: str, limit: int = 10):
 from pymongo import DESCENDING
 
 @router.get("/recetas/maximos_nutricionales")
-async def obtener_maximos_nutricionales():
+async def obtener_maximos_nutricionales(categoria: Optional[str] = None):
     campos_nutricionales = {
         "kcal": ["energy_kcal", "kcal", "kcal_100g"],
         "pro": ["proteins_g", "pro", "proteinas"],
         "car": ["carbohydrates_g", "car", "carbohidratos"]
     }
 
-    async def obtener_maximo_para_campos(keys):
-        valor_max = 0
+    recetas_filtradas = []
+
+    if categoria:
+        categoria_normalizada = unidecode(categoria.lower().strip())
+        recetas_unicas = {}
+
+        # 1. Buscar coincidencia exacta en 'category'
         for collection_name in collections:
             collection = recipe_db_host[collection_name]
-            for key in keys:
-                doc = await collection.find_one(
-                    {f"nutritional_info.{key}": {"$exists": True}, "origin_ISO": "ESP"},
-                    sort=[(f"nutritional_info.{key}", DESCENDING)]
-                )
-                if doc:
-                    valor = doc["nutritional_info"].get(key)
+            cursor = collection.find({
+                'origin_ISO': 'ESP',
+                'category': {'$regex': f'^{re.escape(categoria_normalizada)}$', '$options': 'i'}
+            }, {'title': 1, 'nutritional_info': 1})
+
+            async for doc in cursor:
+                titulo = doc.get("title", "").lower()
+                recetas_unicas[titulo] = doc
+
+        # 2. Buscar por palabras clave si existen
+        if categoria_normalizada in PALABRAS_CLAVE:
+            palabras_clave = [unidecode(p.lower()) for p in PALABRAS_CLAVE[categoria_normalizada]]
+            for collection_name in collections:
+                collection = recipe_db_host[collection_name]
+                cursor = collection.find({'origin_ISO': 'ESP'}, {'title': 1, 'nutritional_info': 1})
+
+                async for doc in cursor:
+                    titulo = doc.get("title", "")
+                    titulo_sin_tildes = unidecode(titulo.lower())
+                    if any(p in titulo_sin_tildes for p in palabras_clave):
+                        recetas_unicas[titulo.lower()] = doc
+
+        if not recetas_unicas:
+            raise HTTPException(status_code=404, detail="No se encontraron recetas para esta categoría")
+
+        recetas_filtradas = list(recetas_unicas.values())
+
+    # Función para obtener el máximo de cada conjunto de claves
+    async def obtener_maximo_para_campos(keys, docs=None):
+        valor_max = 0
+        if docs is not None:
+            for doc in docs:
+                info = doc.get("nutritional_info", {})
+                for key in keys:
+                    valor = info.get(key)
                     if isinstance(valor, (int, float)) and valor > valor_max:
                         valor_max = valor
+        else:
+            for collection_name in collections:
+                collection = recipe_db_host[collection_name]
+                for key in keys:
+                    doc = await collection.find_one(
+                        {f"nutritional_info.{key}": {"$exists": True}, "origin_ISO": "ESP"},
+                        sort=[(f"nutritional_info.{key}", DESCENDING)]
+                    )
+                    if doc:
+                        valor = doc["nutritional_info"].get(key)
+                        if isinstance(valor, (int, float)) and valor > valor_max:
+                            valor_max = valor
         return round(valor_max, 2)
 
-    kcal = await obtener_maximo_para_campos(campos_nutricionales["kcal"])
-    pro = await obtener_maximo_para_campos(campos_nutricionales["pro"])
-    car = await obtener_maximo_para_campos(campos_nutricionales["car"])
+    kcal = await obtener_maximo_para_campos(campos_nutricionales["kcal"], docs=recetas_filtradas if categoria else None)
+    pro = await obtener_maximo_para_campos(campos_nutricionales["pro"], docs=recetas_filtradas if categoria else None)
+    car = await obtener_maximo_para_campos(campos_nutricionales["car"], docs=recetas_filtradas if categoria else None)
 
     return {"kcal": kcal, "pro": pro, "car": car}

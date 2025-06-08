@@ -43,8 +43,8 @@ async def crear_paciente(pacient: Pacient, token: str = Depends(oauth2_scheme)):
 
     paciente_dict = pacient.dict()
     paciente_dict["bornDate"] = pacient.bornDate.isoformat()
-    paciente_dict["nutricionista_id"] = nutricionista["_id"]
-    paciente_dict["nutricionista_email"] = nutricionista["email"]
+    paciente_dict["nutritionist_id"] = nutricionista["_id"]
+    paciente_dict["nutritionist_email"] = nutricionista["email"]
     
     # Añadir los campos calculados manualmente
     paciente_dict["tmb"] = pacient.tmb
@@ -73,8 +73,10 @@ async def listar_pacientes(token: str = Depends(oauth2_scheme)):
         if not nutricionista:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Nutricionista no encontrado")
 
-        pacientes_cursor = pacient_collection.find({"nutricionista_email": email_nutri})
-
+        pacientes_cursor = pacient_collection.find(
+            {"nutritionist_email": email_nutri}
+        ).sort("name", 1)
+        
         pacientes = []
         for paciente in pacientes_cursor:
             paciente["id"] = str(paciente["_id"])
@@ -162,3 +164,22 @@ async def actualizar_paciente(
         raise HTTPException(status_code=400, detail="No se realizaron cambios")
 
     return {"message": "Perfil actualizado correctamente"}
+
+@router.delete("/delete/{patient_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_patient(
+    patient_id: str = Path(..., description="ID of the patient to delete"),
+    token: str = Depends(oauth2_scheme)
+):
+    payload = decode_jwt_token(token)
+    if not payload:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired token")
+
+    email = payload.get("sub")
+    if not email:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized access")
+
+    result = pacient_collection.delete_one({"_id": ObjectId(patient_id)})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Paciente no encontrado")
+
+    return {"message": "Paciente eliminado correctamente"}

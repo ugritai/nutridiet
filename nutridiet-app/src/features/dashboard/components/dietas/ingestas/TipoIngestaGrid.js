@@ -8,18 +8,21 @@ export default function TipoIngestaGrid({ estructura, recetasPorTipo, setRecetas
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
       {Object.entries(estructura).map(([ingesta, subtipos]) => (
-        <Box key={ingesta}>
-          <Typography variant="h5" sx={{ mb: 2 }}>{ingesta}</Typography>
-          <Box sx={{
-            display: 'grid',
-            gap: 2,
-            gridTemplateColumns: {
-              xs: '1fr',
-              sm: 'repeat(2, 1fr)',
-              md: 'repeat(3, 1fr)',
-              lg: 'repeat(5, 1fr)',
-            },
-          }}>
+        <Box key={ingesta} sx={{ overflowX: 'auto', width: '100%' }}>
+          <Box
+            sx={{
+              display: 'grid',
+              gap: 2,
+              gridAutoFlow: 'column',
+              gridTemplateRows: {
+                xs: 'repeat(1, 1fr)',
+                sm: 'repeat(2, 1fr)',
+                md: 'repeat(3, 1fr)',
+              },
+              gridAutoColumns: 'minmax(180px, 1fr)', // Ajusta el ancho mínimo aquí
+              pr: 2,
+            }}
+          >
             {subtipos.map((subtipo) => {
               const id = `${ingesta}::${subtipo}`;
               return (
@@ -33,10 +36,10 @@ export default function TipoIngestaGrid({ estructura, recetasPorTipo, setRecetas
                         border: '1px solid #ccc',
                         borderRadius: 2,
                         minHeight: 200,
-                        backgroundColor: '#fafafa',
+                        backgroundColor: '#fff',
                       }}
                     >
-                      <Typography variant="h6" gutterBottom>
+                      <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
                         {subtipo.replace('_', ' ').toUpperCase()}
                       </Typography>
 
@@ -73,8 +76,6 @@ export default function TipoIngestaGrid({ estructura, recetasPorTipo, setRecetas
                           )}
                         </Draggable>
                       ))}
-
-                      {/* ✅ MUY IMPORTANTE */}
                       {provided.placeholder}
                     </Box>
                   )}

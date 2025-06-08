@@ -28,7 +28,8 @@ const pathNameMap = {
   'categorias': 'Categorías',
   'crear_ingesta': 'Crear ingesta',
   'crear_dieta': 'Crear dieta',
-  'mi_cuenta': 'Mi Cuenta'
+  'mi_cuenta': 'Mi Cuenta',
+  'editar_ingesta': 'Editar ingesta'
 };
 
 export default function NavbarBreadcrumbs() {
@@ -77,6 +78,14 @@ export default function NavbarBreadcrumbs() {
         if (pathnames.includes('categorias')) {
           if (value === 'categorias') return null;
           if (pathnames[index - 1] === 'categorias') {
+            label = decodeURIComponent(value);
+          }
+        }
+
+        // 处理 categorias/:nombre
+        if (pathnames.includes('editar_dieta')) {
+          if (value === 'editar_dieta') return null;
+          if (pathnames[index - 1] === 'editar_dieta') {
             label = decodeURIComponent(value);
           }
         }

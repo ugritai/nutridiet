@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import CardMedia from '@mui/material/CardMedia';
@@ -8,6 +8,7 @@ import ChevronRightRoundedIcon from '@mui/icons-material/ChevronRightRounded';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
 import { Link } from 'react-router-dom';
+import defaultImage from '../../../assets/logo_192.png';
 
 const UniversalCard = ({
   title,
@@ -21,9 +22,12 @@ const UniversalCard = ({
 }) => {
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
-  
+
   // Determinar si es una tarjeta simple (solo título y botón)
   const isSimpleCard = !image && !description && !icon;
+
+  const [imgSrc, setImgSrc] = useState(image && image.trim() !== '' ? image : defaultImage);
+  const isDefaultImage = imgSrc === defaultImage;
 
   return (
     <Card
@@ -41,20 +45,27 @@ const UniversalCard = ({
         minHeight: isSimpleCard ? 180 : (image ? 300 : 240),
       }}
     >
-      {image ? (
+      {image && image.trim() !== '' ? (
         <>
           <div style={{ position: 'relative', height: 160 }}>
             <CardMedia
               component="img"
-              image={image}
+              image={imgSrc}
               alt={title}
               sx={{
-                height: '100%',
+                height: 160,
                 width: '100%',
-                objectFit: 'cover',
+                objectFit: isDefaultImage ? 'contain' : 'cover',
+                objectPosition: 'center',
+                backgroundColor: '#f5f5f5',
+                p: isDefaultImage ? 2 : 0,
+              }}
+              onError={(e) => {
+                setImgSrc(defaultImage); // cambia dinámicamente si la imagen falla
               }}
             />
           </div>
+
           <Typography
             variant="h5"
             sx={{
@@ -69,6 +80,7 @@ const UniversalCard = ({
           >
             {title}
           </Typography>
+
         </>
       ) : (
         <CardContent
@@ -97,7 +109,7 @@ const UniversalCard = ({
               {icon}
             </div>
           )}
-          
+
           <Typography
             variant="h6"
             sx={{
@@ -129,7 +141,7 @@ const UniversalCard = ({
             {description}
           </Typography>
         )}
-        
+
         <Button
           component={buttonLink ? Link : 'button'}
           to={buttonLink}
@@ -139,9 +151,9 @@ const UniversalCard = ({
           endIcon={<ChevronRightRoundedIcon />}
           fullWidth={isSmallScreen}
           onClick={!buttonLink ? onAction : undefined}
-          sx={{ 
+          sx={{
             fontWeight: 500,
-            mt: !description && !image ? 1 : 0 
+            mt: !description && !image ? 1 : 0
           }}
         >
           {buttonText}
