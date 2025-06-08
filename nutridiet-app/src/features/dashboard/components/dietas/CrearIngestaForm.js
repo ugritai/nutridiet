@@ -23,15 +23,20 @@ const porcentajeEsperadoPorTipo = {
 
 
 export default function CrearIngestaForm() {
-    const { pacienteN, nombreIngesta } = useParams();
-    const navigate = useNavigate();
+    const { pacienteN } = useParams();
     const location = useLocation();
-    const modoEdicion = location.state?.modo === 'editar';
-    const tipo = modoEdicion
-        ? location.state?.ingesta?.tipo_diario || ''
-        : location.state?.tipo_diario || '';
+    const navigate = useNavigate();
 
-    const ingestaOriginal = location.state?.ingesta || null; // contiene la ingesta original
+    const modoEdicion = location.state?.modo === 'editar';
+    const ingestaOriginal = location.state?.ingesta || null;
+
+    const nombreIngesta = modoEdicion
+        ? ingestaOriginal?.nombre || ''
+        : useParams().nombreIngesta;
+
+    const tipo = modoEdicion
+        ? ingestaOriginal?.tipo || ''
+        : location.state?.tipo || '';
 
     const [enviando, setEnviando] = useState(false);
     const [error, setError] = useState(null);
@@ -56,25 +61,34 @@ export default function CrearIngestaForm() {
     });
 
     useEffect(() => {
-        if (modoEdicion && ingestaOriginal?.subingestas) {
+        console.log('modoEdicion:', modoEdicion);
+  console.log('ingestaOriginal?.recipes:', ingestaOriginal?.recipes);
+  console.log('tipo:', tipo);
+        if (modoEdicion && ingestaOriginal?.recipes && tipo) {
             const transformadas = {};
-            ingestaOriginal.subingestas.forEach(subingesta => {
-                const ingesta = subingesta.intake_type.toLowerCase();
-                (subingesta.recipes || []).forEach(receta => {
-                    const subtipo = (receta.recipe_type || 'Desconocido').toLowerCase();
-                    const key = `${ingesta}::${subtipo}`;
-                    if (!transformadas[key]) transformadas[key] = [];
-                    transformadas[key].push({
-                        ...receta,
-                        nombre: receta.name || receta.nombre || 'Sin nombre'
-                    });
+
+            console.log('Ejecutando useEffect edición');
+            console.log('tipo:', tipo);
+            console.log('recipes:', ingestaOriginal.recipes);
+
+            ingestaOriginal.recipes.forEach(receta => {
+                const subtipo = (receta.recipe_type || 'desconocido').toLowerCase();
+                const key = `${tipo.toLowerCase()}::${subtipo}`;
+                if (!transformadas[key]) transformadas[key] = [];
+                transformadas[key].push({
+                    ...receta,
+                    nombre: receta.name || 'Sin nombre',
+                    kcal: receta.kcal ?? 0,
+                    pro: receta.pro ?? 0,
+                    car: receta.car ?? 0
                 });
             });
 
+            console.log('recetasPorTipo final:', transformadas);
             setRecetasPorTipo(transformadas);
             setIngestaUniversal(ingestaOriginal.ingesta_universal || false);
         }
-    }, [modoEdicion, ingestaOriginal]);
+    }, [modoEdicion, ingestaOriginal, tipo]);
 
 
     useEffect(() => {
@@ -100,12 +114,11 @@ export default function CrearIngestaForm() {
             const valores = data.nutritional_info;
             const receta = {
                 id: data._id,
-                nombre,
+                name: nombre,
                 kcal: (valores.energy_kcal / raciones).toFixed(2),
                 pro: (valores.pro / raciones).toFixed(2),
                 car: (valores.car / raciones).toFixed(2),
             };
-            console.log(receta)
             setRecetasBuscadas(prev => [...prev, receta]);
         } catch (err) {
             console.error(err);
@@ -123,13 +136,18 @@ export default function CrearIngestaForm() {
     });
 
     const total = useMemo(() => {
-        const sumarCampo = (arr, campo) => arr.reduce((acc, r) => acc + parseFloat(r[campo] || 0), 0);
+        const sumarCampo = (arr, campo) =>
+            (arr || [])
+                .filter(r => r && typeof r[campo] !== 'undefined')
+                .reduce((acc, r) => acc + parseFloat(r[campo]), 0);
+
         const resultado = { kcal: 0, pro: 0, car: 0 };
-        Object.values(recetasPorTipo).forEach(arr => {
+        Object.values(recetasPorTipo || {}).forEach(arr => {
             resultado.kcal += sumarCampo(arr, 'kcal');
             resultado.pro += sumarCampo(arr, 'pro');
             resultado.car += sumarCampo(arr, 'car');
         });
+
         return {
             kcal: resultado.kcal.toFixed(2),
             pro: resultado.pro.toFixed(2),
@@ -158,7 +176,7 @@ export default function CrearIngestaForm() {
                 const maximosData = await maximosRes.json();
 
                 const recetasConDatos = recetasData.resultados || [];
-
+                console.log(recetasConDatos);
                 setRecetasFiltradas(recetasConDatos);
 
                 setMaximosNutricionales({
@@ -185,6 +203,7 @@ export default function CrearIngestaForm() {
 
     const onDragEnd = useCallback((resultado) => {
         const { source, destination, draggableId } = resultado;
+
         if (!destination || !draggableId) return;
 
         const estructura = obtenerEstructuraIngesta(tipo);
@@ -192,75 +211,96 @@ export default function CrearIngestaForm() {
         Object.entries(estructura).forEach(([ingesta, subtipos]) => {
             subtipos.forEach(subtipo => validDroppables.add(`${ingesta}::${subtipo}`));
         });
+
+        // Si el drop ocurre fuera de zonas válidas, ignorar
         if (!validDroppables.has(source.droppableId) || !validDroppables.has(destination.droppableId)) return;
 
-        const getItem = () => {
-            const [nombre] = draggableId.split('::');
-            const todasLasRecetas = [
-                ...recetasBuscadas,
-                ...recetasFiltradas,
-                ...Object.values(recetasPorTipo).flat()
-            ];
-            return todasLasRecetas.find(r => r.nombre === nombre);
-        };
-
-        const item = getItem();
+        // Obtener la receta correspondiente al ID
+        const todasLasRecetas = [
+            ...recetasBuscadas,
+            ...recetasFiltradas,
+            ...Object.values(recetasPorTipo).flat()
+        ];
+        const item = todasLasRecetas.find(r => r.id === draggableId);
         if (!item) return;
 
         const updateState = (sourceId, destId, item) => {
+            // 1. De búsqueda a tipo
             if (sourceId === 'searchResults' && destId !== 'searchResults') {
-                if (recetasPorTipo[destId]?.some(r => r.nombre === item.nombre)) return;
-                setRecetasBuscadas(prev => prev.filter((r) => r.nombre !== item.nombre));
-                setRecetasPorTipo(prev => ({ ...prev, [destId]: [...(prev[destId] || []), item] }));
-            } else if (sourceId === 'categoriaResults' && destId !== 'categoriaResults') {
-                if (recetasPorTipo[destId]?.some(r => r.nombre === item.nombre)) return;
-                setRecetasPorTipo(prev => ({ ...prev, [destId]: [...(prev[destId] || []), item] }));
-            } else if (sourceId !== destId) {
+                if (recetasPorTipo[destId]?.some(r => r.id === item.id)) return;
+                setRecetasBuscadas(prev => prev.filter(r => r.id !== item.id));
+                setRecetasPorTipo(prev => ({
+                    ...prev,
+                    [destId]: [...(prev[destId] || []), item]
+                }));
+            }
+
+            // 2. De categoría a tipo
+            else if (sourceId === 'categoriaResults' && destId !== 'categoriaResults') {
+                if (recetasPorTipo[destId]?.some(r => r.id === item.id)) return;
+                setRecetasPorTipo(prev => ({
+                    ...prev,
+                    [destId]: [...(prev[destId] || []), item]
+                }));
+            }
+
+            // 3. Entre zonas de subtipo (por ejemplo, mover entre "desayuno::primer plato" a "cena::postre")
+            else if (sourceId !== destId) {
                 const sourceItems = [...(recetasPorTipo[sourceId] || [])];
                 const destItems = [...(recetasPorTipo[destId] || [])];
-                if (destItems.some(r => r.nombre === item.nombre)) return;
-                const filtrados = sourceItems.filter((r) => r.nombre !== item.nombre);
+                if (destItems.some(r => r.id === item.id)) return;
+
+                const filtrados = sourceItems.filter(r => r.id !== item.id);
                 destItems.splice(destination.index, 0, item);
-                setRecetasPorTipo(prev => ({ ...prev, [sourceId]: filtrados, [destId]: destItems }));
-            } else {
+
+                setRecetasPorTipo(prev => ({
+                    ...prev,
+                    [sourceId]: filtrados,
+                    [destId]: destItems
+                }));
+            }
+
+            // 4. Reordenar dentro de la misma zona
+            else if (sourceId === destId) {
                 const items = [...(recetasPorTipo[sourceId] || [])];
                 const [moved] = items.splice(source.index, 1);
                 items.splice(destination.index, 0, moved);
-                setRecetasPorTipo(prev => ({ ...prev, [sourceId]: items }));
+                setRecetasPorTipo(prev => ({
+                    ...prev,
+                    [sourceId]: items
+                }));
             }
         };
 
         updateState(source.droppableId, destination.droppableId, item);
     }, [recetasBuscadas, recetasFiltradas, recetasPorTipo, tipo]);
 
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setEnviando(true);
         setError(null);
-        try {
-            const recetasPorIngesta = {};
 
+        try {
             const formatear = (str) =>
                 str
                     .split('_')
                     .map(p => p.charAt(0).toUpperCase() + p.slice(1))
                     .join(' ');
 
+            const recetasUnificadas = [];
+
             Object.entries(recetasPorTipo).forEach(([key, recetasLista]) => {
                 if (!recetasLista || recetasLista.length === 0) return;
 
-                const [ingesta, subtipo] = key.split('::');
-                const ingestaKey = formatear(ingesta);
+                const [, subtipo] = key.split('::');
                 const tipoReceta = formatear(subtipo);
 
-                if (!recetasPorIngesta[ingestaKey]) recetasPorIngesta[ingestaKey] = [];
-                console.log(recetasLista);
-
                 recetasLista.forEach((receta) => {
-                    recetasPorIngesta[ingestaKey].push({
+                    recetasUnificadas.push({
                         id: receta.id,
                         recipe_type: tipoReceta,
-                        name: receta.nombre || receta.name,
+                        name: receta.name,
                         kcal: parseFloat(receta.kcal),
                         pro: parseFloat(receta.pro),
                         car: parseFloat(receta.car),
@@ -268,34 +308,36 @@ export default function CrearIngestaForm() {
                 });
             });
 
-            const cuerpos = Object.entries(recetasPorIngesta)
-                .filter(([_, recetas]) => recetas.length > 0) // solo con recetas
-                .map(([ingesta, recetas]) => ({
-                    intake_type: ingesta,
-                    intake_name: nombreIngesta,
-                    ingesta_universal: ingestaUniversal,
-                    recipes: recetas,
-                }));
-
-            for (const cuerpo of cuerpos) {
-                const url = modoEdicion
-                    ? `/planificacion_ingestas/editar_ingesta/${pacienteN}/${encodeURIComponent(cuerpo.intake_name)}`
-                    : `/planificacion_ingestas/crear_ingesta/${pacienteN}`;
-
-                const method = modoEdicion ? 'PUT' : 'POST';
-
-                const res = await fetchWithAuth(url, {
-                    method,
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(cuerpo),
-                });
-
-                if (!res.ok) throw new Error(`Error al guardar la ingesta: ${cuerpo.intake_type}`);
+            if (recetasUnificadas.length === 0) {
+                setError("Debes añadir al menos una receta.");
+                return;
             }
+
+            const cuerpo = {
+                intake_type: formatear(tipo),
+                intake_name: nombreIngesta,
+                intake_universal: ingestaUniversal,
+                recipes: recetasUnificadas,
+            };
+            console.log(cuerpo)
+
+            const url = modoEdicion
+                ? `/planificacion_ingestas/editar_ingesta/${pacienteN}/${encodeURIComponent(cuerpo.intake_name)}`
+                : `/planificacion_ingestas/crear_ingesta/${pacienteN}`;
+
+            const method = modoEdicion ? 'PUT' : 'POST';
+
+            const res = await fetchWithAuth(url, {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(cuerpo),
+            });
+
+            if (!res.ok) throw new Error(`Error al guardar la ingesta`);
 
             setRecetasPorTipo({});
             setRecetasBuscadas([]);
-            alert('Ingestas guardadas correctamente');
+            alert('Ingesta guardada correctamente');
             navigate(`/planificacion_dieta/${encodeURIComponent(pacienteN)}`);
 
         } catch (err) {
@@ -304,7 +346,6 @@ export default function CrearIngestaForm() {
             setEnviando(false);
         }
     };
-
 
     if (!tipo) return null;
 
@@ -400,8 +441,8 @@ export default function CrearIngestaForm() {
                                         >
                                             {recetasBuscadas.map((receta, index) => (
                                                 <Draggable
-                                                    key={`${receta.name}::categoria`}
-                                                    draggableId={`${receta.name}::categoria`}
+                                                    key={receta.id}
+                                                    draggableId={receta.id}
                                                     index={index}
                                                 >
                                                     {(provided) => (
@@ -488,7 +529,7 @@ export default function CrearIngestaForm() {
                                         >
                                             {recetasFiltradas
                                                 .filter(rf => {
-                                                    const nombre = rf.nombre || rf.receta;
+                                                    const nombre = rf.name;
                                                     const kcal = rf.kcal ?? rf.energy_kcal ?? 0;
                                                     const pro = rf.pro ?? 0;
                                                     const car = rf.car ?? 0;
@@ -500,10 +541,11 @@ export default function CrearIngestaForm() {
                                                 .slice(0, 40)
                                                 .map((receta, index) => (
                                                     <Draggable
-                                                        key={`${receta.name}::categoria`}
-                                                        draggableId={`${receta.name}::categoria`}
+                                                        key={receta.id}
+                                                        draggableId={receta.id}
                                                         index={index}
                                                     >
+
                                                         {(provided) => (
                                                             <RecetaCard receta={receta} provided={provided} />
                                                         )}

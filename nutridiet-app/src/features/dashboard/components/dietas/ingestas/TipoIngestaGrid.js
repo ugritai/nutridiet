@@ -1,8 +1,12 @@
-// ✅ TipoIngestaGrid.jsx
 import React from 'react';
 import { Box, Typography, Card, IconButton } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { Droppable, Draggable } from '@hello-pangea/dnd';
+
+function capitalizarPrimeraLetra(str) {
+  if (!str) return '';
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
 
 export default function TipoIngestaGrid({ estructura, recetasPorTipo, setRecetasPorTipo }) {
   return (
@@ -45,8 +49,9 @@ export default function TipoIngestaGrid({ estructura, recetasPorTipo, setRecetas
 
                       {(recetasPorTipo[id] || []).map((receta, i) => (
                         <Draggable
-                          key={`${receta.nombre}::${id}`}
-                          draggableId={`${receta.nombre}::${id}`}
+
+                          key={receta.id}
+                          draggableId={receta.id}
                           index={i}
                         >
                           {(provided) => (
@@ -58,7 +63,7 @@ export default function TipoIngestaGrid({ estructura, recetasPorTipo, setRecetas
                             >
                               <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                                 <Box>
-                                  <Typography>{receta.nombre}</Typography>
+                                  <Typography> {capitalizarPrimeraLetra(receta.name)}</Typography>
                                   <Typography variant="body2">
                                     Kcal: {receta.kcal} | Pro: {receta.pro} | Carbs: {receta.car}
                                   </Typography>
@@ -66,7 +71,7 @@ export default function TipoIngestaGrid({ estructura, recetasPorTipo, setRecetas
                                 <IconButton
                                   onClick={() => setRecetasPorTipo(prev => ({
                                     ...prev,
-                                    [id]: prev[id].filter(r => r.nombre !== receta.nombre),
+                                    [id]: prev[id].filter(r => r.id !== receta.id),
                                   }))}
                                 >
                                   <CloseIcon />

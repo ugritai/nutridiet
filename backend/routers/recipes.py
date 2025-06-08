@@ -446,7 +446,7 @@ async def obtener_kcal_pro_car_por_categoria(
             continue
         
         resultados.append({
-            "_id": receta_doc["_id"],
+            "id": receta_doc["_id"],
             "name": titulo,
             "kcal": kcal,
             "pro": pro,

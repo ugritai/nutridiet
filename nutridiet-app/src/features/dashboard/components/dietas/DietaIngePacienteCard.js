@@ -1,35 +1,45 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import Dashboard from '../../Dashboard';
 import CrearDietaCard from './CrearDietaCard';
 import CrearIngestaCard from './CrearIngestaCard';
-import { useParams } from 'react-router-dom';
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
+import dayjs from 'dayjs';
+dayjs.extend(isSameOrBefore);
+
 import {
     Accordion,
     AccordionSummary,
     AccordionDetails,
     IconButton,
-    Card,
+    Tabs,
+    Tab,
     Typography,
-    Box, Divider
+    Box,
+    Divider,
+    FormControl,
+    InputLabel,
+    Select,
+    MenuItem,
+    Pagination
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import dayjs from 'dayjs';
 import { fetchWithAuth } from '../api';
-
-
-
-dayjs.extend(isSameOrBefore);
-
+import IngestaCard from './ingestas/IngestaCard';
 
 export default function DietaIngePacienteCard() {
     const navigate = useNavigate();
     const { pacienteN } = useParams();
+    const [tabSeleccionada, setTabSeleccionada] = useState(0);
+    const [filtroTipo, setFiltroTipo] = useState('');
+    const [paginaIngestas, setPaginaIngestas] = useState(1);
+    const [paginaDietas, setPaginaDietas] = useState(1);
+    const itemsPorPagina = 5;
 
     const [dietasExistentes, setDietasExistentes] = useState([]);
+    const [ingestasExistentes, setIngestasExistentes] = useState([]);
 
     useEffect(() => {
         const fetchDietas = async () => {
@@ -45,13 +55,11 @@ export default function DietaIngePacienteCard() {
         fetchDietas();
     }, [pacienteN]);
 
-    const [ingestasExistentes, setIngestasExistentes] = useState([]);
-
     useEffect(() => {
         const fetchIngestas = async () => {
             try {
                 const res = await fetch(`http://localhost:8000/planificacion_ingestas/ingestas/${pacienteN}`);
-                if (!res.ok) throw new Error('No se pudieron obtener las dietas existentes');
+                if (!res.ok) throw new Error('No se pudieron obtener las ingestas');
                 const data = await res.json();
                 setIngestasExistentes(data);
             } catch (err) {
@@ -61,14 +69,30 @@ export default function DietaIngePacienteCard() {
         fetchIngestas();
     }, [pacienteN]);
 
+    useEffect(() => {
+        setPaginaIngestas(1);
+    }, [filtroTipo]);
+
+    const ingestasFiltradas = ingestasExistentes.filter(
+        (ing) => !filtroTipo || ing.intake_type === filtroTipo
+    );
+    const totalPaginasIngestas = Math.ceil(ingestasFiltradas.length / itemsPorPagina);
+    const ingestasPaginadas = ingestasFiltradas.slice(
+        (paginaIngestas - 1) * itemsPorPagina,
+        paginaIngestas * itemsPorPagina
+    );
+
+    const totalPaginasDietas = Math.ceil(dietasExistentes.length / itemsPorPagina);
+    const dietasPaginadas = dietasExistentes.slice(
+        (paginaDietas - 1) * itemsPorPagina,
+        paginaDietas * itemsPorPagina
+    );
 
     const handleEditarDieta = (dieta) => {
-        console.log(dieta)
         navigate(`/planificacion_dieta/${encodeURIComponent(pacienteN)}/editar_dieta/${encodeURIComponent(dieta.nombre_dieta)}`, {
             state: { dietaId: dieta._id }
         });
     };
-
 
     const handleEliminarDieta = async (dieta) => {
         if (window.confirm('¿Estás seguro de eliminar esta dieta?')) {
@@ -76,21 +100,22 @@ export default function DietaIngePacienteCard() {
         }
     };
 
-    const handleEditarIngesta = async (ingesta) => {
+    const handleEditarIngesta = async (idIngesta) => {
         try {
             const res = await fetchWithAuth(
-                `/planificacion_ingestas/ver_ingesta/${encodeURIComponent(pacienteN)}/${encodeURIComponent(ingesta)}`
+                `/planificacion_ingestas/ver_ingesta/${encodeURIComponent(pacienteN)}/${encodeURIComponent(idIngesta)}`
             );
             if (!res.ok) throw new Error('No se pudo cargar la ingesta');
-
             const data = await res.json();
             navigate(`/planificacion_dieta/${encodeURIComponent(pacienteN)}/editar_ingesta`, {
                 state: {
                     modo: 'editar',
                     ingesta: {
-                        tipo_diario: data.tipo_diario,
                         nombre: data.intake_name,
-                        subingestas: data.subingestas
+                        tipo: data.intake_type,
+                        id: data._id,
+                        recipes: data.recipes, 
+                        ingesta_universal: data.intake_universal 
                     }
                 }
             });
@@ -100,72 +125,92 @@ export default function DietaIngePacienteCard() {
         }
     };
 
-    const handleEliminarIngesta = async (ingesta) => {
-        if (window.confirm('¿Estás seguro de eliminar esta ingesta?')) {
-            // llamada al backend para eliminar
+    const handleEliminarIngesta = async (idIngesta) => {
+        const confirmado = window.confirm(`¿Estás seguro de eliminar la ingesta?`);
+      
+        if (!confirmado) return;
+      
+        try {
+          const res = await fetchWithAuth(
+            `/planificacion_ingestas/eliminar_ingesta/${encodeURIComponent(pacienteN)}/${encodeURIComponent(idIngesta)}`,
+            {
+              method: 'DELETE',
+            }
+          );
+      
+          if (!res.ok) throw new Error('No se pudo eliminar la ingesta');
+      
+          alert('Ingesta eliminada correctamente');
+          navigate(`/planificacion_dieta/${encodeURIComponent(pacienteN)}`);
+          setIngestasExistentes(prev => prev.filter(i => i._id !== idIngesta));
+        } catch (error) {
+          console.error('Error al eliminar:', error);
+          alert('Ocurrió un error al intentar eliminar la ingesta.');
         }
-    };
+      };
 
     return (
         <Dashboard>
+            <Typography variant="h4">{pacienteN}</Typography>
 
-            <Typography variant="h4">
-                {pacienteN}
-            </Typography>
             <Box sx={{ width: '100%', display: 'flex', gap: 2, flexWrap: 'wrap', mb: 2 }}>
                 <CrearDietaCard onClick={() => navigate(`/planificacion_dieta/${pacienteN}/crear_dieta`)} />
                 <CrearIngestaCard onClick={() => navigate(`/planificacion_dieta/${pacienteN}/crear_ingesta`)} />
             </Box>
 
+            <Tabs value={tabSeleccionada} onChange={(e, newValue) => setTabSeleccionada(newValue)} sx={{ mb: 3 }}>
+                <Tab label="Ingestas" />
+                <Tab label="Dietas" />
+            </Tabs>
 
-            <Box sx={{ mt: 4, width: '100%' }}>
-                <Typography variant="h6">Ingestas diarias del paciente</Typography>
-                {ingestasExistentes.map((grupo, idx) => (
-                    <Accordion key={idx} sx={{ mt: 2 }}>
-                        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                            <Typography sx={{ flexGrow: 1 }}>
-                                {grupo.intake_name}
-                            </Typography>
-                            <IconButton size="small" onClick={() => handleEditarIngesta(grupo.intake_name)}>
-                                <EditIcon fontSize="small" />
-                            </IconButton>
-                            <IconButton size="small" onClick={() => handleEditarIngesta(grupo.intake_name)}>
-                                <DeleteIcon fontSize="small" />
-                            </IconButton>
-                        </AccordionSummary>
+            {tabSeleccionada === 0 && (
+                <Box sx={{ width: '100%' }}>
+                    <Typography variant="h6">Ingestas diarias del paciente</Typography>
 
-                        <AccordionDetails>
-                            {(grupo.subingestas || []).map((ingesta, subIdx) => (
-                                <Box key={subIdx} sx={{ mb: 2 }}>
-                                    <Typography fontWeight="bold" sx={{ mb: 1 }}>
-                                        {ingesta.intake_type}
-                                    </Typography>
+                    <FormControl sx={{ mb: 2, minWidth: 200 }} size="small">
+                        <InputLabel>Filtrar por tipo</InputLabel>
+                        <Select
+                            value={filtroTipo}
+                            label="Filtrar por tipo"
+                            onChange={(e) => setFiltroTipo(e.target.value)}
+                        >
+                            <MenuItem value="">Todos</MenuItem>
+                            <MenuItem value="Desayuno">Desayuno</MenuItem>
+                            <MenuItem value="Media mañana">Media mañana</MenuItem>
+                            <MenuItem value="Almuerzo">Almuerzo</MenuItem>
+                            <MenuItem value="Merienda">Merienda</MenuItem>
+                            <MenuItem value="Cena">Cena</MenuItem>
+                        </Select>
+                    </FormControl>
 
-                                    {(Array.isArray(ingesta.recipes)
-                                        ? ingesta.recipes
-                                        : Object.values(ingesta.recipes || {}).flat()
-                                    ).map((receta, i) => (
-                                        <Typography key={i} variant="body2" sx={{ ml: 2 }}>
-                                            - <strong>{receta.recipe_type || "Sin tipo"}:</strong> {receta.name}
-                                        </Typography>
-                                    ))}
-                                </Box>
-                            ))}
-                        </AccordionDetails>
-                    </Accordion>))}
-            </Box>
+                    {ingestasPaginadas.map((ingesta, idx) => (
+                        <IngestaCard
+                            key={idx}
+                            ingesta={ingesta}
+                            onEdit={() => handleEditarIngesta(ingesta._id)}
+                            onDelete={() => handleEliminarIngesta(ingesta._id)}
+                        />
+                    ))}
 
+                    {totalPaginasIngestas > 1 && (
+                        <Pagination
+                            count={totalPaginasIngestas}
+                            page={paginaIngestas}
+                            onChange={(e, value) => setPaginaIngestas(value)}
+                            sx={{ mt: 2 }}
+                        />
+                    )}
+                </Box>
+            )}
 
-            {dietasExistentes.length > 0 && (
+            {tabSeleccionada === 1 && (
                 <Box sx={{ mt: 4, width: '100%' }}>
                     <Typography variant="h6">Dietas del paciente</Typography>
 
-                    {dietasExistentes.map((dieta, idx) => (
+                    {dietasPaginadas.map((dieta, idx) => (
                         <Accordion key={idx} sx={{ mt: 2 }}>
                             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                                <Typography sx={{ flexGrow: 1 }}>
-                                    {dieta.nombre_dieta}
-                                </Typography>
+                                <Typography sx={{ flexGrow: 1 }}>{dieta.nombre_dieta}</Typography>
                                 <IconButton size="small" onClick={() => handleEditarDieta(dieta)}>
                                     <EditIcon fontSize="small" />
                                 </IconButton>
@@ -180,7 +225,6 @@ export default function DietaIngePacienteCard() {
                                         <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>
                                             Día {diaIdx + 1} - {dayjs(dia.fecha).format('DD/MM/YYYY')}
                                         </Typography>
-
                                         {dia.ingestas.length > 0 ? (
                                             dia.ingestas.map((ingesta, i) => {
                                                 const detalles = ingesta.detalles;
@@ -204,16 +248,23 @@ export default function DietaIngePacienteCard() {
                                                 No hay ingestas para este día.
                                             </Typography>
                                         )}
-
                                         {diaIdx < dieta.dias.length - 1 && <Divider sx={{ my: 2 }} />}
                                     </Box>
                                 ))}
                             </AccordionDetails>
                         </Accordion>
                     ))}
+
+                    {totalPaginasDietas > 1 && (
+                        <Pagination
+                            count={totalPaginasDietas}
+                            page={paginaDietas}
+                            onChange={(e, value) => setPaginaDietas(value)}
+                            sx={{ mt: 2 }}
+                        />
+                    )}
                 </Box>
             )}
-
         </Dashboard>
     );
 }

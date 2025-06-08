@@ -96,8 +96,8 @@ class Recipe(BaseModel):
     name: str
     recipe_type: str
     kcal: float
-    protein: float
-    carbs: float
+    pro: float
+    car: float
 
 class IntakeCreate(BaseModel):
     intake_type: str

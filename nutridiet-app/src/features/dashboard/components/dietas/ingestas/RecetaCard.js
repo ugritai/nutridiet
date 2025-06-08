@@ -1,9 +1,13 @@
-// ✅ RecetaCard.jsx
 import React from 'react';
 import { Box, Typography } from '@mui/material';
 
+function capitalizarPrimeraLetra(str) {
+    if (!str) return '';
+    return str.charAt(0).toUpperCase() + str.slice(1);
+  }
+  
+
 const RecetaCard = ({ receta, provided }) => {
-    const nombre = receta.nombre || receta.name || 'Sin nombre';
 
     return (
         <Box
@@ -17,14 +21,18 @@ const RecetaCard = ({ receta, provided }) => {
                 backgroundColor: 'white',
                 boxShadow: 1
             }}
+            style={provided.draggableProps.style}
         >
-            <Typography variant="subtitle2" fontWeight="bold">{nombre}</Typography>
+            <Typography variant="subtitle2" fontWeight="bold">
+                {capitalizarPrimeraLetra(receta.name)}
+            </Typography>
             <Typography variant="body2">
                 Kcal: {receta.kcal} | Pro: {receta.pro} | Carbs: {receta.car}
             </Typography>
         </Box>
     );
 };
+
 
 
 export default RecetaCard;
