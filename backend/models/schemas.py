@@ -118,7 +118,6 @@ class DietDay(BaseModel):
     intakes: List[IntakeInfo]
 
 class DietCreate(BaseModel):
-    patient: str
     name: str
     start_date: date
     end_date: date
@@ -126,3 +125,5 @@ class DietCreate(BaseModel):
      # Relación con el nutricionista
     nutritionist_id: Optional[str] = None
     nutritionist_email: Optional[str] = None
+    patient_id: Optional[str] = None
+    patient_name: Optional[str] = None

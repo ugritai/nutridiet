@@ -166,7 +166,7 @@ async def buscar_ingestas(nombre: str, limit: int = 5):
 
     cursor = intake_collection.find({})
     for doc in cursor:
-        intake_name = doc.get("nombre_ingesta", "")
+        intake_name = doc.get("intake_name", "")
         if not intake_name:
             continue
 
@@ -185,18 +185,30 @@ async def buscar_ingestas(nombre: str, limit: int = 5):
 @router.get("/ver_ingesta_detalle/{nombre_ingesta}")
 async def ver_ingesta_detalle(nombre_ingesta: str):
     doc = intake_collection.find_one({
-        "$or": [
-            {"nombre_ingesta": nombre_ingesta},
-            {"intake_name": nombre_ingesta}
-        ]
+        "intake_name": nombre_ingesta
     })
 
     if not doc:
         raise HTTPException(status_code=404, detail="Ingesta no encontrada")
 
-    # Convertir _id a string para evitar problemas de serialización
-    doc["_id"] = str(doc["_id"])
-    return doc
+    recetas = []
+    for r in doc.get("recipes", []):
+        recetas.append({
+            "id": r.get("id", ""),
+            "name": r.get("name", ""),
+            "recipe_type": r.get("recipe_type", ""),
+            "kcal": r.get("kcal", 0),
+            "pro": r.get("pro", 0),
+            "car": r.get("car", 0),
+        })
+
+    return {
+        "_id": str(doc["_id"]),
+        "intake_name": doc.get("intake_name", ""),
+        "intake_type": doc.get("intake_type", ""),
+        "intake_universal": doc.get("intake_universal", False),
+        "recipes": recetas
+    }
 
 
 @router.delete("/eliminar_ingesta/{pacienteN}/{id_ingesta}")

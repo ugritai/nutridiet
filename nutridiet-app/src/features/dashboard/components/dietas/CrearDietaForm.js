@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import {
-    Card, Typography, Button, Box, IconButton
+    Card, Typography, Button, Box, IconButton, FormControl, InputLabel, Select, MenuItem
 } from '@mui/material';
 import Dashboard from '../../Dashboard';
 import dayjs from 'dayjs';
@@ -16,11 +16,30 @@ import FoodSearch from '../../components/FoodSearch';
 import Search from '../Search';
 import { Accordion, AccordionSummary, AccordionDetails } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-
+import PorcentajeCircular from './PorcentajeCircular';
 
 
 
 dayjs.extend(isSameOrBefore);
+
+const colorPorTipoIngesta = (tipo) => {
+    const tipoLower = tipo?.toLowerCase();
+    switch (tipoLower) {
+        case 'desayuno':
+            return '#fff9c4'; // amarillo claro
+        case 'media mañana':
+            return '#e1f5fe'; // celeste claro
+        case 'almuerzo':
+            return '#c8e6c9'; // verde claro
+        case 'merienda':
+            return '#f3e5f5'; // lila claro
+        case 'cena':
+            return '#ffcdd2'; // rojo claro
+        default:
+            return '#eeeeee'; // gris claro por defecto
+    }
+};
+
 
 export default function CrearDietaForm() {
     const { pacienteN, nombreDieta } = useParams();
@@ -34,35 +53,30 @@ export default function CrearDietaForm() {
     const [paso, setPaso] = useState(1);
 
     useEffect(() => {
-        console.log("iddd" + idDieta)
-        if (!idDieta) return;
-        const fetchDieta = async () => {
-            try {
-                const res = await fetch(`http://localhost:8000/planificacion_dietas/dieta_por_id/${idDieta}`);
-                if (!res.ok) throw new Error('No se pudo cargar la dieta');
+        const dietaCompleta = location.state?.dietaCompleta;
 
-                const data = await res.json();
+        if (!idDieta || !dietaCompleta) return;
 
-                setFechaInicio(dayjs(data.fecha_inicio));
-                setFechaFin(dayjs(data.fecha_final));
+        setFechaInicio(dayjs(dietaCompleta.start_date));
+        setFechaFin(dayjs(dietaCompleta.end_date));
 
-                const nuevoPlan = {};
-                for (const dia of data.dias) {
-                    const fecha = dayjs(dia.fecha).format('DD/MM/YYYY');
-                    nuevoPlan[fecha] = dia.ingestas.map((ing) => ({
-                        _id: ing.intake_id,
-                        intake_name: ing.detalles?.nombre_ingesta || 'Sin nombre',
-                    }));
-                }
-                setDiasPlanificados(nuevoPlan);
-            } catch (err) {
-                console.error('Error al cargar la dieta:', err);
-                alert('No se pudo cargar la dieta');
-            }
-        };
+        const nuevoPlan = {};
+        for (const dia of dietaCompleta.days) {
+            const fecha = dayjs(dia.date).format('DD/MM/YYYY');
+            nuevoPlan[fecha] = dia.intakes.map((ing) => {
+                const detalles = ing.detalles || ing;  // fallback si no viene .detalles
 
-        fetchDieta();
-    }, [idDieta]);
+                return {
+                    _id: ing.intake_id || ing._id,
+                    intake_name: detalles.intake_name || detalles.nombre_ingesta || 'Sin nombre',
+                    intake_type: detalles.intake_type || detalles.tipo || '',
+                    recipes: detalles.recipes || []
+                };
+            });
+
+        }
+        setDiasPlanificados(nuevoPlan);
+    }, [idDieta, location.state]);
 
 
     useEffect(() => {
@@ -94,7 +108,7 @@ export default function CrearDietaForm() {
     const buscadorIngestas = FoodSearch({ type: 'ingestas' });
 
     const [ingestasDisponibles, setIngestasDisponibles] = useState([]);
-    const [diasPlanificados, setDiasPlanificados] = useState({}); // { fecha: [ingestaObj, ...] }
+    const [diasPlanificados, setDiasPlanificados] = useState({});
 
     useEffect(() => {
         const fetchIngestas = async () => {
@@ -102,38 +116,7 @@ export default function CrearDietaForm() {
                 const res = await fetch(`http://localhost:8000/planificacion_ingestas/ingestas/${pacienteN}`);
                 if (!res.ok) throw new Error('No se pudieron cargar las ingestas');
                 const data = await res.json();
-
-                // Agrupar subingestas por intake_name
-                const agrupadas = {};
-
-                for (const ingesta of data) {
-                    for (const sub of ingesta.subingestas || []) {
-                        const key = sub.nombre_ingesta;
-                        if (!agrupadas[key]) {
-                            agrupadas[key] = {
-                                intake_name: key,
-                                _id: sub._id, // uno cualquiera
-                                subingestas: [],
-                            };
-                        }
-
-                        // Agrupar recetas por tipo
-                        const recetasPorTipo = {};
-                        for (const receta of sub.recipes || []) {
-                            const tipo = receta.recipe_type?.toLowerCase().replace(/\s/g, '_') || 'otro';
-                            if (!recetasPorTipo[tipo]) recetasPorTipo[tipo] = [];
-                            recetasPorTipo[tipo].push(receta);
-                        }
-
-                        agrupadas[key].subingestas.push({
-                            intake_type: sub.intake_type,
-                            recipes: recetasPorTipo,
-                        });
-                    }
-                }
-
-                setIngestasDisponibles(Object.values(agrupadas));
-
+                setIngestasDisponibles(data);
             } catch (err) {
                 console.error(err);
             }
@@ -148,36 +131,15 @@ export default function CrearDietaForm() {
             if (!res.ok) throw new Error('No se pudo cargar la ingesta');
             const data = await res.json();
 
-            // Agrupar recetas por tipo
-            const recetasPorTipo = {};
-            for (const receta of data.recipes || []) {
-                const tipo = receta.recipe_type?.toLowerCase().replace(/\s/g, '_') || 'otro';
-                if (!recetasPorTipo[tipo]) recetasPorTipo[tipo] = [];
-                recetasPorTipo[tipo].push(receta);
-            }
-
-            // Construir estructura como en fetchIngestas
-            const nuevaIngesta = {
-                intake_name: data.nombre_ingesta,
-                _id: data._id,
-                subingestas: [{
-                    intake_type: data.intake_type,
-                    recipes: recetasPorTipo,
-                }],
-            };
-
-            setIngestasDisponibles(prev => [...prev, nuevaIngesta]);
-            buscador.setQuery('');
-            buscador.setSuggestions([]);
+            setIngestasDisponibles(prev => [...prev, data]);
+            buscadorIngestas.setQuery('');
+            buscadorIngestas.setSuggestions([]);
 
         } catch (err) {
             console.error('❌ Error al añadir ingesta:', err);
             alert('No se pudo añadir la ingesta');
         }
     };
-
-
-
 
     const generarFechasPlanificacion = () => {
         if (!fechaInicio || !fechaFin) return [];
@@ -249,30 +211,32 @@ export default function CrearDietaForm() {
     const guardarDieta = async () => {
         try {
             const payload = {
-                paciente: pacienteN,
+                patient_name: pacienteN,
                 name: idDieta
                     ? nombreDieta || 'Dieta sin nombre'
                     : `Dieta ${pacienteN} - ${fechaInicio.format('DD/MM/YYYY')} al ${fechaFin.format('DD/MM/YYYY')}`,
                 start_date: fechaInicio.format('YYYY-MM-DD'),
                 end_date: fechaFin.format('YYYY-MM-DD'),
-                dias: Object.entries(diasPlanificados)
+                days: Object.entries(diasPlanificados)
                     .map(([fecha, ingestas]) => {
                         const fechaFormateada = dayjs(fecha, ['DD/MM/YYYY', 'YYYY-MM-DD'], true);
                         return fechaFormateada.isValid()
                             ? {
-                                fecha: fechaFormateada.format('YYYY-MM-DD'),
-                                ingestas: ingestas.map((ing) => ({ intake_id: ing._id })),
+                                date: fechaFormateada.format('YYYY-MM-DD'),
+                                intakes: ingestas.map((ing) => ({ intake_id: ing._id })),
                             }
                             : null;
                     })
                     .filter(Boolean),
             };
 
+            console.log("dato enviado para guardar: ", payload);
+
             const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
 
             const url = idDieta
-                ? `http://localhost:8000/planificacion_dietas/editar_dieta/${idDieta}`
-                : 'http://localhost:8000/planificacion_dietas/crear_dieta/';
+                ? `http://localhost:8000/planificacion_dietas/editar_dieta/${pacienteN}/${idDieta}`
+                : `http://localhost:8000/planificacion_dietas/crear_dieta/${pacienteN}`;
 
             const method = idDieta ? 'PUT' : 'POST';
 
@@ -294,6 +258,8 @@ export default function CrearDietaForm() {
             alert('Hubo un error al guardar la dieta');
         }
     };
+
+    const [filtroTipoIngesta, setFiltroTipoIngesta] = useState('');
 
     return (
         <Dashboard>
@@ -351,181 +317,273 @@ export default function CrearDietaForm() {
 
                 {paso === 2 && (
                     <>
-                        <Typography variant="h6" gutterBottom>Confirmar creación de dieta</Typography>
-                        <Typography>Desde: {fechaInicio?.format('DD/MM/YYYY')}</Typography>
-                        <Typography>Hasta: {fechaFin?.format('DD/MM/YYYY')}</Typography>
+                        <Box sx={{ display: 'flex', gap: 2, alignItems: 'stretch', height: '100%' }}>
+                            <Box sx={{ width: '35%', display: 'flex', flexDirection: 'column', height: '100%' }}>
+                                <Typography variant="h6" gutterBottom>Confirmar creación de dieta</Typography>
+                                <Typography>Desde: {fechaInicio?.format('DD/MM/YYYY')}</Typography>
+                                <Typography>Hasta: {fechaFin?.format('DD/MM/YYYY')}</Typography>
 
-                        <Search
-                            value={buscadorIngestas.query}
-                            onChange={(val) => {
-                                buscadorIngestas.setQuery(val);
-                                buscadorIngestas.handleSuggestions(val);
-                            }}
-                            onSubmit={(val) => {
-                                handleAgregarIngesta(val);
-                                buscadorIngestas.setQuery('');
-                                buscadorIngestas.setSuggestions([]);
-                            }}
-                            suggestions={buscadorIngestas.suggestions}
-                            placeholder="Buscar ingesta"
-                            suggestionClick={handleAgregarIngesta}
-                            showButton={false}
-                        />
+                            </Box>
+                            <Box sx={{ width: '65%', display: 'flex', flexDirection: 'column', height: '100%' }}>
+                                <Typography variant="h6" gutterBottom>Requerimientos diarios:</Typography>
+                                <Typography>Calorías: {nutricion.kcal} kcal</Typography>
+                                <Typography>Proteínas: {Number(nutricion.pro).toFixed(2)} g</Typography>
+                                <Typography>Carbohidratos: {nutricion.car} g</Typography>
 
-
-
-
-                        <DragDropContext onDragEnd={onDragEnd}>
-
-                            {/* Ingestas disponibles */}
-                            <Typography variant="h6" mt={3}>Ingestas disponibles</Typography>
-                            <Droppable droppableId="disponibles" direction="vertical">
-                                {(provided) => (
-                                    <Box
-                                        ref={provided.innerRef}
-                                        {...provided.droppableProps}
-                                        sx={{
-                                            display: 'flex',
-                                            flexWrap: 'wrap',
-                                            gap: 2,
-                                            mb: 4,
-                                            p: 2,
-                                            border: '1px dashed gray',
-                                            borderRadius: 2,
-                                            minHeight: 100,
-                                        }}
-                                    >
-                                        {ingestasDisponibles.map((grupo, index) => (
-                                            <Draggable key={grupo._id} draggableId={grupo._id} index={index}>
-                                                {(provided) => (
-                                                    <Box
-                                                        ref={provided.innerRef}
-                                                        {...provided.draggableProps}
-                                                        sx={{ width: '100%', maxWidth: 500 }}
-                                                    >
-                                                        <Accordion elevation={3}>
-                                                            <AccordionSummary
-                                                                expandIcon={<ExpandMoreIcon />}
-                                                                {...provided.dragHandleProps} // Aquí se permite arrastrar desde el resumen
-                                                                sx={{
-                                                                    backgroundColor: '#f5f5f5',
-                                                                    cursor: 'grab',
-                                                                    userSelect: 'none'
-                                                                }}
-                                                            >
-                                                                <Typography fontWeight="bold">{grupo.intake_name}</Typography>
-                                                            </AccordionSummary>
-
-                                                            <AccordionDetails>
-                                                                {(grupo.subingestas || []).map((sub, subIdx) => (
-                                                                    <Box key={subIdx} sx={{ mb: 2 }}>
-                                                                        <Typography fontWeight="bold" sx={{ mb: 1 }}>
-                                                                            {sub.intake_type}
-                                                                        </Typography>
-
-                                                                        {typeof sub.recipes === 'object' && sub.recipes !== null &&
-                                                                            Object.entries(sub.recipes).map(([tipo, recetasArray]) => (
-                                                                                <Box key={tipo} sx={{ ml: 2, mb: 1 }}>
-                                                                                    {recetasArray.map((rec, i) => (
-                                                                                        <Typography key={i} variant="body2">
-                                                                                            - <strong>{rec.recipe_type || tipo}:</strong> {rec.name}
-                                                                                        </Typography>
-                                                                                    ))}
-                                                                                </Box>
-                                                                            ))}
-                                                                    </Box>
-                                                                ))}
-                                                            </AccordionDetails>
-                                                        </Accordion>
-                                                    </Box>
-                                                )}
-                                            </Draggable>
-                                        ))}
-
-
-
-                                        {provided.placeholder}
-                                    </Box>
-                                )}
-                            </Droppable>
-
-                            {/* Planificación por día */}
-                            <Typography variant="h6" mt={4}>Planificación por día</Typography>
-                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
-                                {generarFechasPlanificacion().map((fecha, idx) => (
-                                    <Box key={fecha} sx={{ width: "49%" }}>
-                                        <Typography variant="subtitle1" gutterBottom>
-                                            Día {idx + 1}<br />{fecha}
-                                        </Typography>
-                                        <Droppable droppableId={fecha} >
-                                            {(provided) => (
-                                                <Box
-                                                    ref={provided.innerRef}
-                                                    {...provided.droppableProps}
-                                                    sx={{ p: 2, border: '1px solid #ccc', borderRadius: 2, minHeight: 200 }}
-                                                >
-                                                    {(diasPlanificados[fecha] || []).map((ing, index) => (
-                                                        <Draggable
-                                                            key={`${fecha}-${ing._id}`}
-                                                            draggableId={`${fecha}-${ing._id}`}
-                                                            index={index}
-                                                        >
-                                                            {(provided, snapshot) => (
-                                                                <Box
-                                                                    ref={provided.innerRef}
-                                                                    {...provided.draggableProps}
-                                                                    {...provided.dragHandleProps}
-                                                                    sx={{
-                                                                        p: 1,
-                                                                        mb: 1,
-                                                                        bgcolor: snapshot.isDragging ? '#e0f7fa' : 'background.paper',
-                                                                        border: '1px solid #ccc',
-                                                                        borderRadius: 1,
-                                                                        boxShadow: snapshot.isDragging ? 4 : 0,
-                                                                        ...provided.draggableProps.style,
-                                                                    }}
-                                                                >
-                                                                    {/* MIENTRAS SE ARRASTRA: solo nombre */}
-                                                                    {snapshot.isDragging ? (
-                                                                        <Typography variant="subtitle2" fontWeight="bold">
-                                                                            {ing.intake_name}
-                                                                        </Typography>
-                                                                    ) : (
-                                                                        // AL SOLTAR: nombre con botón eliminar
-                                                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                                            <Typography variant="subtitle2" fontWeight="bold">
-                                                                                {ing.intake_name}
-                                                                            </Typography>
-                                                                            <IconButton
-                                                                                size="small"
-                                                                                onClick={() => {
-                                                                                    setDiasPlanificados(prev => ({
-                                                                                        ...prev,
-                                                                                        [fecha]: prev[fecha].filter(i => i._id !== ing._id)
-                                                                                    }));
-                                                                                }}
-                                                                            >
-                                                                                <CloseIcon fontSize="small" />
-                                                                            </IconButton>
-                                                                        </Box>
-                                                                    )}
-                                                                </Box>
-                                                            )}
-                                                        </Draggable>
-
-
-                                                    ))}
-
-                                                    {provided.placeholder}
-                                                </Box>
-                                            )}
-                                        </Droppable>
-                                    </Box>
-                                ))}
                             </Box>
 
-                        </DragDropContext>
+                        </Box>
 
+                        <DragDropContext onDragEnd={onDragEnd}>
+                            {/* Contenedor FLEX horizontal */}
+                            <Box sx={{ display: 'flex', gap: 2, alignItems: 'stretch', height: '100%' }}>
+                                {/* Panel izquierdo: Ingestas disponibles */}
+                                <Box sx={{ width: '35%', display: 'flex', flexDirection: 'column', height: '100%' }}>
+                                    <Typography variant="h6" mt={1}>Ingestas disponibles</Typography>
+                                    <Search
+                                        value={buscadorIngestas.query}
+                                        onChange={(val) => {
+                                            buscadorIngestas.setQuery(val);
+                                            buscadorIngestas.handleSuggestions(val);
+                                        }}
+                                        onSubmit={(val) => {
+                                            handleAgregarIngesta(val);
+                                            buscadorIngestas.setQuery('');
+                                            buscadorIngestas.setSuggestions([]);
+                                        }}
+                                        suggestions={buscadorIngestas.suggestions}
+                                        placeholder="Buscar ingesta"
+                                        suggestionClick={handleAgregarIngesta}
+                                        showButton={false}
+                                    />
+                                    <FormControl size="small" sx={{ mt: 1, mb: 2, width: '100%' }}>
+                                        <InputLabel>Filtrar por tipo</InputLabel>
+                                        <Select
+                                            label="Filtrar por tipo"
+                                            value={filtroTipoIngesta}
+                                            onChange={(e) => setFiltroTipoIngesta(e.target.value)}
+                                        >
+                                            <MenuItem value="">Todos</MenuItem>
+                                            <MenuItem value="Desayuno">Desayuno</MenuItem>
+                                            <MenuItem value="Media mañana">Media mañana</MenuItem>
+                                            <MenuItem value="Almuerzo">Almuerzo</MenuItem>
+                                            <MenuItem value="Merienda">Merienda</MenuItem>
+                                            <MenuItem value="Cena">Cena</MenuItem>
+                                        </Select>
+                                    </FormControl>
+
+                                    <Droppable droppableId="disponibles" direction="vertical">
+                                        {(provided) => (
+                                            <Box
+                                                ref={provided.innerRef}
+                                                {...provided.droppableProps}
+                                                sx={{
+                                                    display: 'flex',
+                                                    flexDirection: 'column',
+                                                    gap: 2,
+                                                    p: 2,
+                                                    border: '1px dashed gray',
+                                                    borderRadius: 2,
+                                                    minHeight: 100,
+                                                    width: '100%'
+                                                }}
+                                            >
+                                                {ingestasDisponibles
+                                                    .filter((ingesta) => !filtroTipoIngesta || ingesta.intake_type === filtroTipoIngesta)
+                                                    .map((ingesta, index) => {
+                                                        const total = ingesta.recipes.reduce(
+                                                            (acc, r) => ({
+                                                                kcal: acc.kcal + (parseFloat(r.kcal) || 0),
+                                                                pro: acc.pro + (parseFloat(r.pro) || 0),
+                                                                car: acc.car + (parseFloat(r.car) || 0)
+                                                            }),
+                                                            { kcal: 0, pro: 0, car: 0 }
+                                                        );
+
+                                                        return (
+                                                            <Draggable key={ingesta._id} draggableId={ingesta._id} index={index}>
+                                                                {(provided) => (
+                                                                    <Box
+                                                                        ref={provided.innerRef}
+                                                                        {...provided.draggableProps}
+                                                                        {...provided.dragHandleProps}
+                                                                        sx={{
+                                                                            border: '1px solid #ddd',
+                                                                            borderRadius: 1,
+                                                                            p: 2,
+                                                                            backgroundColor: colorPorTipoIngesta(ingesta.intake_type),
+                                                                            boxShadow: 1,
+                                                                            width: '100%',
+                                                                            display: 'flex',
+                                                                            flexDirection: 'column',
+                                                                            gap: 1
+                                                                        }}
+                                                                        style={provided.draggableProps.style}
+                                                                    >
+                                                                        <Typography variant="subtitle1" fontWeight="bold">
+                                                                            {ingesta.intake_type} - {ingesta.intake_name}
+                                                                        </Typography>
+
+                                                                        <Box sx={{ mt: 1 }}>
+                                                                            {ingesta.recipes.length > 0 ? (
+                                                                                <>
+                                                                                    {ingesta.recipes.map((receta, i) => (
+                                                                                        <Typography key={i} variant="body2" sx={{ ml: 2 }}>
+                                                                                            • <strong>{receta.recipe_type}:</strong> {receta.name}
+                                                                                        </Typography>
+                                                                                    ))}
+                                                                                    <Typography variant="caption" color="text.secondary" sx={{ ml: 2, mt: 1, display: 'block' }}>
+                                                                                        Kcal: {total.kcal.toFixed(2)} | Pro: {total.pro.toFixed(2)} | Carbs: {total.car.toFixed(2)}
+                                                                                    </Typography>
+                                                                                </>
+                                                                            ) : (
+                                                                                <Typography variant="body2" color="text.secondary" sx={{ ml: 2 }}>
+                                                                                    (Sin recetas)
+                                                                                </Typography>
+                                                                            )}
+                                                                        </Box>
+                                                                    </Box>
+                                                                )}
+                                                            </Draggable>
+                                                        );
+                                                    })}
+                                                {provided.placeholder}
+                                            </Box>
+                                        )}
+                                    </Droppable>
+                                </Box>
+
+                                {/* Panel derecho: Planificación por día */}
+                                <Box sx={{ width: '65%', display: 'flex', flexDirection: 'column', height: '100%' }}>
+                                    <Typography variant="h6" mt={1}>Planificación por día</Typography>
+                                    <Box sx={{ flexGrow: 1, display: 'flex', flexWrap: 'wrap', gap: 2, overflowY: 'auto' }}>
+                                        {generarFechasPlanificacion().map((fecha, idx) => (
+                                            <Box key={fecha} sx={{ width: "100%" }}>
+                                                <Typography variant="subtitle1" gutterBottom>
+                                                    Día {idx + 1} : {fecha}
+                                                </Typography>
+                                                {(() => {
+                                                    const recetasDia = diasPlanificados[fecha] || [];
+
+                                                    const total = recetasDia.reduce((acc, ing) => {
+                                                        (ing.recipes || []).forEach((r) => {
+                                                            acc.kcal += parseFloat(r.kcal) || 0;
+                                                            acc.pro += parseFloat(r.pro) || 0;
+                                                            acc.car += parseFloat(r.car) || 0;
+                                                        });
+                                                        return acc;
+                                                    }, { kcal: 0, pro: 0, car: 0 });
+
+                                                    return (
+                                                        <Box sx={{ mb: 1, mt: 1 }}>
+                                                            <Typography variant="subtitle2" fontWeight="bold" sx={{ mb: 1 }}>
+                                                                Requerimientos diarios completados:
+                                                            </Typography>
+                                                            <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                                                                <PorcentajeCircular label="Kcal" valor={total.kcal} maximo={nutricion.kcal} />
+                                                                <PorcentajeCircular label="Proteínas" valor={total.pro} maximo={nutricion.pro} />
+                                                                <PorcentajeCircular label="Carbohidratos" valor={total.car} maximo={nutricion.car} />
+                                                            </Box>
+                                                        </Box>
+                                                    );
+                                                })()}
+                                                <Droppable droppableId={fecha} >
+                                                    {(provided) => (
+                                                        <Box
+                                                            ref={provided.innerRef}
+                                                            {...provided.droppableProps}
+                                                            sx={{ p: 2, border: '1px solid #ccc', borderRadius: 2, minHeight: 200 }}
+                                                        >
+                                                            {(diasPlanificados[fecha] || []).map((ing, index) => (
+                                                                <Draggable
+                                                                    key={`${fecha}-${ing._id}`}
+                                                                    draggableId={`${fecha}-${ing._id}`}
+                                                                    index={index}
+                                                                >
+                                                                    {(provided, snapshot) => {
+                                                                        // Calcular totales
+                                                                        const total = ing.recipes?.reduce(
+                                                                            (acc, r) => ({
+                                                                                kcal: acc.kcal + (parseFloat(r.kcal) || 0),
+                                                                                pro: acc.pro + (parseFloat(r.pro) || 0),
+                                                                                car: acc.car + (parseFloat(r.car) || 0)
+                                                                            }),
+                                                                            { kcal: 0, pro: 0, car: 0 }
+                                                                        );
+
+                                                                        return (
+                                                                            <Box
+                                                                                ref={provided.innerRef}
+                                                                                {...provided.draggableProps}
+                                                                                {...provided.dragHandleProps}
+                                                                                sx={{
+                                                                                    border: '1px solid #ddd',
+                                                                                    borderRadius: 1,
+                                                                                    p: 2,
+                                                                                    backgroundColor: colorPorTipoIngesta(ing.intake_type),
+                                                                                    boxShadow: snapshot.isDragging ? 2 : 1,
+                                                                                    width: '100%',
+                                                                                    display: 'flex',
+                                                                                    flexDirection: 'column',
+                                                                                    gap: 1,
+                                                                                    ...provided.draggableProps.style,
+                                                                                }}
+                                                                            >
+                                                                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                                                    <Typography variant="subtitle1" fontWeight="bold">
+                                                                                        {ing.intake_type} - {ing.intake_name}
+                                                                                    </Typography>
+                                                                                    <IconButton
+                                                                                        size="small"
+                                                                                        onClick={() => {
+                                                                                            setDiasPlanificados(prev => ({
+                                                                                                ...prev,
+                                                                                                [fecha]: prev[fecha].filter(i => i._id !== ing._id)
+                                                                                            }));
+                                                                                        }}
+                                                                                    >
+                                                                                        <CloseIcon fontSize="small" />
+                                                                                    </IconButton>
+                                                                                </Box>
+
+                                                                                <Box sx={{ mt: 1 }}>
+                                                                                    {ing.recipes?.length > 0 ? (
+                                                                                        <>
+                                                                                            {ing.recipes.map((receta, i) => (
+                                                                                                <Typography key={i} variant="body2" sx={{ ml: 2 }}>
+                                                                                                    • <strong>{receta.recipe_type}:</strong> {receta.name}
+                                                                                                </Typography>
+                                                                                            ))}
+                                                                                            <Typography variant="caption" color="text.secondary" sx={{ ml: 2, mt: 1, display: 'block' }}>
+                                                                                                Kcal: {total.kcal.toFixed(2)} | Pro: {total.pro.toFixed(2)} | Carbs: {total.car.toFixed(2)}
+                                                                                            </Typography>
+                                                                                        </>
+                                                                                    ) : (
+                                                                                        <Typography variant="body2" color="text.secondary" sx={{ ml: 2 }}>
+                                                                                            (Sin recetas)
+                                                                                        </Typography>
+                                                                                    )}
+                                                                                </Box>
+                                                                            </Box>
+                                                                        );
+                                                                    }}
+                                                                </Draggable>
+
+
+
+                                                            ))}
+
+                                                            {provided.placeholder}
+                                                        </Box>
+                                                    )}
+                                                </Droppable>
+                                            </Box>
+                                        ))}
+                                    </Box>
+                                    {/* Aquí va tu código de planificación por día */}
+                                </Box>
+                            </Box>
+                        </DragDropContext>
                         <Box sx={{ mt: 3, display: 'flex', gap: 2 }}>
                             <Button variant="outlined" onClick={() => setPaso(1)}>
                                 Volver
