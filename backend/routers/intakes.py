@@ -58,9 +58,15 @@ async def crear_ingesta(
 async def obtener_ingestas_paciente(
     pacienteN: str = Path(..., description="Nombre del paciente")
 ):
-    ingestas_crudas = list(intake_collection.find({"patient_name": pacienteN}))
+    ingestas_crudas = list(
+        intake_collection.find({
+            "$or": [
+                {"patient_name": pacienteN},
+                {"intake_universal": True}
+            ]
+        }).sort("_id", -1)
+    )
 
-    # Convertir ObjectId a string
     for ingesta in ingestas_crudas:
         ingesta["_id"] = str(ingesta["_id"])
 

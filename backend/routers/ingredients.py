@@ -225,7 +225,7 @@ async def get_all_categories():
         raise HTTPException(status_code=500, detail=f"Error al obtener categorías: {e}")
     
 @router.get("/buscar_alimentos/{nombre}")
-async def buscar_alimentos(nombre: str, limit: int = 5):
+async def buscar_alimentos(nombre: str, limit: int = 10):
     palabras = remove_stop_words(nombre)
     
     alimentos_sugeridos = set()  # eliminar repetidos

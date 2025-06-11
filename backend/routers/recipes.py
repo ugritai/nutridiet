@@ -11,7 +11,7 @@ import re
 router = APIRouter(tags=["Recipes"])
 
 #collections = ['abuela', 'food.com', 'mealrec', 'recipe1m', 'recipenlg', 'recipeQA']
-collections = ['abuela_bedca', 'GNHD_24_25']
+collections = ['abuela_bedca', 'GNHD_24_25', 'bedca_FB']
 recetas_collection = recipe_db_host['abuela_bedca']
 
 # Mapa de categorías a palabras clave
@@ -75,7 +75,7 @@ async def get_all_categories():
         raise HTTPException(status_code=500, detail=f"Error al obtener categorías: {e}")
 
 @router.get("/buscar_recetas/{nombre}")
-async def buscar_recetas(nombre: str, limit: int = 5):
+async def buscar_recetas(nombre: str, limit: int = Query(20, ge=1, le=100)):
     palabras = remove_stop_words(nombre)
     sugerencias = set()
 
@@ -86,16 +86,20 @@ async def buscar_recetas(nombre: str, limit: int = 5):
 
             async for doc in cursor:
                 title = doc.get("title", "")
+                if not title:
+                    continue
+
                 title_sin_tildes = unidecode(title.lower())
 
                 if palabra in title_sin_tildes:
-                    # Añadimos título capitalizado
                     sugerencias.add(capitalizar_primera_letra(title))
 
                 if len(sugerencias) >= limit:
-                    break
+                    break  
+
         if len(sugerencias) >= limit:
-            break
+            break 
+
     if sugerencias:
         return [{"nombre": s} for s in list(sugerencias)[:limit]]
     else:
@@ -395,8 +399,13 @@ async def obtener_kcal_pro_car_por_categoria(
         collection = recipe_db_host[collection_name]
         cursor = collection.find({
             'origin_ISO': 'ESP',
-            'category': {'$regex': f'^{categoria}$', '$options': 'i'}
+            '$or': [
+                {'category': categoria},
+                {'category': {'$regex': f'^{categoria}$', '$options': 'i'}},
+                {'category': {'$in': [categoria]}}
+            ]
         })
+
 
         async for doc in cursor:
             titulo = doc.get("title", "")
@@ -562,8 +571,13 @@ async def obtener_maximos_nutricionales(categoria: Optional[str] = None):
             collection = recipe_db_host[collection_name]
             cursor = collection.find({
                 'origin_ISO': 'ESP',
-                'category': {'$regex': f'^{re.escape(categoria_normalizada)}$', '$options': 'i'}
+                '$or': [
+                    {'category': categoria},
+                    {'category': {'$regex': f'^{categoria}$', '$options': 'i'}},
+                    {'category': {'$in': [categoria]}}
+                ]
             }, {'title': 1, 'nutritional_info': 1})
+
 
             async for doc in cursor:
                 titulo = doc.get("title", "").lower()
