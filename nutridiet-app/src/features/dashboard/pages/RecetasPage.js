@@ -18,24 +18,44 @@ export default function RecetasPage() {
     'Pescado',
     'Carne',
     'Fruta',
-    'Postre'
+    'Postres'
   ];
-
+  
+  // Mapeo de categorías del backend a categorías normalizadas
+  const categoryMapping = {
+    '2. pescados y mariscos': 'Pescado',
+    'carnes y derivados': 'Carne',
+    '1. verduras y hortalizas': 'Verduras',
+    'plato principal': 'Plato principal',
+    'primer plato': 'Entrante',
+    'entrante': 'Entrante',
+    'acompañamiento': 'Acompañamiento',
+    'otros': 'Otros',
+    'embutidos': 'Carne',
+  };
+  
+  function normalizeCategory(cat) {
+    const lower = cat.trim().toLowerCase();
+    return categoryMapping[lower] || capitalize(lower);
+  }
+  
   function capitalize(text) {
     return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
   }
-
+  
   useEffect(() => {
     fetch('http://localhost:8000/recetas/all_categories')
       .then(res => res.json())
       .then(data => {
         console.log('Data received:', data);
-        const apiCategories = data.categories
-        const all = [...RecetaCategories, ...apiCategories];
-        const unique = Array.from(new Set(all.map(c => c.toLowerCase())));
-        const finalCategories = unique.map(capitalize);
-        
-        setCategories(finalCategories);
+        const apiCategories = data.categories.map(normalizeCategory);
+        const baseCategories = RecetaCategories.map(capitalize);
+  
+        // Unificar y eliminar duplicados
+        const all = [...baseCategories, ...apiCategories];
+        const unique = Array.from(new Set(all));
+  
+        setCategories(unique);
       })
       .catch(err => {
         console.error("Error al obtener categorías:", err)
@@ -44,6 +64,7 @@ export default function RecetasPage() {
         setLoading(false);
       });
   }, []);
+  
 
   const {
     query,

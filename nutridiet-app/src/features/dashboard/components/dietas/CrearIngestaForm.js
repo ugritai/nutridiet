@@ -22,21 +22,24 @@ const porcentajeEsperadoPorTipo = {
 };
 
 
-export default function CrearIngestaForm() {
-    const { pacienteN } = useParams();
+export default function CrearIngestaForm({ onClose = null, nombreIngesta: propNombre, tipo: propTipo }) {
+    const isDialogMode = typeof onClose === 'function';
     const location = useLocation();
-    const navigate = useNavigate();
-
+  
     const modoEdicion = location.state?.modo === 'editar';
     const ingestaOriginal = location.state?.ingesta || null;
-
+  
     const nombreIngesta = modoEdicion
-        ? ingestaOriginal?.nombre || ''
-        : useParams().nombreIngesta;
-
+      ? ingestaOriginal?.nombre || ''
+      : propNombre || useParams().nombreIngesta;
+  
     const tipo = modoEdicion
-        ? ingestaOriginal?.tipo || ''
-        : location.state?.tipo || '';
+      ? ingestaOriginal?.tipo || ''
+      : propTipo || location.state?.tipo || '';
+  
+
+    const { pacienteN } = useParams();
+    const navigate = useNavigate();
 
     const [enviando, setEnviando] = useState(false);
     const [error, setError] = useState(null);
@@ -62,8 +65,8 @@ export default function CrearIngestaForm() {
 
     useEffect(() => {
         console.log('modoEdicion:', modoEdicion);
-  console.log('ingestaOriginal?.recipes:', ingestaOriginal?.recipes);
-  console.log('tipo:', tipo);
+        console.log('ingestaOriginal?.recipes:', ingestaOriginal?.recipes);
+        console.log('tipo:', tipo);
         if (modoEdicion && ingestaOriginal?.recipes && tipo) {
             const transformadas = {};
 
@@ -338,7 +341,11 @@ export default function CrearIngestaForm() {
             setRecetasPorTipo({});
             setRecetasBuscadas([]);
             alert('Ingesta guardada correctamente');
-            navigate(`/planificacion_dieta/${encodeURIComponent(pacienteN)}`);
+            if (isDialogMode) {
+                onClose(); // cerrar diálogo si está en modo modal
+            } else {
+                navigate(`/planificacion_dieta/${encodeURIComponent(pacienteN)}`);
+            }
 
         } catch (err) {
             setError(err.message);
@@ -349,9 +356,8 @@ export default function CrearIngestaForm() {
 
     if (!tipo) return null;
 
-    return (
-        <Dashboard>
-            <Card sx={{ p: 3, mt: 2, width: '100%' }}>
+    const contenido = (
+<Card sx={{ p: 3, mt: 2, width: '100%' }}>
                 {nutricion && (
                     <Box sx={{ display: 'flex', gap: 3, mb: 2, flexWrap: 'wrap' }}>
                         <Box sx={{ flex: { md: 1 }, maxWidth: { md: '60.9999%' } }}>
@@ -602,6 +608,7 @@ export default function CrearIngestaForm() {
                     </DragDropContext>
                 </form>
             </Card>
-        </Dashboard>
     );
+
+    return isDialogMode ? contenido : <Dashboard>{contenido}</Dashboard>;
 }

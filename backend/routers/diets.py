@@ -13,16 +13,21 @@ router = APIRouter(tags=["Diets"])
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/token")
 
-from datetime import datetime
+from datetime import datetime, date
+
 def ensure_datetime(value):
     if isinstance(value, datetime):
         return value
+    elif isinstance(value, date):
+        # convertir date a datetime
+        return datetime.combine(value, datetime.min.time())
     elif isinstance(value, str):
         return datetime.fromisoformat(value)
     elif isinstance(value, dict): 
         return datetime(value["year"], value["month"], value["day"])
     else:
         raise ValueError("Fecha no válida")
+
 
 def convert_date_to_datetime(dieta_dict: Dict) -> Dict:
     for day in dieta_dict["days"]:

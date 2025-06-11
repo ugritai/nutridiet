@@ -89,6 +89,7 @@ export default function PacientesPage() {
 
         if (!res.ok) throw new Error('Error al cargar pacientes');
         const data = await res.json();
+        console.log("pacientes:", data)
         setPacientes(data);
       } catch (err) {
         setError(err.message);

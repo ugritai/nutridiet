@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, status, Depends, Path
-from database.connection import pacient_collection, nutritionist_collection
+from database.connection import pacient_collection, nutritionist_collection, diet_collection
 from utils.nutricion import calcular_tmb, calcular_kcal, calcular_pro, calcular_car
 from models.schemas import Pacient, PacientOut, PacienteUpdate
 from fastapi.security import OAuth2PasswordBearer
@@ -78,10 +78,32 @@ async def listar_pacientes(token: str = Depends(oauth2_scheme)):
         ).sort("name", 1)
         
         pacientes = []
+        today = datetime.combine(date.today(), datetime.min.time())
+        
         for paciente in pacientes_cursor:
             paciente["id"] = str(paciente["_id"])
             del paciente["_id"]
             paciente.pop("password", None)
+
+            dieta_actual = diet_collection.find_one(
+                {
+                    "patient_name": paciente["name"],
+                    "start_date": {"$lte": today},
+                    "end_date": {"$gte": today}
+                },
+                sort=[("start_date", -1)]
+            )
+
+            if dieta_actual:
+                paciente["current_diet"] = {
+                    "id": str(dieta_actual["_id"]),
+                    "name": dieta_actual.get("name"),
+                    "start_date": str(dieta_actual.get("start_date")),
+                    "end_date": str(dieta_actual.get("end_date")),
+                }
+            else:
+                paciente["current_diet"] = None
+
             pacientes.append(paciente)
 
         return pacientes

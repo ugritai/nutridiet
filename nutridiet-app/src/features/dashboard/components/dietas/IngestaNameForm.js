@@ -5,28 +5,36 @@ import Dashboard from '../../Dashboard';
 
 const tiposIngesta = ['Desayuno', 'Media mañana', 'Almuerzo', 'Merienda', 'Cena'];
 
-export default function IngestaNameForm() {
-  const { pacienteN } = useParams();
-  const location = useLocation();
-  const navigate = useNavigate();
+export default function IngestaNameForm({
+  onClose = null,
+  paciente: propPaciente = null,
+  modo: propModo = null,
+  ingesta: propIngesta = null,
+}) {
+  const routeParams = useParams();
+  const routeNavigate = useNavigate();
+  const routeLocation = useLocation();
 
-  const modoEdicion = location.state?.modo === 'editar';
-  const ingestaOriginal = location.state?.ingesta || null;
+  // Modal o ruta
+  const modo = propModo || routeLocation.state?.modo || 'crear';
+  const ingestaOriginal = propIngesta || routeLocation.state?.ingesta || null;
+  const pacienteN = propPaciente || routeParams.pacienteN;
+
+  const isDialog = typeof onClose === 'function';
 
   const [formData, setFormData] = useState({
     tipo: '',
     nombre: ''
   });
 
-  // Prellenar en modo edición
   useEffect(() => {
-    if (modoEdicion && ingestaOriginal) {
+    if (modo === 'editar' && ingestaOriginal) {
       setFormData({
         tipo: ingestaOriginal.tipo || '',
         nombre: ingestaOriginal.nombre || ''
       });
     }
-  }, [modoEdicion, ingestaOriginal]);
+  }, [modo, ingestaOriginal]);
 
   const handleChange = (e) => {
     setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
@@ -38,13 +46,21 @@ export default function IngestaNameForm() {
       return;
     }
 
-    const ruta = modoEdicion
+    if (isDialog) {
+      onClose({
+        tipo: formData.tipo,
+        nombre: formData.nombre
+      });
+      return;
+    }
+
+    const ruta = modo === 'editar'
       ? `/planificacion_dieta/${encodeURIComponent(pacienteN)}/editar_ingesta/${encodeURIComponent(formData.nombre)}`
       : `/planificacion_dieta/${encodeURIComponent(pacienteN)}/crear_ingesta/${encodeURIComponent(formData.nombre)}`;
 
-    navigate(ruta, {
+    routeNavigate(ruta, {
       state: {
-        modo: modoEdicion ? 'editar' : 'crear',
+        modo,
         tipo: formData.tipo,
         ingesta: {
           ...ingestaOriginal,
@@ -55,52 +71,59 @@ export default function IngestaNameForm() {
     });
   };
 
-  return (
-    <Dashboard>
-      <Box sx={{ mx: 'auto', mt: 5 }}>
-        <Typography variant="h5" gutterBottom>
-          {modoEdicion ? 'Editar Ingesta' : 'Crear nueva Ingesta'}
-        </Typography>
+  const content = (
+    <Box sx={{ mx: 'auto', mt: 5 }}>
+      <Typography variant="h5" gutterBottom>
+        {modo === 'editar' ? 'Editar Ingesta' : 'Crear nueva Ingesta'}
+      </Typography>
 
-        <FormControl fullWidth sx={{ mb: 2 }}>
-          <FormLabel>Nombre de la Ingesta</FormLabel>
-          <TextField
-            name="nombre"
-            value={formData.nombre}
-            onChange={handleChange}
-            disabled={modoEdicion}
-            placeholder="Ej. Ingesta del mediodía"
-            required
-          />
-        </FormControl>
+      <FormControl fullWidth sx={{ mb: 2 }}>
+        <FormLabel>Nombre de la Ingesta</FormLabel>
+        <TextField
+          name="nombre"
+          value={formData.nombre}
+          onChange={handleChange}
+          disabled={modo === 'editar'}
+          placeholder="Ej. Ingesta del mediodía"
+          required
+        />
+      </FormControl>
 
-        <FormControl fullWidth sx={{ mb: 2 }}>
-          <FormLabel>Tipo de Ingesta</FormLabel>
-          <TextField
-            select
-            name="tipo"
-            value={formData.tipo}
-            onChange={handleChange}
-            required
-          >
-            {tiposIngesta.map((tipo) => (
-              <MenuItem key={tipo} value={tipo}>
-                {tipo}
-              </MenuItem>
-            ))}
-          </TextField>
-        </FormControl>
+      <FormControl fullWidth sx={{ mb: 2 }}>
+        <FormLabel>Tipo de Ingesta</FormLabel>
+        <TextField
+          select
+          name="tipo"
+          value={formData.tipo}
+          onChange={handleChange}
+          required
+        >
+          {tiposIngesta.map((tipo) => (
+            <MenuItem key={tipo} value={tipo}>
+              {tipo}
+            </MenuItem>
+          ))}
+        </TextField>
+      </FormControl>
 
-        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-          <Button variant="outlined" onClick={() => navigate(`/planificacion_dieta/${encodeURIComponent(pacienteN)}`)}>
-            Atrás
-          </Button>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+        <Button
+          variant="outlined"
+          onClick={() =>
+            isDialog
+              ? onClose(null)
+              : routeNavigate(`/planificacion_dieta/${encodeURIComponent(pacienteN)}`)
+          }
+        >
+          Atrás
+        </Button>
 
-          <Button variant="contained" color="primary" onClick={manejarSiguiente}>
-            {modoEdicion ? 'Editar Ingesta' : 'Siguiente'}
-          </Button>
-        </Box>
+        <Button variant="contained" color="primary" onClick={manejarSiguiente}>
+          {modo === 'editar' ? 'Editar Ingesta' : 'Siguiente'}
+        </Button>
       </Box>
-    </Dashboard>
+    </Box>
   );
+
+  return isDialog ? content : <Dashboard>{content}</Dashboard>;
 }

@@ -7,14 +7,18 @@ import {
   IconButton,
   Stack,
   Divider,
+  Button
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { useNavigate } from 'react-router-dom';
 
 
 export default function PacienteCard({ paciente, onEdit, onDelete }) {
   const [expanded, setExpanded] = useState(false);
+  const navigate = useNavigate();
+
 
   const handleExpandClick = () => setExpanded(!expanded);
   const handleEditClick = () => {
@@ -78,8 +82,21 @@ export default function PacienteCard({ paciente, onEdit, onDelete }) {
             Email: {paciente.email}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Dieta actual:
+            Dieta actual: {paciente.current_diet?.name || 'No asignada'}
           </Typography>
+          {paciente.current_diet && (
+            <Button
+              variant="outlined"
+              size="small"
+              onClick={() => navigate(`/detalle_dieta/${encodeURIComponent(paciente.current_diet.name)}`, {
+                state: { dietaId: paciente.current_diet.id }
+              })}
+              sx={{ mt: 1 }}
+            >
+              Ver dieta
+            </Button>
+
+          )}
         </Stack>
 
         <Collapse in={expanded} timeout="auto" unmountOnExit>

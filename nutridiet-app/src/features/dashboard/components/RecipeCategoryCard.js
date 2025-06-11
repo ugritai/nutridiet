@@ -30,46 +30,49 @@ export default function RecipeCategoryCard({ categoria }) {
         handleSearch, handleSelectSuggestion, handleSuggestions
     } = FoodSearch({ type: 'recetas' });
 
-    useEffect(() => {
+    const fetchDatos = async () => {
         setLoading(true);
+        try {
+            const [recetasRes, maximosRes] = await Promise.all([
+                fetch(`http://localhost:8000/recetas/categoria/${encodeURIComponent(categoria)}/nutricion_simplificada?por_porcion=true`),
+                fetch(`http://localhost:8000/recetas/recetas/maximos_nutricionales?categoria=${encodeURIComponent(categoria)}`)
+            ]);
 
-        const fetchDatos = async () => {
-            try {
-                const [recetasRes, maximosRes] = await Promise.all([
-                    fetch(`http://localhost:8000/recetas/categoria/${encodeURIComponent(categoria)}/nutricion_simplificada`),
-                    fetch(`http://localhost:8000/recetas/maximos_nutricionales`)
-                ]);
+            const recetasData = await recetasRes.json();
+            const maximosData = await maximosRes.json();
 
-                const recetasData = await recetasRes.json();
-                const maximosData = await maximosRes.json();
+            const recetasConDatos = (recetasData.resultados || []).filter(r => r.name);
 
-                const recetasConDatos = recetasData.resultados || [];
+            const kcal = maximosData.kcal || 1000;
+            const pro = maximosData.pro || 100;
+            const car = maximosData.car || 100;
 
-                setKcalMax(maximosData.kcal || 1000);
-                setProMax(maximosData.pro || 100);
-                setCarMax(maximosData.car || 100);
+            setKcalMax(kcal);
+            setProMax(pro);
+            setCarMax(car);
 
-                setKcalRange([0, maximosData.kcal || 1000]);
-                setProRange([0, maximosData.pro || 100]);
-                setCarRange([0, maximosData.car || 100]);
+            setKcalRange([0, kcal]);
+            setProRange([0, pro]);
+            setCarRange([0, car]);
 
-                setRecetas(recetasConDatos);
-                setFilteredRecetas(recetasConDatos);
-                setCurrentPage(1);
-                setSelectedLetter('');
-            } catch (err) {
-                console.error(err);
-            } finally {
-                setLoading(false);
-            }
-        };
+            setRecetas(recetasConDatos);
+            setFilteredRecetas(recetasConDatos);
+            setCurrentPage(1);
+            setSelectedLetter('');
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setLoading(false);
+        }
+    };
 
+    useEffect(() => {
         fetchDatos();
     }, [categoria]);
 
     useEffect(() => {
         const filtro = recetas.filter(r => {
-            const passLetter = !selectedLetter || r.receta.toLowerCase().startsWith(selectedLetter.toLowerCase());
+            const passLetter = !selectedLetter || (r.name && r.name.toLowerCase().startsWith(selectedLetter.toLowerCase()));
             if (!enableFilters) return passLetter;
 
             const passKcal = r.kcal >= kcalRange[0] && r.kcal <= kcalRange[1];
@@ -93,10 +96,6 @@ export default function RecipeCategoryCard({ categoria }) {
     };
 
     const handleResetFilters = () => {
-        setEnableFilters(false);
-        setFilteredRecetas(recetas);
-        setCurrentPage(1);
-        setSelectedLetter('');
         setKcalRange([0, kcalMax]);
         setProRange([0, proMax]);
         setCarRange([0, carMax]);
@@ -168,14 +167,21 @@ export default function RecipeCategoryCard({ categoria }) {
                     </Box>
                 )}
 
-                <Box sx={{ mt: 2, display: 'flex', gap: 2 }}>
-                    <Button variant="outlined" onClick={handleResetFilters}>Resetear filtros</Button>
-                </Box>
+                {enableFilters && (
+                    <Box sx={{ mt: 2, display: 'flex', gap: 2 }}>
+                        <Button variant="outlined" onClick={handleResetFilters}>
+                            Resetear filtros
+                        </Button>
+                    </Box>
+                )}
 
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 4, mb: 3 }}>
                     <Button variant={selectedLetter === '' ? 'contained' : 'outlined'} onClick={() => handleLetterClick('')}>Todas</Button>
                     {alphabet.map((letter) => {
-                        const count = filteredRecetas.filter(r => r.receta.toLowerCase().startsWith(letter.toLowerCase())).length;
+                        const count = recetas.filter(r =>
+                            r.name && r.name.toLowerCase().startsWith(letter.toLowerCase())
+                        ).length;
+
                         return (
                             <Button
                                 key={letter}
@@ -190,14 +196,19 @@ export default function RecipeCategoryCard({ categoria }) {
                 </Box>
 
                 <Grid container spacing={2}>
-                    {currentRecetas.map((recetaObj) => (
-                        <Grid size={{ xs: 12, sm: 6, lg: 4, md: 4 }} key={recetaObj.receta}>
-                            <UniversalCard
-                                title={recetaObj.receta.charAt(0).toUpperCase() + recetaObj.receta.slice(1)}
-                                buttonLink={`/recetas/detalle_receta/${encodeURIComponent(recetaObj.receta)}`}
-                            />
-                        </Grid>
-                    ))}
+                    {currentRecetas.map((recetaObj) => {
+                        const nombre = recetaObj.name;
+                        if (!nombre) return null;
+
+                        return (
+                            <Grid size={{ xs: 12, sm: 6, lg: 4, md: 4 }} key={nombre}>
+                                <UniversalCard
+                                    title={nombre.charAt(0).toUpperCase() + nombre.slice(1)}
+                                    buttonLink={`/recetas/detalle_receta/${encodeURIComponent(nombre)}`}
+                                />
+                            </Grid>
+                        );
+                    })}
                 </Grid>
 
                 {totalPages > 1 && (

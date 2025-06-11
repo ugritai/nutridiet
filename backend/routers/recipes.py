@@ -16,17 +16,35 @@ recetas_collection = recipe_db_host['abuela_bedca']
 
 # Mapa de categorías a palabras clave
 PALABRAS_CLAVE = {
-    'sopas': ['sopa', 'crema'],
-    'ensaladas': ['ensalada', 'ensaladas', 'Ensaladas'],
-    'verduras': ['1. Verduras y Hortalizas', 'Verduras y Hortalizas', 'Verduras', '1. verduras y hortalizas'],
-    'otros': ['desconocidos'],
-    'arroz': ['paella', 'risotto', 'arroz'],
-    'pasta': ['espaguetis', 'macarrones', 'ravioli', 'lasaña', 'pizza', 'tortellini', 'spaghetti', 'ramen'],
-    'guisos': ['guiso', 'puré', 'pure', 'lentejas', 'garbanzos', 'estofado', 'cocido'],
-    'pescado': ['bonito', 'atún', 'sardina', 'dorada', 'bacalao', 'salmón', '2. pescados y mariscos'],
-    'carne': ['pollo', 'ternera', 'cerdo', 'pavo', 'jamón', 'conejo', 'redondo'],
-    'postre': ['postre', 'helado', 'tarta', 'galleta', 'bizcocho', 'mousse', 'chocolate', 'dulce', 'brownie', 'pudin', 'batido', 'pancakes', 'porridge'],
-    'fruta': ['manzana', 'plátano', 'pera', 'naranja', 'pomelo', 'kiwi', 'sandía', 'melón', 'cereza', 'ciruela', 'fresa', 'mandarina']
+    'sopas': ['sopa', 'crema', 'gazpacho'],
+    'ensaladas': ['ensalada', 'ensaladas', 'tabulé', 'bowl', 'bol'],
+    'verduras': [
+        'verduras', 'hortalizas', 'calabacín', 'berenjena', 'espinacas', 'zanahoria',
+        'coliflor', 'pimientos', 'brocoli', 'alcachofas', 'champiñones', 'setas', 'ajo',
+        'cebolla', 'espárragos', 'puerro', 'tomate', 'pepino', 'patatas'
+    ],
+    'otros': ['desconocidos', 'pico de gallo', 'entremeses', 'aperitivos'],
+    'arroz': ['paella', 'risotto', 'arroz', 'cuscús'],
+    'pasta': ['espaguetis', 'macarrones', 'ravioli', 'lasaña', 'pizza', 'tortellini', 'spaghetti', 'ramen', 'noodles'],
+    'guisos': ['guiso', 'puré', 'pure', 'lentejas', 'garbanzos', 'estofado', 'cocido', 'puchero', 'alubias'],
+    'pescado': [
+        'bonito', 'atún', 'sardina', 'dorada', 'bacalao', 'salmón', 'merluza', 'lubina', 
+        'pescado', 'surimi', 'gambas', 'langostinos', 'anchoas', 'almejas', 'trucha'
+    ],
+    'carne': [
+        'pollo', 'ternera', 'cerdo', 'pavo', 'jamón', 'conejo', 'redondo', 'carnes', 'lomo', 
+        'salchichas', 'bacon', 'sobrasada', 'albóndigas', 'hamburguesa', 'carne molida', 'carne'
+    ],
+    'postres': [
+        'postre', 'helado', 'tarta', 'galleta', 'bizcocho', 'mousse', 'chocolate', 'dulce',
+        'brownie', 'pudin', 'batido', 'pancakes', 'porridge', 'flan', 'pudding', 'chía', 'yogur'
+    ],
+    'fruta': ['manzana', 'plátano', 'pera', 'naranja', 'pomelo', 'kiwi', 'sandía', 'melón', 'cereza', 'ciruela', 'fresa', 'mandarina', 'mango', 'açaí'],
+    'pan': ['pan', 'bocadillo', 'bagel', 'sándwich', 'tostas', 'tostadas', 'crackers', 'pionono', 'blinis'],
+    'empanadas': ['empanada', 'empanadillas', 'hojaldre', 'quiche', 'volovanes', 'canastitas'],
+    'croquetas': ['croquetas', 'bombas'],
+    'pates': ['paté', 'pate', 'tapenade', 'sobrasada', 'almogrote'],
+    'salsas': ['salsa', 'dip', 'mantequilla']
 }
 
 def capitalizar_primera_letra(texto: str) -> str:

@@ -14,10 +14,10 @@ import { useNavigate } from 'react-router-dom';
 import CloseIcon from '@mui/icons-material/Close';
 import FoodSearch from '../../components/FoodSearch';
 import Search from '../Search';
-import { Accordion, AccordionSummary, AccordionDetails } from '@mui/material';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import PorcentajeCircular from './PorcentajeCircular';
-
+import CrearIngestaForm from './CrearIngestaForm';
+import { Dialog, DialogTitle, DialogContent } from '@mui/material';
+import IngestaNameForm from './IngestaNameForm';
 
 
 dayjs.extend(isSameOrBefore);
@@ -42,6 +42,10 @@ const colorPorTipoIngesta = (tipo) => {
 
 
 export default function CrearDietaForm() {
+    const [openDialog, setOpenDialog] = useState(false);
+    const [pasoIngesta, setPasoIngesta] = useState(1);
+    const [datosIngestaNueva, setDatosIngestaNueva] = useState(null);
+
     const { pacienteN, nombreDieta } = useParams();
     const location = useLocation();
     const idDieta = location.state?.dietaId;
@@ -371,6 +375,71 @@ export default function CrearDietaForm() {
                                             <MenuItem value="Cena">Cena</MenuItem>
                                         </Select>
                                     </FormControl>
+                                    <Button
+                                        variant="contained"
+                                        color="secondary"
+                                        fullWidth
+                                        onClick={() => {
+                                            setPasoIngesta(1);
+                                            setDatosIngestaNueva(null);
+                                            setOpenDialog(true);
+                                        }}
+                                        sx={{ mb: 2 }}
+                                    >
+                                        Crear nueva ingesta
+                                    </Button>
+
+                                    <Dialog open={openDialog} onClose={() => setOpenDialog(false)} fullWidth maxWidth="md">
+                                        <DialogTitle>
+                                            Crear nueva ingesta
+                                            <IconButton
+                                                onClick={() => {
+                                                    setOpenDialog(false);
+                                                    setPasoIngesta(1);
+                                                    setDatosIngestaNueva(null);
+                                                }}
+                                                sx={{ position: 'absolute', right: 8, top: 8 }}
+                                            >
+                                                <CloseIcon />
+                                            </IconButton>
+                                        </DialogTitle>
+                                        <DialogContent dividers>
+                                            {pasoIngesta === 1 && (
+                                                <IngestaNameForm
+                                                    paciente={pacienteN}
+                                                    onClose={(datos) => {
+                                                        if (!datos) {
+                                                            setOpenDialog(false);
+                                                            return;
+                                                        }
+                                                        setDatosIngestaNueva(datos);
+                                                        setPasoIngesta(2);
+                                                    }}
+                                                />
+                                            )}
+
+                                            {pasoIngesta === 2 && datosIngestaNueva && (
+                                                <CrearIngestaForm
+                                                    onClose={async () => {
+                                                        setOpenDialog(false);
+                                                        setPasoIngesta(1);
+                                                        setDatosIngestaNueva(null);
+                                                        // Recargar ingestas disponibles
+                                                        try {
+                                                            const res = await fetch(`http://localhost:8000/planificacion_ingestas/ingestas/${pacienteN}`);
+                                                            if (!res.ok) throw new Error('No se pudieron cargar las ingestas');
+                                                            const data = await res.json();
+                                                            setIngestasDisponibles(data);
+                                                        } catch (err) {
+                                                            console.error(err);
+                                                        }
+                                                    }}
+                                                    nombreIngesta={datosIngestaNueva.nombre}
+                                                    tipo={datosIngestaNueva.tipo}
+                                                />
+                                            )}
+                                        </DialogContent>
+                                    </Dialog>
 
                                     <Droppable droppableId="disponibles" direction="vertical">
                                         {(provided) => (

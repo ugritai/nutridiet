@@ -69,6 +69,12 @@ class PacienteUpdate(BaseModel):
     height: Optional[float]
     weight: Optional[float]
     activityLevel: Optional[int]
+    
+class DietaActualOut(BaseModel):
+    id: str
+    name: str
+    start_date: str
+    end_date: str
 
 class PacientOut(BaseModel):
     id: str
@@ -83,6 +89,7 @@ class PacientOut(BaseModel):
     restrictionsKcal: float
     dailyProIntake: float
     dailyCalIntake: float
+    current_diet: Optional[DietaActualOut] = None
 
     class Config:
         orm_mode = True
@@ -127,3 +134,4 @@ class DietCreate(BaseModel):
     nutritionist_email: Optional[str] = None
     patient_id: Optional[str] = None
     patient_name: Optional[str] = None
+
