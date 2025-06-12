@@ -33,6 +33,9 @@ const pathNameMap = {
   editar_ingesta: 'Editar ingesta',
   mi_cuenta: 'Mi cuenta',
   detalle_dieta: 'Detalle de dieta',
+  configuracion: 'Configuración',
+  acerca_de: 'Acerca de',
+  comentarios: 'Comentarios',
 };
 
 export default function NavbarBreadcrumbs() {

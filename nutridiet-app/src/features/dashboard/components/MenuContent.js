@@ -28,8 +28,8 @@ export default function MenuContent() {
 
   const secondaryListItems = [
     { text: 'Configuración', icon: <SettingsRoundedIcon />, path: '/configuracion' },
-    { text: 'Acerca de', icon: <InfoRoundedIcon />, path: '/acerce' },
-    { text: 'Comentarios', icon: <HelpRoundedIcon />, parh: '/comentarios' },
+    { text: 'Acerca de', icon: <InfoRoundedIcon />, path: '/acerca_de' },
+    { text: 'Comentarios', icon: <HelpRoundedIcon />, path: '/comentarios' },
   ];
 
   const handleNavigate = (path) => () => {

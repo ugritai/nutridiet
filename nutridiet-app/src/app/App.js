@@ -20,6 +20,9 @@ import PerfilPage from '../features/dashboard/pages/PerfilPage';
 import DietaIngePacienteCard from "../features/dashboard/components/dietas/DietaIngePacienteCard";
 import IngestaNameForm from "../features/dashboard/components/dietas/IngestaNameForm";
 import DetalleDietaPage from "../features/dashboard/components/dietas/DetalleDietaPage";
+import Configuracion from "../features/dashboard/Configuracion";
+import AcercaDe from "../features/dashboard/AcercaDe";
+import Comentarios from "../features/dashboard/Comentarios";
 
 function App() {
   return (
@@ -162,6 +165,24 @@ function App() {
         <Route path="/mi_cuenta" element={
           <ProtectedRoute>
             <PerfilPage />
+          </ProtectedRoute>
+        } />
+
+        <Route path="/configuracion" element={
+          <ProtectedRoute>
+            <Configuracion />
+          </ProtectedRoute>
+        } />
+
+        <Route path="/acerca_de" element={
+          <ProtectedRoute>
+            <AcercaDe />
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/comentarios" element={
+          <ProtectedRoute>
+            <Comentarios />
           </ProtectedRoute>
         } />
 
