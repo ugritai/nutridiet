@@ -1,5 +1,4 @@
 # routers/ingredients.py
-from fastapi.responses import JSONResponse
 from fastapi import APIRouter, HTTPException
 from database.connection import recipe_db_host, bedca_collection,embeddings_collection,images_collection,food_portions_collection
 from unidecode import unidecode

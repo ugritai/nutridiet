@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
     Grid, Typography, CircularProgress, Box,
     Pagination, Button, Slider, Checkbox, FormControlLabel
@@ -8,6 +9,8 @@ import FoodSearch from '../components/FoodSearch';
 import Search from '../components/Search';
 
 export default function RecipeCategoryCard({ categoria }) {
+    const navigate = useNavigate();
+
     const [recetas, setRecetas] = useState([]);
     const [filteredRecetas, setFilteredRecetas] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -204,7 +207,14 @@ export default function RecipeCategoryCard({ categoria }) {
                             <Grid size={{ xs: 12, sm: 6, lg: 4, md: 4 }} key={nombre}>
                                 <UniversalCard
                                     title={nombre.charAt(0).toUpperCase() + nombre.slice(1)}
-                                    buttonLink={`/recetas/detalle_receta/${encodeURIComponent(nombre)}`}
+                                    onAction={() =>
+                                        navigate(`/recetas/detalle_receta/${encodeURIComponent(nombre)}`, {
+                                            state: {
+                                                desdeDieta: false,
+                                                dietaNombre: nombre
+                                            }
+                                        })
+                                    }
                                 />
                             </Grid>
                         );

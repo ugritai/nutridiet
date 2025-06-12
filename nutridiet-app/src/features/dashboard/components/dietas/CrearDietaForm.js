@@ -216,9 +216,7 @@ export default function CrearDietaForm() {
         try {
             const payload = {
                 patient_name: pacienteN,
-                name: idDieta
-                    ? nombreDieta || 'Dieta sin nombre'
-                    : `Dieta ${pacienteN} - ${fechaInicio.format('DD/MM/YYYY')} al ${fechaFin.format('DD/MM/YYYY')}`,
+                name: `Dieta ${pacienteN} - ${fechaInicio.format('DD/MM/YYYY')} al ${fechaFin.format('DD/MM/YYYY')}`,
                 start_date: fechaInicio.format('YYYY-MM-DD'),
                 end_date: fechaFin.format('YYYY-MM-DD'),
                 days: Object.entries(diasPlanificados)

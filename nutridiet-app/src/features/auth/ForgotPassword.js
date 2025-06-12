@@ -29,8 +29,10 @@ function ForgotPassword({ open, handleClose }) {
         sx={{ display: 'flex', flexDirection: 'column', gap: 2, width: '100%' }}
       >
         <DialogContentText>
-          Introduce la dirección de correo electrónico de tu cuenta y te enviaremos un enlace para restablecer tu contraseña.
+          Introduce la dirección de correo electrónico asociada a tu cuenta y te enviaremos un enlace para restablecer tu contraseña.
+          (Funcionalidad no disponible en esta versión. Para recuperar el acceso, por favor contacta con el desarrollador del sistema).
         </DialogContentText>
+
         <OutlinedInput
           autoFocus
           required

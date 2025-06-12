@@ -24,6 +24,9 @@ export const obtenerEstructuraIngesta = (tipo) => {
     'Merienda': {
       Merienda: ['primer plato', 'bebida']
     },
+    'Cena':{
+      Cena: ['entrante', 'primer plato', 'segundo plato', 'postre', 'bebida']
+    },
   };
 
   const estructura = estructuras[tipo] || {};

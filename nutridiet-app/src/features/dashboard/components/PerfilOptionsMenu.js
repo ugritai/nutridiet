@@ -60,10 +60,6 @@ export default function OptionsMenu() {
           handleClose();
           navigate('/mi_cuenta');
         }}>Mi cuenta</MenuItem>
-        <Divider />
-        <MenuItem onClick={handleClose}>Añadir otra cuenta</MenuItem>
-        <MenuItem onClick={handleClose}>Configuración</MenuItem>
-        <Divider />
         <MenuItem
           onClick={() => {
             handleClose();

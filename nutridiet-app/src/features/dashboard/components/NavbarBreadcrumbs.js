@@ -39,8 +39,9 @@ export default function NavbarBreadcrumbs() {
   const location = useLocation();
   const pathnames = location.pathname.split('/').filter((x) => x);
 
-  const dietaNombre = sessionStorage.getItem('breadcrumb_dieta_nombre');
-  const dietaId = sessionStorage.getItem('breadcrumb_dieta_id');
+  const desdeDieta = location.state?.desdeDieta;
+  const dietaNombre = location.state?.dietaNombre;
+  const dietaId = location.state?.dietaId;
 
   return (
     <StyledBreadcrumbs separator={<NavigateNextRoundedIcon fontSize="small" />}>
@@ -49,46 +50,55 @@ export default function NavbarBreadcrumbs() {
         Inicio
       </Link>
 
-      {/* Mostrar Dieta si estamos viendo receta dentro de una dieta */}
-      {pathnames.includes('detalle_receta') && dietaNombre && dietaId && (
-        <Link
-          key="breadcrumb-dieta"
-          component={RouterLink}
-          underline="hover"
-          color="inherit"
-          to={`/detalle_dieta/${encodeURIComponent(dietaNombre)}`}
-          state={{ dietaId }}
-        >
-          {dietaNombre}
-        </Link>
-      )}
-
-      {pathnames.map((value, index) => {
-        if (value === 'inicio') return null;
-
-        const previous = pathnames[index - 1];
-        const isLast = index === pathnames.length - 1;
-
-        // Salta los IDs si ya los manejamos por separado
-        if (
-          ['detalle_dieta', 'detalle_alimento', 'detalle_receta', 'categorias', 'editar_dieta', 'editar_ingesta', 'crear_ingesta'].includes(previous)
-        ) {
-          return null;
-        }
-
-        const to = '/' + pathnames.slice(0, index + 1).join('/');
-        let label = pathNameMap[value] || decodeURIComponent(value);
-
-        return isLast ? (
-          <Typography key={to} color="text.primary" sx={{ fontWeight: 600 }}>
-            {label}
+      {/* Si vienes desde dieta: mostrar dieta y nombre de receta */}
+      {pathnames.includes('detalle_receta') && desdeDieta && dietaNombre && dietaId ? (
+        [
+          <Link
+            key="breadcrumb-dieta"
+            component={RouterLink}
+            underline="hover"
+            color="inherit"
+            to={`/detalle_dieta/${encodeURIComponent(dietaNombre)}`}
+            state={{ dietaId }}
+          >
+            {dietaNombre}
+          </Link>,
+          <Typography key="receta-final" color="text.primary" sx={{ fontWeight: 600 }}>
+            {decodeURIComponent(pathnames[pathnames.length - 1])
+              .split(' ')
+              .map(p => p.charAt(0).toUpperCase() + p.slice(1))
+              .join(' ')}
           </Typography>
-        ) : (
-          <Link key={to} component={RouterLink} underline="hover" color="inherit" to={to}>
-            {label}
-          </Link>
-        );
-      })}
+        ]
+      ) : (
+        // Caso normal: no vienes desde dieta
+        pathnames.map((value, index) => {
+          if (value === 'inicio') return null;
+
+          const previous = pathnames[index - 1];
+          const isLast = index === pathnames.length - 1;
+
+          // Saltar IDs cuando ya están representados
+          if (
+            ['detalle_dieta', 'detalle_alimento', 'detalle_receta', 'categorias', 'editar_dieta', 'editar_ingesta', 'crear_ingesta'].includes(previous)
+          ) {
+            return null;
+          }
+
+          const to = '/' + pathnames.slice(0, index + 1).join('/');
+          const label = pathNameMap[value] || decodeURIComponent(value);
+
+          return isLast ? (
+            <Typography key={to} color="text.primary" sx={{ fontWeight: 600 }}>
+              {label}
+            </Typography>
+          ) : (
+            <Link key={to} component={RouterLink} underline="hover" color="inherit" to={to}>
+              {label}
+            </Link>
+          );
+        })
+      )}
     </StyledBreadcrumbs>
   );
 }

@@ -63,7 +63,14 @@ export default function DetalleDietaPage() {
 
             // Agrupar recetas por ingesta con info para rowSpan
             const recetasAgrupadas = dia.intakes.flatMap((ingesta) => {
-                const recetas = ingesta.recipes || [];
+                const recetas = ingesta.recipes?.length > 0 ? ingesta.recipes : [{
+                    name: '—',
+                    recipe_type: '—',
+                    kcal: 0,
+                    pro: 0,
+                    car: 0
+                }];
+
                 return recetas.map((receta, i) => {
                     const kcal = receta.kcal || 0;
                     const pro = receta.pro || 0;
@@ -123,13 +130,10 @@ export default function DetalleDietaPage() {
                 didParseCell: function (data) {
                     const row = recetasAgrupadas[data.row.index];
 
-                    // rowSpan para "Ingesta"
                     if (data.column.index === 0) {
-                        if (row.isTotal) return;
-                        if (!row.showIngesta) {
+                        // Ingesta (solo mostrar en la primera receta del grupo)
+                        if (row.isTotal || !row.showIngesta) {
                             data.cell.text = '';
-                        } else {
-                            data.cell.rowSpan = row.rowSpan;
                         }
                     }
                 },
@@ -207,9 +211,13 @@ export default function DetalleDietaPage() {
                                                 <Button
                                                     size="small"
                                                     onClick={() => {
-                                                        sessionStorage.setItem('breadcrumb_dieta_nombre', dieta.name);
-                                                        sessionStorage.setItem('breadcrumb_dieta_id', dieta._id);
-                                                        navigate(`/recetas/detalle_receta/${encodeURIComponent(receta.name)}`);
+                                                        navigate(`/recetas/detalle_receta/${encodeURIComponent(receta.name)}`, {
+                                                            state: {
+                                                                desdeDieta: true,
+                                                                dietaId: dieta._id,
+                                                                dietaNombre: dieta.name
+                                                            }
+                                                        });
                                                     }}
                                                 >
                                                     Ver receta

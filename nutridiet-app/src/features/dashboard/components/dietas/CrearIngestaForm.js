@@ -26,7 +26,9 @@ export default function CrearIngestaForm({ onClose = null, nombreIngesta: propNo
     const isDialogMode = typeof onClose === 'function';
     const location = useLocation();
   
-    const modoEdicion = location.state?.modo === 'editar';
+    const modoEdicion = !isDialogMode && location.state?.modo === 'editar';
+    // Nota: si isDialogMode (modal), forzamos siempre modo creación
+
     const ingestaOriginal = location.state?.ingesta || null;
   
     const nombreIngesta = modoEdicion

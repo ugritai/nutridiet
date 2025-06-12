@@ -95,7 +95,6 @@ export default function PacienteCard({ paciente, onEdit, onDelete }) {
             >
               Ver dieta
             </Button>
-
           )}
         </Stack>
 

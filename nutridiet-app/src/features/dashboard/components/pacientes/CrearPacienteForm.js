@@ -60,6 +60,23 @@ export default function CrearPacienteForm({ open, onClose, onPacienteCreado, pac
         activityLevel: '',
     });
 
+    const [formErrors, setFormErrors] = React.useState({});
+    React.useEffect(() => {
+        if (open && !pacienteInicial) {
+            setFormValues({
+                name: '',
+                email: '',
+                password: '',
+                gender: '',
+                bornDate: '',
+                height: '',
+                weight: '',
+                activityLevel: '',
+            });
+            setFormErrors({});
+        }
+    }, [open, pacienteInicial]);
+
     React.useEffect(() => {
         if (pacienteInicial) {
             setFormValues({
@@ -68,8 +85,6 @@ export default function CrearPacienteForm({ open, onClose, onPacienteCreado, pac
             });
         }
     }, [pacienteInicial]);
-
-    const [formErrors, setFormErrors] = React.useState({});
 
     const handleChange = (field) => (event) => {
         setFormValues((prev) => ({
@@ -109,7 +124,6 @@ export default function CrearPacienteForm({ open, onClose, onPacienteCreado, pac
             const url = isEdit
                 ? `/pacientes/actualizar_paciente/${pacienteInicial.id}`
                 : '/pacientes/crear_paciente/';
-
             const method = isEdit ? 'PUT' : 'POST';
 
             const { id, tmb, restrictionsKcal, dailyProIntake, dailyCalIntake, ...rest } = formValues;
@@ -134,11 +148,9 @@ export default function CrearPacienteForm({ open, onClose, onPacienteCreado, pac
                 onPacienteCreado?.(paciente);
                 onClose();
 
-                alert(isEdit ? 'Datos de paciente actualizado' : 'Peciente creado con exito!');
-
+                alert(isEdit ? 'Datos de paciente actualizado' : 'Paciente creado con éxito!');
                 window.location.reload();
-            }
-            else {
+            } else {
                 const error = await response.json();
                 alert(error.detail || 'Error al guardar paciente');
             }
@@ -148,7 +160,15 @@ export default function CrearPacienteForm({ open, onClose, onPacienteCreado, pac
         }
     };
 
-
+    const isFormIncomplete =
+        !formValues.name ||
+        !formValues.email ||
+        (!isEdit && !formValues.password) ||
+        !formValues.gender ||
+        !formValues.bornDate ||
+        !formValues.height ||
+        !formValues.weight ||
+        !formValues.activityLevel;
 
     return (
         <Modal open={open} onClose={onClose}>
@@ -160,6 +180,12 @@ export default function CrearPacienteForm({ open, onClose, onPacienteCreado, pac
                         <Typography component="h1" variant="h5">
                             {isEdit ? 'Editar paciente' : 'Crear paciente'}
                         </Typography>
+
+                        {Object.keys(formErrors).length > 0 && (
+                            <Typography color="error">
+                                Por favor, complete todos los campos correctamente.
+                            </Typography>
+                        )}
 
                         <Box
                             component="form"
@@ -177,6 +203,7 @@ export default function CrearPacienteForm({ open, onClose, onPacienteCreado, pac
                                     helperText={formErrors.name}
                                 />
                             </FormControl>
+
                             <FormControl>
                                 <FormLabel>Correo electrónico</FormLabel>
                                 <TextField
@@ -189,6 +216,7 @@ export default function CrearPacienteForm({ open, onClose, onPacienteCreado, pac
                                     helperText={formErrors.email}
                                 />
                             </FormControl>
+
                             {!isEdit && (
                                 <FormControl>
                                     <FormLabel>Contraseña</FormLabel>
@@ -203,6 +231,7 @@ export default function CrearPacienteForm({ open, onClose, onPacienteCreado, pac
                                     />
                                 </FormControl>
                             )}
+
                             <FormControl>
                                 <FormLabel>Género</FormLabel>
                                 <TextField
@@ -217,6 +246,7 @@ export default function CrearPacienteForm({ open, onClose, onPacienteCreado, pac
                                     <MenuItem value="female">Femenino</MenuItem>
                                 </TextField>
                             </FormControl>
+
                             <FormControl>
                                 <FormLabel>Fecha de nacimiento</FormLabel>
                                 <TextField
@@ -229,6 +259,7 @@ export default function CrearPacienteForm({ open, onClose, onPacienteCreado, pac
                                     InputLabelProps={{ shrink: true }}
                                 />
                             </FormControl>
+
                             <FormControl>
                                 <FormLabel>Altura (cm)</FormLabel>
                                 <TextField
@@ -240,6 +271,7 @@ export default function CrearPacienteForm({ open, onClose, onPacienteCreado, pac
                                     helperText={formErrors.height}
                                 />
                             </FormControl>
+
                             <FormControl>
                                 <FormLabel>Peso (kg)</FormLabel>
                                 <TextField
@@ -251,6 +283,7 @@ export default function CrearPacienteForm({ open, onClose, onPacienteCreado, pac
                                     helperText={formErrors.weight}
                                 />
                             </FormControl>
+
                             <FormControl>
                                 <FormLabel>Actividad física</FormLabel>
                                 <TextField
@@ -268,10 +301,17 @@ export default function CrearPacienteForm({ open, onClose, onPacienteCreado, pac
                                     <MenuItem value={5}>Muy activo</MenuItem>
                                 </TextField>
                             </FormControl>
-                            <Button type="submit" variant="contained" fullWidth>
+
+                            <Button
+                                type="submit"
+                                variant="contained"
+                                fullWidth
+                                disabled={isFormIncomplete}
+                            >
                                 {isEdit ? 'Guardar cambios' : 'Registrar paciente'}
                             </Button>
                         </Box>
+
                         <Divider />
                         <Button onClick={onClose} fullWidth>
                             Cancelar

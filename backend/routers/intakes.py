@@ -1,11 +1,10 @@
-from fastapi import APIRouter, Path, Depends, HTTPException, status, Request
+from fastapi import APIRouter, Path, Depends, HTTPException, status
 from models.schemas import IntakeCreate
 from database.connection import intake_collection, nutritionist_collection, pacient_collection
 from fastapi.security import OAuth2PasswordBearer 
 from .security import decode_jwt_token
 from typing import List
 from unidecode import unidecode
-from utils.food_utils import remove_stop_words
 
 router = APIRouter(tags=["Intakes"])
 

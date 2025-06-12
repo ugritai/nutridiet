@@ -1,12 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.encoders import jsonable_encoder
+from fastapi import APIRouter, Depends, HTTPException
 from models.schemas import DietCreate
 from database.connection import intake_collection, nutritionist_collection, diet_collection, pacient_collection
 from fastapi.security import OAuth2PasswordBearer 
 from .security import decode_jwt_token
 import datetime
 from bson import ObjectId
-from typing import Any, Dict, List
+from typing import Dict, List
 
 
 router = APIRouter(tags=["Diets"])

@@ -16,11 +16,12 @@ export default function IngestaNameForm({
   const routeLocation = useLocation();
 
   // Modal o ruta
-  const modo = propModo || routeLocation.state?.modo || 'crear';
-  const ingestaOriginal = propIngesta || routeLocation.state?.ingesta || null;
+  const isDialog = typeof onClose === 'function';
+  const modo = isDialog ? 'crear' : (propModo || routeLocation.state?.modo || 'crear');
+
+  const ingestaOriginal = isDialog ? null : (propIngesta || routeLocation.state?.ingesta || null);
   const pacienteN = propPaciente || routeParams.pacienteN;
 
-  const isDialog = typeof onClose === 'function';
 
   const [formData, setFormData] = useState({
     tipo: '',
