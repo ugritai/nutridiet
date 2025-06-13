@@ -434,7 +434,7 @@ export default function FoodDetailCard() {
                         </Grid >
 
                         {/* Alimentos relacionados */}
-                        {
+                        {/*
                             sugeridos.length > 0 && (
                                 <Box sx={{ mt: 3 }}>
                                     <Divider sx={{ mb: 3 }} />
@@ -470,7 +470,7 @@ export default function FoodDetailCard() {
                                     </Box>
                                 </Box>
                             )
-                        }
+                        */}
                     </>
                 )
                 }
