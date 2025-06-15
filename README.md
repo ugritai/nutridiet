@@ -12,6 +12,7 @@ La plataforma ha sido diseñada como una herramienta modular con el objetivo de 
 Este sistema está orientado a ser utilizado en contextos docentes (como apoyo a la formación en dietética) y en entornos profesionales donde se requiera una herramienta práctica para la toma de decisiones nutricionales fundamentadas. Todo el código fuente se encuentra disponible públicamente, permitiendo su revisión, adaptación y mejora continua.
 
 ## Estructura del repositorio
+```
 nutridiet/
 ├── backend/
 │   ├── database/              # Conexión y operaciones con MongoDB
@@ -46,6 +47,7 @@ nutridiet/
     ├── README.md               # Instrucciones del frontend
     ├── package.json            # Dependencias y scripts de React
     └── package-lock.json       # Versión bloqueada de dependencias
+```
 
 ### `backend/`
 Contiene la implementación de la API REST del sistema utilizando FastAPI. 
