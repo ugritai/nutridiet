@@ -1,0 +1,12 @@
+myenv/
+venv/
+__pycache__/
+*/__pycache__/
+static/
+*/static/
+imagenes_filtradas
+*.pt
+*.pt
+utils/*.json
+utils/*.xlsx
+.DS_Store
