@@ -297,10 +297,17 @@ export default function CrearIngestaForm({ onClose = null, nombreIngesta: propNo
 
             Object.entries(recetasPorTipo).forEach(([key, recetasLista]) => {
                 if (!recetasLista || recetasLista.length === 0) return;
-
+            
+                if (typeof key !== 'string' || !key.includes('::')) {
+                    console.warn('❌ Clave de receta inválida:', key);
+                    return;
+                }
+            
                 const [, subtipo] = key.split('::');
+                if (!subtipo) return;
+            
                 const tipoReceta = formatear(subtipo);
-
+            
                 recetasLista.forEach((receta) => {
                     recetasUnificadas.push({
                         id: receta.id,
@@ -312,6 +319,7 @@ export default function CrearIngestaForm({ onClose = null, nombreIngesta: propNo
                     });
                 });
             });
+            
 
             if (recetasUnificadas.length === 0) {
                 setError("Debes añadir al menos una receta.");
