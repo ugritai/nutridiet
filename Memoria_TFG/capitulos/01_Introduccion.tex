@@ -1,0 +1,63 @@
+\chapter{Introducción}
+Una dieta razonable y una ingesta nutricional equilibrada son bases importantes para mantener la salud y prevenir enfermedades. Sin embargo, a medida que el ritmo de la vida moderna se acelera, se han producido cambios significativos en nuestros hábitos alimentarios. Por ejemplo, las comidas rápidas, ricas en azúcares, los alimentos fritos y los productos ultraprocesados se han vuelto cada vez más frecuentes en la alimentación diaria. Estos hábitos poco saludables se han convertido en uno de los principales factores que impulsan las enfermedades crónicas como la obesidad, la diabetes y las enfermedades cardiovasculares. 
+
+En este proyecto se desarrolla un sistema de información para la creación de dietas dirigido a uso profesional, con el objetivo de ser utilizado en el ámbito educativo de la nutrición mediante casos reales. Su finalidad es contribuir a la prevención de enfermedades crónicas asociadas a la alimentación y facilitar el trabajo de los nutricionistas.
+
+\section{Contexto y motivación}
+Según el informe de la Organización Mundial de la Salud (OMS), la diabetes es la novena causa principal de mortalidad a nivel mundial, con aproximadamente 1,5 millones de muertes atribuibles directamente a esta enfermedad.~\cite{who_diabetes_fact_sheet_2025} Además, la prevalencia de esta ha mostrado una preocupante tendencia, la proporción de adultos con diabetes se duplicó, pasando del 7\% en 1990 al 14\% en 2022, lo que indica que cada vez más personas desarrollan diabetes.
+
+Por su parte, la Federación Internacional de Diabetes (IDF)~\cite{idf_diabetes_atlas_2025} proyecta que el número de adultos con diabetes aumentará de 589 millones en 2024 a 853 millones para 2050, lo que supone un incremento del 46\%.
+
+A pesar de que estas cifras son muy alarmantes, no todo está perdido, la diabetes y otras enfermedades relacionadas con la alimentación pueden prevenirse y controlarse. Diversas investigaciones indican que hasta el 80\% de los casos se podrían evitar mediante la adopción de hábitos de vida saludables, en los que la alimentación equilibrada desempeña un papel clave~\cite{harvard_healthy_lifestyle_diabetes_2018}.
+
+Aquí es donde los nutricionistas y las herramientas digitales pueden marcar la diferencia. La planificación de dietas implica tomar decisiones informadas basadas en datos clínicos, hábitos alimentarios, contexto social y cultural, y objetivos específicos de cada individuo. Para facilitar ese trabajo, es necesario contar con herramientas que ayuden a organizar esta información, interpretarla correctamente y proponer soluciones concretas.
+
+En el ámbito formativo, estas herramientas adquieren un valor aún mayor. Para los futuros profesionales de la nutrición, aprender a construir una dieta equilibrada exige más que comprender los conceptos: requiere aplicarlos con precisión, evaluar los resultados y corregir errores. Sin embargo, las soluciones actualmente disponibles en el entorno docente, especialmente en la Facultad de Farmacia de UGR, como NutriPro~\cite{NutriPro} y NutriWin~\cite{Nutriwin}, aunque ofrecen funciones útiles para el análisis nutricional, son software privativos con licencias de pago, lo que restringe su accesibilidad y uso generalizado en contextos educativos. Además, presentan una escasa integración con bases de datos abiertas o actualizadas de alimentos y recetas, lo que limita su utilidad para trabajar con información real y diversa, especialmente en actividades prácticas centradas en la creación y adaptación de dietas personalizadas. Esto restringe su uso por parte del alumnado, especialmente en los primeros cursos, que necesita una herramienta más flexible, accesible y diseñada pensando en el aprendizaje.
+
+Este proyecto nace como respuesta a esa necesidad. Su propósito es ofrecer un sistema de información nutricional que, aunque se ha desarrollado con un enfoque formativo, está pensado para ser útil tanto en la enseñanza como en la práctica profesional. Gracias a una interfaz clara, interactiva y accesible, permite al usuario, ya sea estudiante o nutricionista en activo, crear dietas personalizadas, adaptar menús a distintos perfiles clínicos y analizar de forma inmediata su impacto nutricional. Todo ello con el objetivo de reforzar el razonamiento dietético, mejorar la toma de decisiones y facilitar una planificación más eficiente y basada en datos reales.
+
+El sistema ha sido desarrollado utilizando tecnologías web modernas como React en el frontend, FastAPI en el backend y MongoDB como base de datos, lo que garantiza una estructura modular, escalable y abierta a futuras ampliaciones. Esta arquitectura permite adaptación a diferentes niveles de uso: desde la práctica académica hasta escenarios reales como el Aula de Nutrición de UGR.
+
+Uno de los aspectos más relevantes del proyecto es su validación directa por parte de nutricionistas de la Facultad de Farmacia de la UGR. Su experiencia ha sido clave para asegurar que el sistema responde a criterios científicos y pedagógicos rigurosos, y que su contenido y funcionalidades son pertinentes dentro del plan de estudios del Grado en Nutrición Humana y Dietética. La herramienta será implementada y usada en el próximo curso académico, durante las prácticas de la asignatura Principios de Dietética, lo que permitirá su evaluación directa en el aula y su posterior incorporación al \textit{Aula de Nutrición y Dietética}\footnote{Gabinete nutricional de la Universidad de Granada: \url{https://grados.ugr.es/nutricion/informacion/presentacion/gabinete-nutricional}} de la Universidad de Granada, y servirá como punto de partida para futuras mejoras.
+
+Por último, este trabajo representa también una motivación personal. Como estudiante de ingeniería y responsable del desarrollo, ha supuesto una oportunidad para aplicar los conocimientos adquiridos en desarrollo web, arquitectura de software y bases de datos, con el objetivo de construir una herramienta útil, funcional y socialmente relevante. No se trata únicamente de completar un trabajo académico, sino de aportar una solución real que pueda continuar creciendo y siendo utilizada más allá del contexto del TFG.
+
+% Te dejo por aquí algunos links de artículos que te pueden ser de utilidad para coger ideas de la introducción: 
+
+% https://im2recipe.csail.mit.edu/tpami19.pdf
+
+% https://link.springer.com/article/10.1007/s00530-025-01667-y?utm_source=rct_congratemailt&utm_medium=email&utm_campaign=oa_20250201&utm_content=10.1007%2Fs00530-025-01667-y
+
+
+\section{Objetivos del trabajo}
+El objetivo principal de este trabajo es diseñar y desarrollar un sistema de información nutricional multiplataforma orientado a la planificación de dietas saludables, destinado tanto a profesionales del ámbito sanitario como a estudiantes de nutrición en formación avanzada. 
+
+Dada su complejidad, este objetivo general se ha desglosado en los siguientes objetivos específicos:
+\begin{enumerate}
+    \item Realizar un estudio comparativo de software nutricional libre existente, analizando sus funcionalidades, limitaciones y aplicabilidad en entornos profesionales.
+    \item Conectar el sistema a una base de datos con información nutricional validada, y permitir la integración de nuevos datos sujetos a revisión y validación por parte de profesionales cualificados.
+    \item Implementar funcionalidades clave en el sistema de información, como la creación de dietas y menús personalizados, un filtrado inteligente de recetas basado en características nutricionales, y el seguimiento del paciente.
+    \item Dejar el sistema listo para su validación y pruebas, garantizando que su funcionamiento sea estable y adecuado para su aplicación en entornos reales.
+\end{enumerate}
+
+\section{Estructura de la memoria}
+En el capítulo 1 se ha presentado el contexto, la motivación y los objetivos del proyecto, introduciendo así la necesidad de un sistema de información nutricional para uso profesional. El resto de la memoria se ha estructurado como sigue:
+\begin{itemize}
+    \item El capítulo~\ref{capitulo2} está dedicado al estado del arte. En él se revisan diversas aplicaciones y herramientas existentes relacionadas con la planificación nutricional, analizando sus fortalezas, limitaciones y tecnologías empleadas. Esta revisión ha servido de referencia para definir los aspectos diferenciales del sistema propuesto.
+    
+    \item En el capítulo~\ref{capitulo3} se recogen los Requisitos del sistema, tanto funcionales como no funcionales, que guían el desarrollo de la solución.
+    
+    \item El capítulo~\ref{capitulo4} describe la Metodología de trabajo y la planificación temporal, incluyendo el enfoque de desarrollo iterativo seguido, el cronograma propuesto y una estimación de recursos y costes. 
+    
+    \item En el capítulo~\ref{capitulo5} se aborda el Diseño del sistema y la arquitectura del
+    sistema, describiendo los distintos módulos funcionales desarrollados.
+    
+    \item El capítulo~\ref{capitulo6} describe en profundidad la implementación del sistema, detallando las tecnologías utilizadas, el proceso de integración entre módulos, y los retos técnicos superados durante su construcción.
+    
+    \item El capítulo~\ref{capitulo7} recoge los resultados obtenidos, presentados en forma de capturas de pantalla y ejemplos prácticos. A modo de manual de usuario, se explica el funcionamiento general de la aplicación.
+    
+    \item En el capítulo~\ref{capitulo8} se incluyen las conclusiones del trabajo y se proponen diferentes líneas de mejora y desarrollo futuro. 
+    
+    \item Por último, recoge la bibliografía utilizada, que incluye tanto referencias técnicas como fuentes teóricas que han servido de apoyo para el desarrollo y fundamentación del proyecto.
+\end{itemize}
+

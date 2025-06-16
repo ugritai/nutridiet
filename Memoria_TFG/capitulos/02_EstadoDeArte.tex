@@ -1,0 +1,169 @@
+\chapter{Estado del arte}\label{capitulo2}
+En la actualidad, existen diversas herramientas tecnológicas diseñadas para facilitar la evaluación de dietas, el asesoramiento nutricional y la recopilación de datos clínicos y alimentarios. Estas soluciones, basadas en técnicas de inteligencia artificial, procesamiento de lenguaje natural o simplemente en reglas nutricionales, varían ampliamente en cuanto a su enfoque, grado de personalización, licencia y público objetivo.
+
+En este capítulo se presenta una revisión de algunas de las herramientas más relevantes que han sido desarrolladas recientemente, con especial atención a aquellas que pueden ser utilizadas como referencia o inspiración para el sistema propuesto en este trabajo.
+
+\section{Revisión de herramientas existentes}
+\subsection{AdaptaFood\cite{MoralesGarzon2025}}
+AdaptaFood es un sistema inteligente diseñado para adaptar recetas a dietas con restricciones alimentarias específicas. Su principal innovación consiste en la utilización de modelos avanzados de procesamiento de lenguaje natural, concretamente el modelo BERT\footnote{BERT (Bidirectional Encoder Representations from Transformers, Representaciones de Codificadores Bidireccionales a partir de Transformadores)} , para analizar el contenido nutricional y semántico de una receta y sugerir sustituciones compatibles con las restricciones dietéticas del usuario.
+
+El sistema permite introducir una receta en formato texto o imagen. En el caso de imágenes, se aplica un modelo de visión por computadora para extraer automáticamente los ingredientes. A continuación, se aplica BERT para analizar los ingredientes extraídos y proponer alternativas que respeten las restricciones del paciente (por ejemplo, alergias, intolerancias o dietas terapéuticas).
+
+A pesar de su potencial, AdaptaFood presenta ciertas limitaciones desde el punto de vista profesional. Su enfoque está centrado en la modificación individual de recetas, sin contemplar aspectos fundamentales para el trabajo clínico como la planificación de dietas completas, la gestión del seguimiento nutricional, o la integración con historiales clínicos y bases de datos de pacientes. Tampoco ofrece funciones de análisis nutricional detallado o control de menús diarios y semanales, lo que limita su aplicabilidad directa en entornos sanitarios profesionales.
+
+\subsection{Nutrimind\cite{NutriMind2023}}
+NutriMind es un software especializado en nutrición clínica diseñado para potenciar el trabajo de los profesionales de la salud. Su propuesta se centra en ofrecer precisión científica y personalización avanzada en la gestión de dietas y planes nutricionales.
+
+Una de sus principales funcionalidades es el denominado ``dietocálculo'', un sistema que permite calcular con alto nivel de detalle los valores de macronutrientes (proteínas, grasas, carbohidratos) y micronutrientes (como hierro o vitamina B12) consumidos por el paciente. Esta capacidad analítica permite diseñar dietas adaptadas a objetivos concretos, como la pérdida de peso, el tratamiento de patologías metabólicas o la mejora del rendimiento deportivo.
+
+Para contextos deportivos, Nutrimind ofrece herramientas como gráficas de evolución corporal, incluyendo la somatochart\footnote{Somatochart: un gráfico triangular utilizado para representar el somatotipo de una persona, acumulación de grasa, masa muscular y delgadez estructural.} para analizar la composición corporal, así como el cálculo del gasto calórico estimado según el tipo de actividad física (por ejemplo, maratón vs. halterofilia).
+
+En el ámbito del control de peso, el software incluye funcionalidades como cuadros de equivalentes dietéticos automáticos, que permiten realizar sustituciones alimentarias sin comprometer el equilibrio nutricional, y módulos de análisis de hábitos mediante inteligencia artificial, que detectan patrones como saltarse el desayuno o proponen ajustes personalizados.
+
+Otra característica destacada es su sistema de motivación inteligente, que refuerza el compromiso del paciente mostrando su progreso nutricional y físico, acompañado de mensajes motivacionales personalizados en la aplicación móvil.
+
+En comparación con el sistema de información nutricional propuesto en este trabajo, Nutrimind destaca por su precisión clínica y su enfoque en la adaptación a múltiples perfiles profesionales; es bastante completa, aunque presenta la limitación de ser un software privativo y de pago. En contraste, el sistema desarrollado en este TFG ofrece una alternativa libre y de código abierto frente a soluciones comerciales. 
+
+\subsection{Food Processor\cite{FoodProcessor}}
+Food Processor es un software dirigido a dietistas, nutricionistas y profesionales de la salud, que permite realizar un seguimiento dietético integral, establecer objetivos de ejercicio y gestionar indicadores clave de salud de los pacientes.
+
+Cuenta con una base de datos de más de 146,000 alimentos, y permite el análisis nutricional detallado por porción, desglosando nutrientes como calorías, proteínas, vitamina D, hierro, entre otros, con ajuste automático de valores al modificar las cantidades.
+
+Incluye funciones para el registro integral de comidas y actividad física, así como la planificación de menús cíclicos dirigidos a instituciones como escuelas y hospitales, respetando las normativas nutricionales vigentes.
+
+Tanto Nutrimind como Food Processor son herramientas bastante completas con todas las funcionalidades necesarias. Tienen limitaciones de ser un software privativo y de pago.
+
+\subsection{ChefTec\cite{Cheftec}}
+ChefTec es una herramienta digital orientada principalmente a la gestión de operaciones alimentarias en entornos profesionales como restaurantes, cocinas industriales y servicios de catering. Su uso está enfocado a los cocineros, gerentes de cocina y propietarios de establecimientos, con el objetivo de mejorar la eficiencia y el control en la gestión alimentaria diaria.
+
+Entre sus funcionalidades principales destaca el control de costes en tiempo real, permitiendo calcular automáticamente el coste por porción de cada plato, lo cual facilita la toma de decisiones informadas respecto a precios, rentabilidad y desperdicio alimentario.
+
+Además, incorpora un módulo de planificación nutricional profesional, mediante el cual es posible realizar un análisis detallado de calorías, alérgenos y valores nutricionales por receta. Esta característica es especialmente útil para cumplir con las normativas de etiquetado alimentario, ya que el sistema puede generar automáticamente etiquetas nutricionales listas para imprimir que se ajustan a los requisitos legales establecidos en diferentes regiones.
+
+Aunque ChefTec presenta funcionalidades nutricionales avanzadas, su enfoque está claramente dirigido a la industria alimentaria comercial más que al ámbito clínico o dietético. A diferencia del sistema propuesto en este trabajo, que está orientado al seguimiento personalizado de pacientes y la planificación de dietas en contextos de salud, ChefTec está más centrado en la gestión operativa y económica de la cocina profesional.
+
+\subsection{Genesis R\&D\cite{GenesisRD}}
+Genesis R\&D es un software profesional de formulación y etiquetado de alimentos, ampliamente utilizado en la industria alimentaria para generar paneles de información nutricional conforme a las regulaciones oficiales, como las establecidas por la FDA\footnote{Administración de Alimentos y Medicamentos de EE. UU., encargada de regular alimentos, fármacos y suplementos.} u otras agencias internacionales. El sistema se mantiene actualizado con las normativas gubernamentales en constante evolución, garantizando así el cumplimiento legal en el etiquetado y la presentación de productos alimenticios.
+
+Una de sus principales ventajas es la posibilidad de formular productos de manera virtual, permitiendo analizar y ajustar el contenido nutricional de las recetas sin necesidad de enviar muestras físicas al laboratorio tras cada modificación. Esto acelera significativamente el ciclo de desarrollo y reduce los costes.
+
+Genesis R\&D está enfocado al desarrollo y etiquetado de productos alimentarios conforme a normativas industriales, siendo una herramienta pensada para la industria manufacturera. Nuestra solución, sin embargo, responde a necesidades distintas: proporcionar soporte a profesionales de la salud en la elaboración de dietas personalizadas, basándose en datos abiertos y criterios clínicos.
+
+\subsection{Nutritics\cite{Nutritics}}
+Nutritics es una plataforma digital especializada en la gestión de datos nutricionales orientada principalmente a empresas del sector alimentario y de hostelería. Su objetivo principal es optimizar las operaciones, garantizar el cumplimiento normativo y mejorar la experiencia del cliente, mediante un seguimiento preciso de los ingredientes desde su origen hasta el producto final.
+
+Entre sus funcionalidades más destacadas se encuentra el control de costes en tiempo real, que permite calcular automáticamente el coste por porción y sugiere precios de venta en función de los márgenes objetivos definidos. Asimismo, facilita la reducción del desperdicio alimentario a través de técnicas de análisis predictivo basadas en patrones de consumo y producción.
+
+Nutritics permite la generación instantánea de etiquetas nutricionales adaptadas a diferentes normativas internacionales, incluyendo la Unión Europea (UE), FDA de EE.UU. y organismos de regulación en Asia. Cuenta además con un sistema de alertas para alérgenos y posibles riesgos de contaminación cruzada, lo que aumenta la seguridad alimentaria del sistema.
+
+Un aspecto diferencial de esta herramienta es su módulo de sostenibilidad, el cual permite medir, establecer objetivos y generar informes sobre la huella de carbono y de agua asociada a recetas y menús. Esto ayuda a las empresas a implementar prácticas más sostenibles y a reducir su impacto ambiental.
+
+En comparación con el sistema propuesto en este trabajo, Nutritics se enfoca en la gestión empresarial y el cumplimiento regulatorio, mientras que nuestra solución está orientada a profesionales de la nutrición clínica y a la personalización de planes dietéticos, integrando información clínica y preferencias individuales en un contexto sanitario.
+
+\subsection{Nutritionist Pro\cite{Nutritionistpro}}
+Nutritionist Pro es un software experto en nutrición, ampliamente utilizado en entornos clínicos, industriales y de servicios alimentarios. Ofrece un sistema digital integral que abarca desde la creación de etiquetas alimentarias conforme a normativas internacionales, hasta el análisis dietético profesional y la gestión de menús y servicios de alimentos.
+
+El sistema trabaja con bases de datos nutricionales de múltiples países, lo que le permite generar etiquetas bilingües adaptadas a distintos contextos normativos. Integra un modelo tridimensional que contempla nutrición, ejercicio y peso, facilitando así la definición y seguimiento de objetivos nutricionales individualizados. Además, incorpora técnicas de inteligencia artificial para la optimización de recetas según los objetivos establecidos.
+
+Es compatible con distintos sistemas operativos y se actualiza de forma trimestral, tanto en lo referente a bases de datos como a normativas. Esta sincronización en tiempo real garantiza que los profesionales trabajen siempre con información vigente y de calidad.
+
+Aunque Nutritionist Pro destaca por su versatilidad y amplitud funcional, su orientación está pensada para contextos mixtos que combinan entornos clínicos, industriales y de servicios alimentarios. En cambio, el sistema desarrollado en este trabajo se focaliza en la práctica clínica y educativa, priorizando la personalización del seguimiento nutricional, la transparencia mediante datos abiertos, y la usabilidad en contextos formativos. Además, Nutritionist Pro es un software comercial cerrado, nuestra propuesta busca fomentar la accesibilidad y adaptabilidad mediante tecnologías multiplataforma y código abierto.
+
+\subsection{MyFitnessPal\cite{Myfitnesspal}}
+MyFitnessPal es una aplicación móvil orientada al seguimiento personal de la alimentación y la salud, utilizada principalmente por el público general. Funciona como un diario alimentario digital y un planificador de comidas, permitiendo a los usuarios registrar su ingesta diaria, guardar recetas y visualizar su evolución nutricional a lo largo del tiempo.
+
+La aplicación ofrece análisis detallados de calorías y macronutrientes, además de proporcionar herramientas orientadas a objetivos como la pérdida de peso, el aumento de masa muscular o la reducción del índice de masa corporal. 
+
+Una de sus funcionalidades más destacadas es la posibilidad de sincronización con más de 50 aplicaciones de salud, incluyendo Apple Health\footnote{Aplicación de Apple para iOS que centraliza datos de salud y bienestar (actividad, nutrición, sueño, etc.). \url{https://www.apple.com/health/}} y Google Fit\footnote{Aplicación de Google para Android que registra actividad física, frecuencia cardíaca, sueño y otros datos de salud. \url{https://www.google.com/fit/}}. Esto permite construir un perfil más completo del estado físico del usuario, integrando variables como calidad del sueño, intensidad del ejercicio y consumo nutricional.
+
+En contraste con el sistema propuesto en este trabajo, que está orientado a profesionales de la nutrición y al tratamiento clínico individualizado, MyFitnessPal se enfoca en el autocuidado y el bienestar general, careciendo de funcionalidades avanzadas como el manejo clínico de pacientes o la generación estructurada de planes nutricionales personalizados.
+
+\subsection{DietMate\cite{Dietmate}}
+DietMate es una aplicación desarrollada en Malasia orientada al control de la salud en personas con diabetes tipo 2, a través de planes de alimentación personalizados y un sistema de seguimiento médico digital. Esta solución integra la cultura culinaria local con innovaciones en salud digital, promoviendo así un enfoque accesible y culturalmente adaptado al manejo de enfermedades crónicas.
+
+Una de sus principales funcionalidades es el desarrollo de recetas adaptadas a la dieta malaya, ajustadas a las necesidades nutricionales de personas con diabetes, incluyendo opciones bajas en carbohidratos, selección por alergias, preferencias religiosas y límites presupuestarios.
+
+La aplicación permite el registro de glucosa antes y después de las comidas, con recordatorios automático, y ofrece seguimiento de otros indicadores como la presión arterial y la actividad física, integrándose con dispositivos wearables para una monitorización más precisa.
+
+Al estar enfocada en una condición médica específica, DietMate incluye un sistema de atención médica integrada, que proporciona consultas virtuales con nutricionistas certificados y genera alertas automáticas al equipo médico cuando los niveles del paciente superan los rangos establecidos.
+
+Comparado con el sistema propuesto en este trabajo, DietMate representa una herramienta vertical y especializada en el tratamiento de la diabetes, mientras que nuestra solución se enfoca en ser una plataforma generalista para profesionales de la nutrición, abarcando un mayor número de perfiles clínicos, necesidades alimentarias y escenarios de intervención dietética.
+
+\subsection{Cronometer\cite{Cronometer}}
+Cronometer es una plataforma en línea diseñada para nutricionistas, entrenadores personales e investigadores que necesitan un sistema práctico para el monitoreo de la alimentación y salud de sus clientes.
+
+Ofrece un análisis detallado de 94 nutrientes esenciales y permite el registro de ejercicio físico y métricas biomédicas como presión arterial o niveles de glucosa. Su base de datos alimentaria contiene más de 1 millón de registros verificados, provenientes de fuentes como el USDA\footnote{Departamento de Agricultura de EE. UU., responsable de desarrollar políticas sobre alimentación, nutrición y bases de datos como el FoodData Central. \url{https://www.usda.gov/}}, Health Canada\footnote{Agencia gubernamental de Canadá encargada de la regulación de alimentos, nutrición, medicamentos y salud pública. \url{https://www.canada.ca/en/health-canada.html}}
+, y diversas bases europeas.
+
+Entre sus funcionalidades destacan la generación automática de gráficos nutricionales, la creación y distribución de recetas adaptadas a planes dietéticos específicos y un sistema de mensajería segura que permite la comunicación directa entre profesional y paciente. Estas características, propias de herramientas reflejan un enfoque profesional avanzado, están sujetas a licencias de pago.
+
+El sistema desarrollado en este proyecto ofrece una solución muy similar en estructura y objetivos. Permite crear y planificar dietas personalizadas, gestionar pacientes y analizar el contenido nutricional de recetas de forma detallada. Aunque no incluye todas las funcionalidades de los sistemas comerciales, representa una alternativa válida, flexible y extensible, especialmente útil en entornos educativos y de práctica clínica inicial.
+
+\subsection{My Plate\cite{Myplate}}
+My Plate es una herramienta gratuita creada por el Departamento de Agricultura de los Estados Unidos, cuyo objetivo es ayudar al público general a organizar comidas equilibradas de manera sencilla y visual.
+
+En lugar de centrarse en el conteo de calorías, la herramienta propone dividir el plato diario en cinco grupos alimenticios: frutas, verduras, granos (como arroz o pan), proteínas (carne, pescado, legumbres) y lácteos. Según la edad, sexo, nivel de actividad física y objetivo nutricional, el sistema genera un plan semanal personalizado con cantidades sugeridas de cada grupo.
+
+Además, My Plate ofrece recursos complementarios como diarios de comidas imprimibles, juegos interactivos educativos para niños y listas de compra estacionales, facilitando la adopción de hábitos alimentarios saludables por parte del usuario común.
+
+En contraste, el sistema desarrollado en este proyecto está orientado a un uso más profesional y clínico. Mientras que MyPlate busca educar al público general mediante recursos visuales y recomendaciones generales, nuestro sistema permite una planificación nutricional más precisa y personalizada, adaptada al perfil individual de cada paciente. Aunque no incluye materiales educativos para población infantil ni funciones lúdicas, su enfoque en la personalización y el seguimiento lo convierte en una solución más potente para el entorno sanitario y académico.
+
+\section{Tabla de resumen comparativo de software}
+Con el objetivo de situar el sistema desarrollado en el contexto actual de herramientas tecnológicas aplicadas a la nutrición, se ha realizado un análisis comparativo de diversas soluciones disponibles tanto de licencia abierta como comercial. 
+
+En la Tabla ~\ref{tab:software_licencia_abierta} se recogen las aplicaciones gratuitas o de código abierto encontradas recientemente. En la Tabla ~\ref{tab:software_pago} se examinan programas de pago ampliamente usados en entornos profesionales, muchos de los cuales presentan funcionalidades avanzadas.
+
+\begin{table}[t]
+\begin{longtable}{|p{2.6cm}|p{4.4cm}|p{4.4cm}|}
+\hline
+\textbf{Software} & \textbf{Funcionalidades principales} & \textbf{Limitaciones frente al sistema propuesto} \\
+\hline
+\textbf{AdaptaFood} & Adaptación semántica de recetas con BERT, extracción automática de ingredientes desde texto o imagen, sugerencias compatibles con restricciones dietéticas. & No contempla la planificación de dietas completas, ni seguimiento clínico, ni gestión de pacientes. \\
+\hline
+\textbf{MyFitnessPal} & Diario alimentario, análisis de calorías y macronutrientes, sincronización con apps de salud (Apple Health, Google Fit). & Enfoque generalista y no clínico, carece de planificación nutricional profesional o personalización clínica. \\
+\hline
+\textbf{My Plate} & Generación visual de platos equilibrados, planificación semanal por grupos alimentarios, recursos educativos. & No ofrece análisis nutricional detallado ni planificación clínica individualizada. \\
+\hline
+\end{longtable}
+\caption{Resumen de limitaciones en software de licencia abierta}
+\label{tab:software_licencia_abierta}
+\end{table}
+
+\begin{table}[H]
+\begin{longtable}{|p{2.6cm}|p{4.4cm}|p{4.4cm}|}
+\hline
+\textbf{Software} & \textbf{Funcionalidades principales} & \textbf{Limitaciones frente al sistema propuesto} \\
+\hline
+\textbf{Nutrimind} & Dietocálculo clínico, somatochart, análisis de hábitos con IA, motivación personalizada. & Software cerrado y de pago; acceso restringido en contextos educativos. \\
+\hline
+\textbf{Food Processor} & Base de datos extensa, análisis nutricional detallado, menús institucionales cíclicos. & Privativo; no adaptable a entornos formativos abiertos. \\
+\hline
+\textbf{ChefTec} & Control de costes por porción, etiquetado nutricional automático, gestión operativa. & Enfoque en restauración comercial, no diseñado para nutrición clínica. \\
+\hline
+\textbf{Genesis R\&D} & Formulación de productos y simulación nutricional, cumplimiento normativo (FDA). & Uso industrial, no enfocado en la planificación clínica ni educativa. \\
+\hline
+\textbf{Nutritics} & Cálculo de costes, alertas de alérgenos, etiquetado normativo, módulo de sostenibilidad. & Orientado a hostelería, sin personalización clínica para pacientes. \\
+\hline
+\textbf{Nutritionist Pro} & Gestión de menús, análisis dietético, etiquetas alimentarias, IA para recetas. & Software cerrado y de pago; no adaptado a contextos educativos o investigación abierta. \\
+\hline
+\textbf{DietMate} & Gestión de diabetes tipo 2, recetas culturales, seguimiento glucosa y signos vitales. & Enfoque específico para una patología; no es una solución generalista. \\
+\hline
+\textbf{Cronometer} & Seguimiento de nutrientes (94), métricas biomédicas, mensajería profesional-paciente. & Acceso limitado por suscripción; no siempre disponible en entornos formativos. \\
+\hline
+\end{longtable}
+\caption{Resumen de limitaciones en software de pago}
+\label{tab:software_pago}
+\end{table}
+
+\section{Conclusión del estado del arte}
+El análisis comparativo realizado en este capítulo evidencia que actualmente existe una amplia variedad de herramientas digitales orientadas a la nutrición, cada una con enfoques, públicos objetivos y funcionalidades distintas. 
+
+Por un lado, se analizan soluciones gratuitas o accesibles como ``MyFitnessPal'' o ``My Plate'', orientadas principalmente al autocuidado y la educación nutricional básica. Aunque útiles para el público general, estas aplicaciones no satisfacen las necesidades de seguimiento clínico personalizado ni permiten planificar dietas con criterios profesionales.
+
+Por otro lado, se encuentran soluciones especializadas en el entorno clínico, como ``Nutrimind'', ``Food Processor'', ``Nutritionist Pro'', ``DietMate'' o ``Cronomate''  que destacan por su precisión en el cálculo nutricional, su capacidad de adaptación a perfiles médicos diversos y la disponibilidad de versiones adaptadas tanto para uso profesional como educativo. Se trata de herramientas bastante completas y consolidadas en el ámbito sanitario. Sin embargo, presentan importantes limitaciones: son soluciones privativas, de coste elevado.
+
+Además, otras herramientas como ``ChefTec'', ``Genesis R\&D'' o ``Nutritics'' de pago también, están dirigidas al ámbito industrial o empresarial, centrando sus funcionalidades en la gestión de costes, el etiquetado normativo o la sostenibilidad de la producción alimentaria, sin cubrir las particularidades del trabajo nutricional clínico o educativo.
+
+Podemos observar con claridad que la mayoría de las herramientas analizadas son de pago, y aquellas que se ofrecen de forma gratuita no se ajustan a las funcionalidades requeridas en contextos profesionales o educativos avanzados. En este sentido, el sistema desarrollado en este trabajo busca precisamente cubrir ese vacío: ofrecer una solución accesible, adaptable y alineada con las necesidades reales del ámbito sanitario y formativo, manteniendo un equilibrio entre funcionalidad, usabilidad y apertura tecnológica.
+
+

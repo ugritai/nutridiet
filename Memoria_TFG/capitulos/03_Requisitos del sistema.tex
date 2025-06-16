@@ -1,0 +1,121 @@
+\chapter{Requisitos del sistema}\label{capitulo3}
+En este capítulo se describen los requisitos funcionales y no funcionales que guían el diseño e implementación del sistema. 
+
+La definición precisa de estos requisitos permite asegurar que el sistema responda a las necesidades de los usuarios previstos (principalmente estudiantes y docentes del ámbito de la nutrición).
+
+\section{Requisitos funcionales}
+En esta sección se presentan las especificaciones detalladas que se deben realizar para cumplir las necesidades de los usuarios finales. En este caso, el usuario final son los profesionales de la salud, especialmente nutricionistas. Y se han identificado los siguientes requisitos clave:
+
+\begin{itemize}
+    \item \textbf{RF1. Registro y autenticación de usuarios}
+    \begin{itemize}
+        \item El sistema debe permitir el registro de nuevos usuarios (en este caso los nutricionista).
+        \item El sistema debe permitir iniciar sesión mediante autenticación basada en JWT.
+        \item Los usuarios deben poder actualizar su perfil y cambiar su avatar.
+    \end{itemize}
+
+    \item \textbf{RF2. Gestión de pacientes}
+    \begin{itemize}
+        \item El sistema debe permitir crear, editar y eliminar pacientes.
+        \item Al crear un paciente, se debe calcular automáticamente su Tasa Metabólica Basal (TMB), las calorías diarias recomendadas, los requerimientos de proteínas y carbohidratos, utilizando la fórmula de Harris-BEnedict.
+        \item Todos los pacientes creados deben estar vinculado al nutricionista correspondiente.
+    \end{itemize}  
+
+    \item \textbf{RF3. Gestión de alimentos}
+    \begin{itemize}
+        \item El sistema debe listar alimentos organizados por categorías principales (ej. verduras, legumbres, carne, etc.).
+        \item Se debe permitir buscar alimentos y filtrarlos por nombre o letra inicial.
+        \item El sistema debe mostrar el detalle nutricional de cada alimento, incluyendo valores por porción.
+    \end{itemize}
+
+    \item \textbf{RF4. Gestión de recetas}
+    \begin{itemize}
+        \item El sistema debe permitir buscar y visualizar recetas disponibles por categorías principales (ej. sopas, entrantes, carne, etc.).
+        \item Se debe mostrar el contenido nutricional de las recetas, tato por porción como en total.
+       \item Las recetas pueden ser seleccionadas para formar parte de ingestas. 
+    \end{itemize}
+
+    \item \textbf{RF5. Gestión de ingestas personalizadas}
+    \begin{itemize}
+        \item El sistema debe permitir al usuario seleccionar varios recetas para componer una ingesta.
+        \item Se debe ofrecer una interfaz visual de arrastrar y soltar para asignar recetas a los distintos subtipos: entrante, primer plato, segundo plato, postre y bebida.
+        \item La información se debe almacenar estructurada por subtipo para facilitar su análisis posterior.
+    \end{itemize}
+
+    \item \textbf{RF6. Gestión de dietas personalizadas}
+    \begin{itemize}
+        \item El sistema debe permitir al nutricionista crear dietas completas compuestas por diferentes tipo de ingesta para sus pacientes.
+        \item Las dietas deben organizarse por día de la semana y por tipo de plato, utilizando también una interfaz visual de arrastrar y soltar.
+        \item Las dietas deben ser almacenadas junto al paciente correspondiente.
+    \end{itemize}
+
+    \item \textbf{RF7. Búsqueda y sugerencias inteligentes}
+    \begin{itemize}
+        \item El sistema debe ofrecer un motor de búsqueda de alimentos y recetas, con sugerencias en tiempo real.
+        \item Las sugerencias deben poder seleccionarse directamente sin abandonar la pantalla de trabajo (por ejemplo, al crear una ingesta).
+  \end{itemize}
+\end{itemize}
+
+\section{Requisitos no funcionales}
+Los requisitos no funcionales definen las características y restricciones que debe cumplir el sistema, más allá de las funcionalidades específicas. Estos requisitos abarcan aspectos como la calidad, la escalabilidad, la seguridad, la facilidad de uso o el mantenimiento del sistema, y son fundamentales para garantizar que la aplicación sea robusta, eficiente y usable a largo plazo. A continuación, se detallan los principales requisitos no funcionales identificados para el desarrollo del sistema:
+\begin{itemize}
+    \item \textbf{Calidad}
+    \begin{itemize}
+        \item Utilizar fuentes fiables para la obtención de la información alimentario. 
+        \item Incorporar mecanismo de control y validación de los datos almacenados en el sistema.
+    \end{itemize}
+    
+    \item \textbf{Escalabilidad}
+    \begin{itemize}
+        \item Diseñar una arquitectura que permita  futuras ampliaciones o modificaciones sin necesidad de rehacer el sistema completo.
+        \item Mantener una separación entre el backend y el frontend, facilitando su evolución independiente. 
+    \end{itemize}
+    
+    \item \textbf{Facilidad de mantenimiento}
+    \begin{itemize}
+        \item Organizar el código siguiendo buenas prácticas de modularidad y documentación.
+    \end{itemize}
+    
+    \item \textbf{Facilidad de uso}
+    \begin{itemize}
+        \item Crear una interfaz amigable e intuitiva para el usuario final.
+        \item Garantizar que la aplicación sea accesible tanto desde dispositivos móviles como de escritorio, ya que este sistema debe ser multiplataforma.
+    \end{itemize}
+    
+    \item \textbf{Seguridad}
+    \begin{itemize}
+        \item Implementar autenticación mediante token JWT, protegiendo así la información sensible.
+        \item Establecer niveles de acceso diferenciados según el rol del usuario.
+    \end{itemize}
+    
+    \item \textbf{Modularidad}
+    \begin{itemize}
+        \item Dividir el proyecto en componentes independientes para facilitar su mantenimiento y escalabilidad.
+    \end{itemize}
+    
+    \item \textbf{Multilingüismo}
+    \begin{itemize}
+        \item Preparar el sistema para permitir su uso en diferentes idiomas, adaptándose a las preferencias del usuario.
+    \end{itemize}
+    
+    \item \textbf{Interoperabilidad}
+    \begin{itemize}
+        \item Diseñar bien la estructura, que permita la correcta comunicación entre el servidor y el cliente.
+    \end{itemize}
+    
+    \item \textbf{Consistencia de datos}
+    \begin{itemize}
+        \item Validar los datos tanto en el cliente como en el servidor.
+        \item Asegurar la integridad y coherencia de la información almacenada en el base de dato.
+    \end{itemize}
+    
+    \item \textbf{Gestión de usuario}
+    \begin{itemize}
+        \item Permitir el registro de nuevos usuarios, su autenticación segura y la asignación de permisos adecuados.
+    \end{itemize}
+    
+    \item \textbf{Personalización}
+    \begin{itemize}
+        \item Permitir que el usuario personalice aspectos de su experiencias, como el idioma, el tipo de contenido, aspecto de mostrar los contenidos (en modo oscuro, normal, o según el sistema del dispositivo en uso).
+    \end{itemize}
+\end{itemize}

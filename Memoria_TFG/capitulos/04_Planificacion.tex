@@ -1,0 +1,191 @@
+\chapter{Metodologías y Planificación}\label{capitulo4}
+En este capítulo se describe la metodología de trabajo adoptada para el desarrollo del proyecto, detallando las fases seguidas desde la concepción inicial hasta la implementación final del sistema. Asimismo, se presenta la planificación del proyecto, incluyendo el cronograma de actividades y la distribución de tareas, así como una estimación de los costes asociados al desarrollo, tanto en términos de recursos técnicos como humanos.
+
+El objetivo de esta sección es proporcionar una visión clara y estructurada del proceso de trabajo, justificando las decisiones adoptadas y permitiendo evaluar la viabilidad y eficiencia del proyecto desde una perspectiva organizativa y económica.
+
+\section{Metodología}
+Con el fin de alcanzar los requisitos establecidos, el proyecto se ha dividido en una serie de fases organizadas en bloques de trabajo. Cada bloque se centra en un objetivo concreto y las actividades necesarias para alcanzarlo.
+
+\subsection*{1. Diseño e implementación de la base de datos}
+\begin{itemize}
+    \item Análisis de las necesidades de información que debe gestionar el sistema.
+    \item Modelado de colección en MongoDB para representar alimentos, recetas y usuario.
+    \item Definición de las relaciones entre los distintos tipos de datos.
+\end{itemize}
+
+\subsection*{2. Desarrollo del backend}
+\begin{itemize}
+    \item Implementación de diferentes rutas para obtener los datos desde MongoDB y guardar en ello utilizando FastAPI como framework principal.
+    \item Implementación de la lógica de autenticación mediante JWT.
+    \item Desarrollo de validaciones para garantizar la integridad de los datos enviados y recibidos.
+\end{itemize}
+
+\subsection*{3. Desarrollo del frontend}
+\begin{itemize}
+    \item Creación de la interfaz de usuario en React, utilizando Material-UI como biblioteca de componentes.
+    \item Desarrollo de las pantallas principales: registro, inicio de sesión, navegación por categorías y visualización de alimentos y de recetas, gestión de dietas, gestión de pacientes y gestión del usuarios.
+    \item Integración del frontend con la API del backend, permitiendo el consumo dinámico de datos.
+\end{itemize}
+
+\subsection*{4. Pruebas y validación}
+\begin{itemize}
+    \item Realización de pruebas unitarias y de integración para asegurar el correcto funcionamiento de las diferentes partes del sistema.
+    \item Verificación del comportamiento de la aplicación en distintos dispositivos y navegadores.
+\end{itemize}
+
+\subsection*{5. Documentación y entrega}
+\begin{itemize}
+    \item Redacción de la memoria del proyecto, explicando el proceso seguido y las decisiones tomadas.
+    \item Preparación de la defensa del trabajo de fin de grado.
+\end{itemize}
+
+\section{Cronograma del Proyecto}
+Esta sección presenta el cronograma del proyecto, estructurado en función de las principales tareas realizadas entre marzo y junio de 2025. El gráfico refleja la evolución del trabajo a lo largo de estos meses, conforme a una planificación. Gracias a que durante este periodo la carga lectiva fue reducida, fue posible dedicar casi todo el tiempo al desarrollo del sistema, lo que permitió avanzar de manera constante y  llegar a completarlo en el plazo previsto para la convocatoria de junio.
+
+\begin{ganttchart}[
+    hgrid,
+    vgrid,
+    time slot format=isodate-yearmonth,
+    time slot unit=month,
+    bar height=0.5,
+    bar label font=\small\bfseries,
+    x unit=2cm,
+    bar label node/.append style={align=left},
+    group label node/.append style={align=left}
+]{2025-03}{2025-06}
+\gantttitlecalendar{year, month} \\
+
+% Fase de planificación
+\ganttbar[bar/.append style={fill=cyan!50}] {Reuniones de Seguimiento}{2025-03}{2025-06} \\
+\ganttbar[bar/.append style={fill=cyan!50}] {Investigación del Estado del Arte}{2025-03}{2025-03} \\
+\ganttbar[bar/.append style={fill=cyan!50}] {Definición de Requisitos}{2025-03}{2025-03} \\
+
+% Fase de desarrollo
+\ganttbar[bar/.append style={fill=green!40}] {Diseño del Sistema}{2025-03}{2025-04} \\
+\ganttbar[bar/.append style={fill=green!40}] {Desarrollo del Backend}{2025-03}{2025-06} \\
+\ganttbar[bar/.append style={fill=green!40}] {Desarrollo del Frontend}{2025-03}{2025-06} \\
+
+% Fase de cierre
+\ganttbar[bar/.append style={fill=orange!50}] {Pruebas y Validación}{2025-06}{2025-06} \\
+\ganttbar[bar/.append style={fill=orange!50}] {Redacción de la Memoria}{2025-03}{2025-06} \\
+\ganttbar[bar/.append style={fill=orange!50}] {Preparación de la Defensa}{2025-06}{2025-06}
+\end{ganttchart}
+
+
+% Leyenda
+\noindent
+\begin{tikzpicture}
+    \draw[fill=cyan!50] (0,0) rectangle (0.4,0.4);
+    \node[right=5pt of {(0.4,0.2)}] {Fase de planificación};
+
+    \draw[fill=green!40] (5,0) rectangle (5.4,0.4);
+    \node[right=5pt of {(5.4,0.2)}] {Fase de desarrollo};
+
+    \draw[fill=orange!50] (10,0) rectangle (10.4,0.4);
+    \node[right=5pt of {(10.4,0.2)}] {Fase de finalización};
+\end{tikzpicture}
+\\
+\\
+A continuación, se describe con detalle lo realizado en cada mes:
+\begin{itemize}
+    \item Marzo 2025: El trabajo comenzó con reuniones iniciales con las tutoras al principio de marzo para establecer los objetivos generales y la planificación preliminar. Tras las primeras reuniones se inició la fase de investigación del estado del arte, recopilando y analizando distintas soluciones tecnológicas existentes en el ámbito de la nutrición. Asimismo, se comenzó a redactar la memoria del proyecto, especialmente en los capítulos iniciales (introducción y motivación). También se diseñó la arquitectura general y se definieron los modelos de datos y la estructura de la API. Comenzó el desarrollo del sistema, con la implementación de los primeros módulos del backend (usuarios, autenticación, conexión con la base de datos) y la creación de la estructura inicial del frontend en React.
+
+    \item Abril 2025: Se consolidó el diseño técnico del sistema y se avanzó en la implementación de funcionalidades clave. En el backend se desarrollaron rutas para la gestión de alimentos y recetas, mientras que en el frontend se construyeron las interfaces principales y se integraron con la API. También se incorporaron mejoras visuales, mecanismos de validación y seguridad, y se ajustaron los modelos de datos en MongoDB. Asimismo, se validaron diversas fuentes de información nutricional y se procedió a su estandarización para garantizar consistencia estructural. Una vez finalizado se realizaron reuniones con profesionales del ámbito de la nutrición, profesora de la Facultad de Farmacia de UGR, para validación del trabajo realizado hasta el momento.
+
+    \item Mayo 2025: El sistema alcanzó un estado avanzado de desarrollo. Se integraron filtros nutricionales y funcionalidades de búsqueda inteligente, y se desarrollaron rutas y componentes con soporte para interacción drag-and-drop, facilitando la planificación de ingestas y dietas. Paralelamente, se continuó con la documentación del sistema y se realizaron pruebas internas para verificar la coherencia funcional y la estabilidad de la aplicación.
+    
+    \item Junio 2025: Finalmente, este mes se destinó a la validación final del sistema. Antes de dar por concluido el desarrollo, tuvo otra reunión con la profesional del ámbito de la nutrición, con el objetivo de validar el sistema implementado y proponer posibles líneas de mejora y trabajo futuro. Y se llevaron a cabo pruebas funcionales completas, se aplicaron correcciones menores y se finalizó la redacción de la memoria del TFG, incorporando capturas de pantalla, explicaciones técnicas y anexos. Además, se preparó la presentación para la defensa oral del proyecto, incluyendo una síntesis de las funcionalidades implementadas y los resultados alcanzados.
+\end{itemize}
+
+\section{Costes}
+La realización de este proyecto no ha implicado un coste económico directo significativo, ya que se ha desarrollado íntegramente utilizando herramientas y recursos de software libre. No obstante, es importante reflejar el coste estimado en términos de tiempo de trabajo invertido, así como considerar el valor aproximado que tendría un desarrollo similar en un entorno profesional. Esta sección detalla tanto los recursos utilizados como una estimación orientativa del coste en función del tiempo dedicado y el perfil técnico requerido.
+
+\subsection{Costes de personal}
+Este proyecto está realizado por un estudiante de Ingeniería Informática que se dedica unas 300 horas de trabajo y con ayuda de dos tutores que pueden haber dedicado 15 horas cada uno. 
+
+El sueldo base promedio de un programador junior en España es de 20.792 \euro al año (10.41 \euro/hora)\footnote{Según datos de Indeed. Fuente: \url{https://es.indeed.com/career/programador-junior/salaries}. Consulta: junio de 2025.} y los profesores universitarios en España tienen de promedio un salario base de 22.204\euro al año \footnote{Según datos de Indeed. Fuente: \url{https://es.indeed.com/career/profesor-universitario/salaries}. Consulta: junio de 2025.}(11,10\euro/hora).
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{3.5cm}|c|c|c|}
+\hline
+\textbf{Rol} & \textbf{Horas} & \textbf{Tarifa por hora} & \textbf{Coste total} \\
+\hline
+Programador junior & 300 & 10,41\,\euro{} & 3\,123,00\,\euro{} \\
+\hline
+Profesor universitario (tutor) & 30 & 11,10\,\euro{} & 333,00\,\euro{} \\
+\hline
+\textbf{Total} & \textbf{330} & & \textbf{3\,456,00\,\euro{}} \\
+\hline
+\end{tabular}
+\caption{Estimación de costes de personal}
+\label{tab:coste_personal_proyecto}
+\end{table}
+
+\subsection{Costes de material}
+El dispositivo utilizado para la realización del proyector es un ordenador portátil MacBook Pro de 13 pulgadas, 2020, con procesador de 2 GHz Intel Core i5 de cuatro núcleos, con gráficos de Intel Iris Plus Graphics de 1536 MB, una memoria RAM de 16 GB, 3733 MHz, LPDDR4X, y un almacenamiento de 512 GB. También se incluye un monitor HP de 27 pulgadas para mejorar la eficiencia de trabajo.
+
+Suponemos una vida útil de 5 años y un uso de 8 horas diarias, 5 días a la semana, durante 50 semanas al año.
+\[
+\text{Total de horas de uso} = 5 \times (50 \times 5 \times 8) = 10 000 \text{ horas}
+\]
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|c|c|c|}
+\hline
+\textbf{Equipo} & \textbf{Precio total} & \textbf{Coste por hora} & \textbf{Coste (300h)} \\
+\hline
+Portátil & 2\,500\,\euro{} & 0.25\,\euro{}/h & 75.00\,\euro{} \\ 
+\hline
+Monitor externo & 99\,\euro{} & 0.0099\,\euro{}/h & 2.97\,\euro{} \\
+\hline
+\textbf{Total} & & & \textbf{77.97\,\euro{}} \\
+\hline
+\end{tabular}
+\caption{Coste estimado por uso de equipo}
+\label{tab:coste_equipo}
+\end{table}
+
+\subsection{Costes indirectos}
+Aparte de los costes anteriores, también vamos a tener en cuenta otro tipo de gastos indirectos como el agua, la luz, conexión a Internet, alquiler, etc. Son gastos que se comparten con otros proyectos.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|c|p{7cm}|p{2cm}|p{2cm}|}
+\hline
+\textbf{Concepto} & \textbf{Descripción} & \textbf{Coste mensual} & \textbf{Coste total (3 meses)} \\
+\hline
+Luz & Consumo energético estimado en el domicilio donde se desarrolló el proyecto. Incluye el uso prolongado del equipo informático. & 100\,\euro{} & 300\,\euro{} \\
+\hline
+Agua & Gasto mensual medio de agua asociado al entorno doméstico. Considerado como coste indirecto del espacio de trabajo. & 80\,\euro{} & 240\,\euro{} \\
+\hline
+Internet & Conexión de fibra óptica de 1\,Gbps, necesaria para el trabajo remoto, acceso a documentación, actualizaciones y repositorios. & 59,99\,\euro{} & 179,97\,\euro{} \\
+\hline
+\textbf{Total} & & & \textbf{719,97\,\euro{}} \\
+\hline
+\end{tabular}
+\caption{Costes estimados de suministros domésticos}
+\label{tab:costes_descripcion_suministros}
+\end{table}
+
+\subsection{Costes Totales}
+A partir del análisis realizado, se puede estimar el coste total del proyecto considerando los distintos elementos involucrados: trabajo técnico, uso de equipamiento y gastos derivados del entorno de trabajo. A continuación, se presenta un resumen consolidado con los costes aproximados calculados en las secciones anteriores.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|c|}
+\hline
+\textbf{Concepto} & \textbf{Coste estimado} \\
+\hline
+Coste de desarrollo (programador junior) & 3\,123,00\,\euro{} \\
+Coste de tutoría (profesor universitario) & 333,00\,\euro{} \\
+Coste por uso de equipamiento (portátil y monitor) & 77,97\,\euro{} \\
+Costes de suministros domésticos (luz, agua, internet) & 719,97\,\euro{} \\
+\hline
+\textbf{Coste total estimado} & \textbf{4\,253,94\,\euro{}} \\
+\hline
+\end{tabular}
+\caption{Resumen de costes totales}
+\label{tab:costes_totales}
+\end{table}
+

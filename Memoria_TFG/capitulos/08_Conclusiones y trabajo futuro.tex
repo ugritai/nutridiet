@@ -1,0 +1,63 @@
+\chapter{Conclusiones y trabajos futuros}\label{capitulo8}
+\section{Conclusiones}
+
+El objetivo principal de este Trabajo de Fin de Grado ha sido desarrollar un sistema digital que facilite a los nutricionistas la planificación y gestión de dietas personalizadas para sus pacientes. El sistema se ha construido sobre una arquitectura moderna, compuesta por React en el frontend, FastAPI en el backend y MongoDB como base de datos, con el fin de ofrecer una herramienta práctica que sirva de apoyo en la toma de decisiones nutricionales.
+
+Los resultados obtenidos han sido muy satisfactorios y se han alcanzado de acuerdo con la planificación establecida. El sistema desarrollado es completamente funcional y cubre las necesidades esenciales del proceso: permite registrar y editar pacientes, gestionar recetas, planificar ingestas diarias y estructurar dietas completas. 
+
+Además, se han incorporado funcionalidades útiles como los filtros por categoría y por valores nutricionales, la búsqueda semántica de recetas, sugerencias de recetas y alimentos mediante modelos de lenguaje con embeddings, búsqueda semántica de recetas, la visualización detallada de información nutricional por raciones estándar, caseras o por unidad y la integración de bases de datos especializadas, tanto propias como externas, para respaldar los valores nutricionales y estandarizar los ingredientes utilizados. Este trabajo ha requerido una cuidadosa validación y limpieza de datos, así como la adaptación de estructuras compatibles con el modelo de planificación. También se han implementado mecanismos como la exportación de dietas en formato PDF, el diseño de interfaces interactivas con funcionalidades de arrastrar y soltar, y el control seguro de usuarios mediante autenticación con tokens.
+
+Respecto a los objetivos específicos propuestos, el grado de cumplimiento ha sido el siguiente:
+
+\begin{itemize}
+    \item Diseñar una arquitectura modular y escalable: 100\,\% completado. Se ha construido una estructura clara basada en servicios RESTful, documentada en el capítulo correspondiente al implementación. 
+    \item Crear una interfaz intuitiva para el usuario profesional: 90\,\% completado. Se han implementado formularios dinámicos, navegación fluida y un sistema de organización mediante arrastrar y soltar (``drag-and-drop''), tal como se refleja en el capítulo de resultados.
+    \item Gestionar información nutricional por ración: 80\,\% completado. El sistema permite visualizar datos por raciones y unidades domésticas, aunque aún no admite personalización libre de cantidades.
+    \item Planificar ingestas diarias: 100\,\% completado. El sistema permite definir tipos de comidas diarias y asociarlas a días concretos, tal y como se detalla en el apartado de planificación.
+    \item Crear y almacenar dietas completas: 100\,\% completado. Las dietas se estructuran en días con sus respectivas ingestas, totalmente vinculadas al paciente correspondiente.
+\end{itemize}
+
+Durante el desarrollo de este trabajo he podido aplicar muchos de los conocimientos adquiridos a lo largo del grado. En concreto, asignaturas como Bases de datos distribuidas y Administración de bases de datos han sido clave para diseñar la estructura lógica de almacenamiento y para trabajar con MongoDB, permitiendo optimizar las consultas y organizar de manera eficiente los datos.
+
+A través de lo aprendido en las asignaturas \textit{Diseño y desarrollo de sistemas de información} y\textit{ Programación y diseño orientado a objetos}, he afianzado mis habilidades de análisis de requisitos, diseño funcional, identificación de casos de uso y estructuración modular de un sistema. Estas bases han resultado fundamentales para dar coherencia a la solución propuesta.
+
+También resultó especialmente útil lo aprendido en la asignatura  \textit{Ingeniería de Sistemas de Información}, que me dio una visión clara del ciclo de vida de un sistema informático. Esto me permitió planificar de forma ordenada el proyecto, diferenciando las etapas de diseño, implementación y validación.
+
+En cuanto al desarrollo de la interfaz, los conocimientos de la asignatura \textit{Programación Web} (especialmente JavaScript, HTML y CSS) me proporcionaron la base necesaria para entender la lógica del cliente y construir interfaces usables. Sin embargo, la aplicación se ha desarrollado usando React, una biblioteca que no se abordó en clase y que he aprendido de forma autodidacta a lo largo del TFG. Gracias a ello, he podido implementar componentes reutilizables, gestionar el estado con fluidez y conectar eficientemente el frontend con el backend a través de APIs.
+
+Además de React, también fue necesario aprender por mi cuenta tecnologías y conceptos que no se habían tratado previamente en el grado. Entre ellos destacan el uso de FastAPI, la implementación de autenticación con JWT, la validación de datos con Pydantic, y la gestión de rutas protegidas. Asimismo, integré componentes interactivos como ``drag-and-drop'', mejorando la experiencia de usuario en tareas como la creación de dietas e ingestas.
+
+Desde el punto de vista ético y social, considero que este sistema puede tener un impacto positivo real, ya que promueve hábitos alimentarios saludables y facilita la labor del profesional sanitario en la planificación nutricional personalizada. Tal como se mencionaba en la introducción, actualmente existe una creciente preocupación por el aumento de enfermedades crónicas no transmisibles, como la obesidad, la diabetes tipo 2 y las enfermedades cardiovasculares, muchas de ellas asociadas a una mala alimentación. Ante esta situación, disponer de herramientas digitales que apoyen la toma de decisiones nutricionales de forma más eficiente y personalizada cobra una especial relevancia.
+
+Aunque el sistema ha sido desarrollado inicialmente en un entorno académico y funciona en local, su diseño responde a necesidades reales del ámbito profesional. No se trata solo de una práctica académica, sino de una herramienta con utilidad práctica concreta, tanto en entornos clínicos como educativos. De hecho, está prevista su implementación en el gabinete de nutrición de la universidad, donde servirá de apoyo en actividades docentes (en las prácticas de la asignatura de Principios de Dietética) y en sesiones de atención personalizada (en Aula de Nutrición). Esta aplicación directa refuerza el carácter profesional del trabajo y demuestra su valor más allá.
+
+La herramienta permite a los nutricionistas planificar dietas de forma estructurada y ofrecer recomendaciones personalizadas, ajustadas al perfil nutricional de cada paciente. Supone un avance respecto a los métodos tradicionales, aún muy presentes en la práctica diaria, basados en registros manuales o sistemas poco integrados. Además, se alinea con el Objetivo de Desarrollo Sostenible (ODS) 3: Salud y Bienestar, al facilitar la promoción de estilos de vida más saludables y reforzar el papel preventivo de la alimentación a través de soluciones digitales eficaces.
+
+Finalmente, me gustaría destacar que, a diferencia de otros proyectos realizados durante el grado que fueron en grupo, este TFG ha sido desarrollado de forma completamente individual. Esto ha supuesto una diferencia importante en cuanto a organización, toma de decisiones y resolución de problemas. He tenido que gestionar cada fase por mi cuenta, desde la planificación hasta la implementación técnica y la documentación. Ha sido una experiencia exigente pero muy enriquecedora, que me ha ayudado a mejorar mi autonomía, mi capacidad de adaptación y mi seguridad a la hora de abordar proyectos complejos. Me siento satisfecho con los conocimientos adquiridos y con el resultado alcanzado, y creo que este trabajo representa fielmente mi evolución como estudiante y como futuro profesional.
+
+\section{Trabajos futuros}
+Debido a la limitación de tiempo y al alcance definido para esta primera versión, hay múltiples funcionalidades que quedan como propuestas para futuras mejoras del sistema:
+
+\begin{itemize}
+    \item Preferencias del paciente y filtros personalizados: 
+    Actualmente no se ha incorporado un sistema de preferencias alimentarias específicas por paciente. En versiones futuras se propone implementar un formulario de preferencias que permita registrar alergias, alimentos restringidos, hábitos alimentarios, objetivos dietéticos y preferencias culturales. Estas preferencias podrán usarse como filtros automáticos al sugerir recetas o generar dietas.
+
+    \item Porciones variables y unidades domésticas: 
+    En la versión actual, los valores nutricionales están calculados únicamente por ración fija. En el futuro, se prevé permitir que el usuario modifique libremente la cantidad de alimento o elija entre porciones estándar (por ejemplo, “vaso pequeño”, “vaso grande” para líquidos como zumos), ajustando dinámicamente los valores nutricionales mostrados.
+
+    \item Creación de recetas personalizadas por parte del usuario:
+    En caso de que un nutricionista o paciente no encuentre recetas adecuadas en la base de datos, se ofrecerá la opción de crear recetas propias seleccionando ingredientes disponibles. Esto permitirá generar dietas incluso en ausencia de recetas predefinidas.
+
+    \item Mejoras en las sugerencias de alimentos: 
+    Las sugerencias de alimentos podrían refinarse mediante el análisis de su composición nutricional o su frecuencia de aparición en recetas. Un sistema de recomendación basado en datos permitiría proponer alimentos de manera más inteligente y adaptada a cada contexto.
+
+    \item Despliegue en la nube y apertura al público: 
+    Actualmente el sistema funciona en local como herramienta académica. En el futuro, se prevé su despliegue en la nube, con una arquitectura segura y escalable, lo que permitiría su uso por nutricionistas reales y pacientes de forma remota.
+
+    \item Interacción en línea mediante chatbot: 
+    Para la versión pública, se propone la integración de un chatbot que facilite la comunicación entre paciente y nutricionista. Este asistente virtual podría responder dudas, guiar en la selección de alimentos y dar recomendaciones nutricionales básicas en tiempo real.
+
+\end{itemize}
+
+En definitiva, aunque el sistema se encuentra funcional en su versión actual y cubre las funcionalidades esenciales, aún presenta margen de mejora para convertirlo como una herramienta profesional completa. El desarrollo realizado hasta el momento proporciona una base sólida sobre la que construir futuras versiones, con un alto potencial de aplicación tanto en contextos académicos como en entornos clínicos.
+
