@@ -90,7 +90,7 @@ Las contraseñas se almacenan cifradas utilizando el algoritmo ``bcrypt''\cite{b
 La solución final es el resultado de un proceso iterativo de evaluación y mejora. A lo largo del desarrollo se implementaron y testearon distintas aproximaciones, con sus respectivas limitaciones:
 
 \begin{enumerate}
-    \item Primera versión: token almacenado en \textit{localStorage}.
+    \item Primera versión: token almacenado en ``localStorage''.
     
     En las primeras pruebas, el token JWT generado en el backend se almacenaba en el navegador mediante ``localStorage''\footnote{Funcionalidad del navegador que permite almacenar información de forma persistente en el cliente. Su uso para almacenar tokens expone riesgos ante ataques XSS si no se implementan medidas de seguridad adicionales.}.  
     Esta solución era funcional, pero presentaba dos problemas graves: (1) las sesiones nunca expiraban automáticamente y (2) los tokens eran vulnerables a ataques XSS, ya que no estaban protegidos con banderas ``HttpOnly''.
@@ -138,7 +138,7 @@ Para solucionar este problema, se implementó una estrategia de homogenización 
 
 Se desarrolló un endpoint específico (\texttt{/por\_categoria/\{categoria\}}) que permite recuperar recetas asociadas a categorías genéricas más útiles para el usuario, como ``pasta'',``carne'', ``postre'', ``ensalada'', entre otras. Este sistema sigue una lógica en dos fases:
 \begin{enumerate}
-  \item Coincidencia directa: en primer lugar, se verifica si la receta contiene un campo \texttt{category} que coincide exactamente con la categoría solicitada. Si es así, la receta se incluye en los resultados.
+  \item Coincidencia directa: en primer lugar, se verifica si la receta contiene un campo ``category'' que coincide exactamente con la categoría solicitada. Si es así, la receta se incluye en los resultados.
 
   \item Búsqueda por palabras clave: si no se encuentran coincidencias exactas, se realiza una búsqueda semántica en el campo ``title'' de cada receta. Para cada categoría general se ha definido un conjunto de palabras clave representativas. Por ejemplo, la categoría ``carne'' incluye términos como ``pollo'', ``ternera'', ``cerdo'' o ``jamón'', mientras que ``pasta'' incluye ``espaguetis'', ``macarrones'', ``lasaña'', ``ravioli'', entre otros.
 
@@ -405,17 +405,17 @@ El frontend siguiendo una arquitectura modular basada en componentes reutilizabl
         \end{itemize}
     \item \textbf{index.js}: Punto de entrada de la aplicación, donde se inicializa el renderizado de React y se aplican las configuraciones globales (tema, rutas, etc.).
 
-    \item \textbf{api.js}: Archivo centralizado que contiene funciones para realizar peticiones al backend (\texttt{FastAPI}), incluyendo autenticación, recuperación y actualización de datos.
+    \item \textbf{api.js}: Archivo centralizado que contiene funciones para realizar peticiones al backend (FastAPI), incluyendo autenticación, recuperación y actualización de datos.
     \end{itemize}
   \end{itemize}
 
 \subsection*{Autenticación}
-Para garantizar la seguridad de autenticación, se implementó el componente ProtectedRoute como guardián de las rutas sensibles, realizando tres verificaciones en cascada: existencia del token en localStorage, validez de su firma digital y vigencia del timestamp de expiración. Solo tras superar estos tres filtros se permite el acceso a las vistas protegidas.
+Para garantizar la seguridad de autenticación, se implementó el componente ``ProtectedRoute'' como guardián de las rutas sensibles, realizando tres verificaciones en cascada: existencia del token en ``localStorage'', validez de su firma digital y vigencia del ``timestamp'' de expiración\footnote{Un \textit{timestamp} (marca temporal) es un valor numérico que representa una fecha y hora específicas, normalmente expresado como la cantidad de segundos transcurridos desde el 1 de enero de 1970 a las 00:00:00 UTC (conocido como epoch Unix). En este contexto autenticación o sesiones, se utiliza para indicar el momento exacto en que un token o credencial deja de ser válido.}. Solo tras superar estos tres filtros se permite el acceso a las vistas protegidas.
 
 También cuenta con la implementación del sistema ``Recuérdame''. Al detectar que el usuario selecciona esta opción durante el ``login'', el frontend almacena los tokens en ``localStorage'' para persistencia entre sesiones. En caso contrario, utiliza ``sessionStorage'' que se purga automáticamente al cerrar el navegador. Esta doble estrategia permite adaptarse a diferentes escenarios de uso: equipos compartidos en clínicas versus dispositivos personales de nutricionistas.
 
 \subsection*{Búsqueda y filtrado de información}
-El sistema incluye un componente genérico de búsqueda con sugerencias autocompletadas, utilizado en múltiples contextos como alimentos, recetas e ingestas.``FoodSearch.js'' y ``Search.js''.
+El sistema incluye un componente genérico de búsqueda con sugerencias autocompletadas, utilizado en múltiples contextos como alimentos, recetas e ingestas``FoodSearch.js'' y ``Search.js''.
 
 \begin{itemize}
     \item ``FoodSearch.js'':
@@ -437,7 +437,7 @@ El sistema incluye un componente genérico de búsqueda con sugerencias autocomp
 \end{itemize}
 
 \subsection*{Tarjetas de visualización}
-El sistema implementa múltiples componentes especializados que permiten una exploración completa de alimentos y recetas, así como la planificación dietética con interacción avanzada. La estructura se basa en el uso de hooks (``useEffect'', ``useState''), componentes condicionales, y renderizado responsivo según el tipo de contenido y los datos recibidos.
+El sistema implementa múltiples componentes especializados que permiten una exploración completa de alimentos y recetas, así como la planificación dietética con interacción avanzada. La estructura se basa en el uso de hooks (``useEffect'', ``useState''), componentes condicionales y renderizado responsivo según el tipo de contenido y los datos recibidos.
 
 El componente ``FoodDetailCard'' se encarga de representar la información nutricional de un alimento de forma completa. Este componente realiza dos llamadas asincrónicas: una para obtener los datos generales del alimento y otra para cargar las distintas porciones asociadas (porción estándar, unidad, medidas caseras). Una vez recibidos los datos, se genera una tabla dinámica que muestra el contenido nutricional por 100 gramos, por porción comestible y por cada tipo de porción, realizando los cálculos de forma automática en el frontend.
 
