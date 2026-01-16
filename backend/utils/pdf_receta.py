@@ -28,7 +28,6 @@ def pdf_to_excel(pdf_path, excel_path):
     print(f"Texto guardado en {excel_path}")
 
 # Uso
-pdf_path = '/Users/linqi/Downloads/transfer_92036_files_4b2c4082/Recetario_Grupo A.pdf'
-       # Cambia por tu ruta de PDF
-excel_path = "salidaA.xlsx"      # Nombre del Excel resultante
+pdf_path = r"C:\Users\loren\Downloads\transfer_92036_files_4b2c4082 (1)\transfer_92036_files_4b2c4082\Recetario_Grupo A.pdf"
+excel_path = "salidaA.xlsx"
 pdf_to_excel(pdf_path, excel_path)

@@ -20,7 +20,7 @@ import ListaDietas from './ingestas/ListaDieta';
 
 export default function DietaIngePacienteCard() {
     const navigate = useNavigate();
-    const { pacienteN } = useParams();
+    const { patientId } = useParams();
     const [tabSeleccionada, setTabSeleccionada] = useState(0);
     const [filtroTipo, setFiltroTipo] = useState('');
     const [paginaIngestas, setPaginaIngestas] = useState(1);
@@ -30,11 +30,12 @@ export default function DietaIngePacienteCard() {
     const [dietasExistentes, setDietasExistentes] = useState([]);
     const [ingestasExistentes, setIngestasExistentes] = useState([]);
     const [detallesDieta, setDetallesDieta] = useState({});
+    const [pacienteName, setPacienteName] = useState(null);
 
     useEffect(() => {
         const fetchDietas = async () => {
             try {
-                const res = await fetchWithAuth(`/planificacion_dietas/dietas/${encodeURIComponent(pacienteN)}`);
+                const res = await fetchWithAuth(`/planificacion_dietas/dietas/${patientId}`);
                 if (!res.ok) throw new Error('No se pudieron obtener las dietas');
                 const data = await res.json();
                 console.log('dieta', data)
@@ -44,7 +45,7 @@ export default function DietaIngePacienteCard() {
             }
         };
         fetchDietas();
-    }, [pacienteN]);
+    }, [patientId]);
 
     const handleExpandirDieta = async (dietaId) => {
         if (detallesDieta[dietaId]) return; 
@@ -58,11 +59,10 @@ export default function DietaIngePacienteCard() {
         }
     };
 
-
     useEffect(() => {
         const fetchIngestas = async () => {
             try {
-                const res = await fetch(`http://localhost:8000/planificacion_ingestas/ingestas/${pacienteN}`);
+                const res = await fetchWithAuth(`/planificacion_ingestas/ingestas/${patientId}`);
                 if (!res.ok) throw new Error('No se pudieron obtener las ingestas');
                 const data = await res.json();
                 setIngestasExistentes(data);
@@ -71,7 +71,21 @@ export default function DietaIngePacienteCard() {
             }
         };
         fetchIngestas();
-    }, [pacienteN]);
+    }, [patientId]);
+
+    useEffect(() => {
+        const fetchPaciente = async () => {
+            try {
+                const res = await fetchWithAuth(`/pacientes/paciente_info/${patientId}`);
+                if (!res.ok) throw new Error('Error');
+                const data = await res.json();
+                setPacienteName(data.name);
+            } catch (err) {
+                console.error(err);
+            }
+        };
+        fetchPaciente();
+    }, [patientId]);
 
     useEffect(() => {
         setPaginaIngestas(1);
@@ -99,7 +113,7 @@ export default function DietaIngePacienteCard() {
             );
             if (!res.ok) throw new Error('No se pudo cargar la dieta');
             const data = await res.json();
-            navigate(`/planificacion_dieta/${encodeURIComponent(pacienteN)}/editar_dieta/${encodeURIComponent(dieta.name)}`, {
+            navigate(`/planificacion_dieta/${patientId}/editar_dieta/${encodeURIComponent(dieta.name)}`, {
                 state: {
                     modo: 'editar',
                     dietaId: dieta._id,
@@ -119,7 +133,7 @@ export default function DietaIngePacienteCard() {
     
         try {
             const res = await fetchWithAuth(
-                `/planificacion_dietas/eliminar_dieta/${encodeURIComponent(pacienteN)}/${encodeURIComponent(dieta._id)}`,
+                `/planificacion_dietas/eliminar_dieta/${patientId}/${encodeURIComponent(dieta._id)}`,
                 {
                     method: 'DELETE',
                 }
@@ -139,11 +153,11 @@ export default function DietaIngePacienteCard() {
     const handleEditarIngesta = async (idIngesta) => {
         try {
             const res = await fetchWithAuth(
-                `/planificacion_ingestas/ver_ingesta/${encodeURIComponent(pacienteN)}/${encodeURIComponent(idIngesta)}`
+                `/planificacion_ingestas/ver_ingesta/${encodeURIComponent(patientId)}/${encodeURIComponent(idIngesta)}`
             );
             if (!res.ok) throw new Error('No se pudo cargar la ingesta');
             const data = await res.json();
-            navigate(`/planificacion_dieta/${encodeURIComponent(pacienteN)}/editar_ingesta`, {
+            navigate(`/planificacion_dieta/${patientId}/editar_ingesta`, {
                 state: {
                     modo: 'editar',
                     ingesta: {
@@ -168,7 +182,7 @@ export default function DietaIngePacienteCard() {
 
         try {
             const res = await fetchWithAuth(
-                `/planificacion_ingestas/eliminar_ingesta/${encodeURIComponent(pacienteN)}/${encodeURIComponent(idIngesta)}`,
+                `/planificacion_ingestas/eliminar_ingesta/${patientId}/${encodeURIComponent(idIngesta)}`,
                 {
                     method: 'DELETE',
                 }
@@ -177,7 +191,7 @@ export default function DietaIngePacienteCard() {
             if (!res.ok) throw new Error('No se pudo eliminar la ingesta');
 
             alert('Ingesta eliminada correctamente');
-            navigate(`/planificacion_dieta/${encodeURIComponent(pacienteN)}`);
+            navigate(`/planificacion_dieta/${patientId}`);
             setIngestasExistentes(prev => prev.filter(i => i._id !== idIngesta));
         } catch (error) {
             console.error('Error al eliminar:', error);
@@ -187,11 +201,11 @@ export default function DietaIngePacienteCard() {
 
     return (
         <Dashboard>
-            <Typography variant="h4">{pacienteN}</Typography>
+            <Typography variant="h4">{pacienteName || patientId}</Typography>
 
             <Box sx={{ width: '100%', display: 'flex', gap: 2, flexWrap: 'wrap', mb: 2 }}>
-                <CrearDietaCard onClick={() => navigate(`/planificacion_dieta/${pacienteN}/crear_dieta`)} />
-                <CrearIngestaCard onClick={() => navigate(`/planificacion_dieta/${pacienteN}/crear_ingesta`)} />
+                <CrearDietaCard onClick={() => navigate(`/planificacion_dieta/${patientId}/crear_dieta`)} />
+                <CrearIngestaCard onClick={() => navigate(`/planificacion_dieta/${patientId}/crear_ingesta`)} />
             </Box>
 
             <Tabs value={tabSeleccionada} onChange={(e, newValue) => setTabSeleccionada(newValue)} sx={{ mb: 3 }}>

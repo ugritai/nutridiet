@@ -16,12 +16,12 @@ import os
 
 # Carga de la base de datos 
 
-MONGO_URI = 'mongodb://localhost:27018/'
+MONGO_URI = 'mongodb://app_user:secure_pass123@127.0.0.1:27018/fooddb?authSource=admin'
 
 client = MongoClient(MONGO_URI)
 
-db = client['nutridiet']
-collection_ingredientes = db['bedca']
+db = client['fooddb'] #client['nutridiet']
+collection_ingredientes = db['bedca_unified'] #db['bedca']
 collection_recetas = db['GNHD_24_25']
 
 # Carga del modelo de lenguaje

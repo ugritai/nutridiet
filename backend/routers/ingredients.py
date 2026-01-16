@@ -51,6 +51,7 @@ async def get_ingredient_categories():
     sorted_categories = sorted(categories)
     return {"categories": sorted_categories}
 
+
 # Para obetener nombre de alimentos en español de una categorías en concreta del BedCA 
 @router.get("/por_categoria/{categoria}")
 async def get_alimentos_por_categoria(
@@ -79,8 +80,14 @@ async def get_alimentos_por_categoria(
         cat = item.get("category_esp", "")
         if unidecode(cat.lower().strip()) == categoria:
             nombre_esp = item.get("name_esp")
+            #image_doc = images_collection.find_one({"name_esp": nombre_esp})
+            #image_url = image_doc.get("image_url") if image_doc else None
             image_doc = images_collection.find_one({"name_esp": nombre_esp})
-            image_url = image_doc.get("image_url") if image_doc else None
+            if image_doc:
+                image_url = image_doc.get("image_url")
+            else:
+                # DESCARGA AUTOMÁTICA
+                image_url = await get_pixabay_image_api(nombre_esp)
 
             resultado.append({
                 "nombre": nombre_esp,
@@ -112,49 +119,51 @@ async def get_alimentos_por_categoria_imagen(categoria: str):
     resultado.sort(key=lambda x: x["name_esp"])
     return {"alimentos": resultado}
 
-@router.get("/sugerir_alimentos/{nombre}")
-async def sugerir_alimentos(nombre: str, limit: int = 10):
+async def _sugerir_alimentos_logic(nombre: str, limit: int = 10):
     nombre_normalizado = unidecode(nombre.strip().lower())
-    
+
     embedding_input = model.encode(nombre_normalizado)
     embedding_input = torch.tensor(embedding_input, dtype=torch.float32)
 
-    # Obtener todos los documentos de la base de datos
-    docs = list(embeddings_collection.find({}, {"_id": 0, "name_esp": 1, "category_esp": 1, "embedding": 1}))
-    
+    docs = list(
+        embeddings_collection.find(
+            {},
+            {"_id": 0, "name_esp": 1, "category_esp": 1, "embedding": 1}
+        )
+    )
+
     similarities = []
 
     for doc in docs:
         doc_name_normalized = unidecode(doc["name_esp"].strip().lower())
         if doc_name_normalized == nombre_normalizado:
             continue
-        
-        categoria_doc = doc["category_esp"]
-        emb = np.array(doc["embedding"])
-        emb = torch.tensor(emb, dtype=torch.float32)
+
+        emb = torch.tensor(np.array(doc["embedding"]), dtype=torch.float32)
         sim = util.cos_sim(embedding_input, emb)[0][0].item()
 
-        similarities.append((sim, doc, categoria_doc))
+        similarities.append((sim, doc, doc["category_esp"]))
 
     if not similarities:
-        raise HTTPException(status_code=404, detail="No se encontraron sugerencias")
-    
-    # Ordenar primero por similitud (de mayor a menor)
+        return []
+
     top = sorted(similarities, key=lambda x: x[0], reverse=True)[:limit]
 
-    # Obtener la categoría del término de búsqueda (nombre ingresado)
-    categoria_objetivo = None
-    for doc in docs:
-        doc_name_normalized = unidecode(doc["name_esp"].strip().lower())
-        if doc_name_normalized == nombre_normalizado:
-            categoria_objetivo = doc["category_esp"]
-            break
-    
-    # Ahora ordenamos para mostrar primero los elementos de la misma categoría
-    top_ordenado = sorted(top, key=lambda x: x[2] != categoria_objetivo, reverse=False)
+    categoria_objetivo = next(
+        (
+            doc["category_esp"]
+            for doc in docs
+            if unidecode(doc["name_esp"].strip().lower()) == nombre_normalizado
+        ),
+        None
+    )
 
-    # Generar los resultados finales
-    resultados = [
+    top_ordenado = sorted(
+        top,
+        key=lambda x: x[2] != categoria_objetivo
+    )
+
+    return [
         {
             "nombre": doc["name_esp"],
             "category_esp": categoria_doc,
@@ -162,15 +171,32 @@ async def sugerir_alimentos(nombre: str, limit: int = 10):
         }
         for sim, doc, categoria_doc in top_ordenado
     ]
-    
-    # Si no hay sugerencias después de filtrar el término exacto
+
+@router.get("/sugerir_alimentos/{nombre}")
+async def sugerir_alimentos(nombre: str, limit: int = 10):
+    resultados = await _sugerir_alimentos_logic(nombre, limit)
+
     if not resultados:
-        raise HTTPException(status_code=404, detail="No se encontraron sugerencias distintas al término de búsqueda")
+        raise HTTPException(
+            status_code=404,
+            detail="No se encontraron sugerencias"
+        )
 
     return resultados
 
+
+'''
+
 @router.get("/detalle_alimento/{nombre}")
 async def get_alimento_detalle(nombre: str):
+
+    doc = await alimentos_collection.find_one(
+    { "name_esp": { "$regex": "^Alioli$", "$options": "i" } },
+    { "_id": 0 }
+    )
+
+    print("DOC:", doc)    
+
     nombre_normalizado = unidecode(nombre.strip().lower())
     
     cursor = alimentos_collection.find({}, {"_id": 0})
@@ -212,6 +238,50 @@ async def get_alimento_detalle(nombre: str):
         "sugeridos": sugeridos,
         "image_url": image_url,
     }
+'''
+
+# routers/ingredients.py (continuación)
+
+@router.get("/detalle_alimento/{nombre:path}")
+async def get_alimento_detalle(nombre: str):
+    nombre_limpio = nombre.strip()
+    nombre_normalizado = unidecode(nombre_limpio.lower())
+
+    pattern = re.compile(f"^{re.escape(nombre_limpio)}$", re.IGNORECASE)
+
+    doc = await alimentos_collection.find_one(
+        {"name_esp": pattern},
+        {"_id": 0}
+    )
+
+    if not doc:
+        sugeridos = await _sugerir_alimentos_logic(nombre)
+        if sugeridos:
+            return {
+                "message": "No se encontró el alimento exacto.",
+                "sugeridos": [a["nombre"] for a in sugeridos]
+            }
+        raise HTTPException(status_code=404, detail="Alimento no encontrado")
+
+    # 🔧 FIX REAL
+    doc = convert_objectid(doc)
+
+    image_doc = images_collection.find_one(
+        {"name_esp": pattern},
+        {"_id": 0, "image_url": 1}
+    )
+    image_url = image_doc.get("image_url") if image_doc else None
+
+    sugeridos = await _sugerir_alimentos_logic(nombre)
+
+    return {
+        "alimento": doc,
+        "sugeridos": sugeridos,
+        "image_url": image_url
+    }
+
+
+
 
 # Para obetener todas las categorías de alimentos del BedCA
 @router.get("/all_categories")

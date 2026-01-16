@@ -3,8 +3,8 @@ from pymongo import MongoClient
 from bson import ObjectId
 
 # 1. Conecta a MongoDB (ajusta URI según tu configuración)
-client_host = MongoClient('mongodb://localhost:27018')
-db_host = client_host['nutridiet']
+client_host = MongoClient('mongodb://app_user:secure_pass123@127.0.0.1:27018/fooddb?authSource=admin')
+db_host = client_host['fooddb'] #nutridiet
 col = db_host["GNHD_24_25"]
 
 # 2. Lee el archivo JSON

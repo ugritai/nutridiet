@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+                                                                                import React, { useEffect, useState } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import {
     Card, Typography, Button, Box, IconButton, FormControl, InputLabel, Select, MenuItem
@@ -18,7 +18,7 @@ import PorcentajeCircular from './PorcentajeCircular';
 import CrearIngestaForm from './CrearIngestaForm';
 import { Dialog, DialogTitle, DialogContent } from '@mui/material';
 import IngestaNameForm from './IngestaNameForm';
-
+import { fetchWithAuth } from '../api';
 
 dayjs.extend(isSameOrBefore);
 
@@ -40,17 +40,17 @@ const colorPorTipoIngesta = (tipo) => {
     }
 };
 
-
 export default function CrearDietaForm() {
     const [openDialog, setOpenDialog] = useState(false);
     const [pasoIngesta, setPasoIngesta] = useState(1);
     const [datosIngestaNueva, setDatosIngestaNueva] = useState(null);
 
-    const { pacienteN, nombreDieta } = useParams();
+    const { patientId, nombreDieta } = useParams();
     const location = useLocation();
     const idDieta = location.state?.dietaId;
     const navigate = useNavigate();
     const [nutricion, setNutricion] = useState(null);
+    const [pacienteName, setPacienteName] = useState(null);
     const [fechaInicio, setFechaInicio] = useState(null);
     const [fechaFin, setFechaFin] = useState(null);
 
@@ -82,20 +82,20 @@ export default function CrearDietaForm() {
         setDiasPlanificados(nuevoPlan);
     }, [idDieta, location.state]);
 
-
     useEffect(() => {
         const fetchInfoPaciente = async () => {
             try {
-                const res = await fetch(`http://localhost:8000/pacientes/paciente_info/${pacienteN}`);
+                const res = await fetchWithAuth(`/pacientes/paciente_info/${patientId}`);
                 if (!res.ok) throw new Error('No se pudo obtener la información del paciente');
                 const data = await res.json();
                 setNutricion(data);
+                setPacienteName(data.name);
             } catch (err) {
                 console.error(err);
             }
         };
         fetchInfoPaciente();
-    }, [pacienteN]);
+    }, [patientId]);
 
     const manejarSiguiente = () => {
         if (!fechaInicio || !fechaFin) {
@@ -117,7 +117,7 @@ export default function CrearDietaForm() {
     useEffect(() => {
         const fetchIngestas = async () => {
             try {
-                const res = await fetch(`http://localhost:8000/planificacion_ingestas/ingestas/${pacienteN}`);
+                const res = await fetchWithAuth(`/planificacion_ingestas/ingestas/${patientId}`);
                 if (!res.ok) throw new Error('No se pudieron cargar las ingestas');
                 const data = await res.json();
                 setIngestasDisponibles(data);
@@ -127,11 +127,11 @@ export default function CrearDietaForm() {
         };
 
         fetchIngestas();
-    }, [pacienteN]);
+    }, [patientId]);
 
     const handleAgregarIngesta = async (nombreIngesta) => {
         try {
-            const res = await fetch(`http://localhost:8000/planificacion_ingestas/ver_ingesta_detalle/${encodeURIComponent(nombreIngesta)}`);
+            const res = await fetchWithAuth(`/planificacion_ingestas/ver_ingesta_detalle/${encodeURIComponent(nombreIngesta)}`);
             if (!res.ok) throw new Error('No se pudo cargar la ingesta');
             const data = await res.json();
 
@@ -215,8 +215,8 @@ export default function CrearDietaForm() {
     const guardarDieta = async () => {
         try {
             const payload = {
-                patient_name: pacienteN,
-                name: `Dieta ${pacienteN} - ${fechaInicio.format('DD/MM/YYYY')} al ${fechaFin.format('DD/MM/YYYY')}`,
+                patient_id: patientId,
+                name: `Dieta ${pacienteName} - ${fechaInicio.format('DD/MM/YYYY')} al ${fechaFin.format('DD/MM/YYYY')}`,
                 start_date: fechaInicio.format('YYYY-MM-DD'),
                 end_date: fechaFin.format('YYYY-MM-DD'),
                 days: Object.entries(diasPlanificados)
@@ -234,27 +234,22 @@ export default function CrearDietaForm() {
 
             console.log("dato enviado para guardar: ", payload);
 
-            const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
-
             const url = idDieta
-                ? `http://localhost:8000/planificacion_dietas/editar_dieta/${pacienteN}/${idDieta}`
-                : `http://localhost:8000/planificacion_dietas/crear_dieta/${pacienteN}`;
+                ? `/planificacion_dietas/editar_dieta/${patientId}/${idDieta}`
+                : `/planificacion_dietas/crear_dieta/${patientId}`;
 
             const method = idDieta ? 'PUT' : 'POST';
 
-            const res = await fetch(url, {
+            const res = await fetchWithAuth(url, {
                 method,
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`,
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
             });
 
             if (!res.ok) throw new Error('Error al guardar la dieta');
 
             alert(idDieta ? 'Dieta actualizada con éxito' : 'Dieta guardada con éxito');
-            navigate(`/planificacion_dieta/${encodeURIComponent(pacienteN)}`);
+            navigate(`/planificacion_dieta/${patientId}`);
         } catch (err) {
             console.error(err);
             alert('Hubo un error al guardar la dieta');
@@ -267,7 +262,7 @@ export default function CrearDietaForm() {
         <Dashboard>
             <Box mb={2}>
                 <Typography variant="h4">
-                    {idDieta ? 'Editar dieta' : 'Crear dieta'} para paciente: {pacienteN}
+                    {idDieta ? 'Editar dieta' : 'Crear dieta'} para paciente: {pacienteName}
                 </Typography>
 
                 {idDieta && (
@@ -306,7 +301,7 @@ export default function CrearDietaForm() {
                         <Box sx={{ mt: 3, display: 'flex', gap: 5 }}>
                             <Button
                                 variant="outlined"
-                                onClick={() => navigate(`/planificacion_dieta/${pacienteN}`)}
+                                onClick={() => navigate(`/planificacion_dieta/${patientId}`)}
                             >
                                 Atrás
                             </Button>
@@ -328,9 +323,9 @@ export default function CrearDietaForm() {
                             </Box>
                             <Box sx={{ width: '65%', display: 'flex', flexDirection: 'column', height: '100%' }}>
                                 <Typography variant="h6" gutterBottom>Requerimientos diarios:</Typography>
-                                <Typography>Calorías: {nutricion.kcal} kcal</Typography>
-                                <Typography>Proteínas: {Number(nutricion.pro).toFixed(2)} g</Typography>
-                                <Typography>Carbohidratos: {nutricion.car} g</Typography>
+                                <Typography>Calorías: {nutricion?.kcal} kcal</Typography>
+                                <Typography>Proteínas: {Number(nutricion?.pro).toFixed(2)} g</Typography>
+                                <Typography>Carbohidratos: {nutricion?.car} g</Typography>
 
                             </Box>
 
@@ -404,7 +399,7 @@ export default function CrearDietaForm() {
                                         <DialogContent dividers>
                                             {pasoIngesta === 1 && (
                                                 <IngestaNameForm
-                                                    paciente={pacienteN}
+                                                    paciente={patientId}
                                                     onClose={(datos) => {
                                                         if (!datos) {
                                                             setOpenDialog(false);
@@ -424,7 +419,7 @@ export default function CrearDietaForm() {
                                                         setDatosIngestaNueva(null);
                                                         // Recargar ingestas disponibles
                                                         try {
-                                                            const res = await fetch(`http://localhost:8000/planificacion_ingestas/ingestas/${pacienteN}`);
+                                                            const res = await fetchWithAuth(`/planificacion_ingestas/ingestas/${patientId}`);
                                                             if (!res.ok) throw new Error('No se pudieron cargar las ingestas');
                                                             const data = await res.json();
                                                             setIngestasDisponibles(data);
@@ -547,9 +542,9 @@ export default function CrearDietaForm() {
                                                                 Requerimientos diarios completados:
                                                             </Typography>
                                                             <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-                                                                <PorcentajeCircular label="Kcal" valor={total.kcal} maximo={nutricion.kcal} />
-                                                                <PorcentajeCircular label="Proteínas" valor={total.pro} maximo={nutricion.pro} />
-                                                                <PorcentajeCircular label="Carbohidratos" valor={total.car} maximo={nutricion.car} />
+                                                                <PorcentajeCircular label="Kcal" valor={total.kcal} maximo={nutricion?.kcal} />
+                                                                <PorcentajeCircular label="Proteínas" valor={total.pro} maximo={nutricion?.pro} />
+                                                                <PorcentajeCircular label="Carbohidratos" valor={total.car} maximo={nutricion?.car} />
                                                             </Box>
                                                         </Box>
                                                     );
@@ -635,9 +630,6 @@ export default function CrearDietaForm() {
                                                                         );
                                                                     }}
                                                                 </Draggable>
-
-
-
                                                             ))}
 
                                                             {provided.placeholder}
@@ -647,7 +639,6 @@ export default function CrearDietaForm() {
                                             </Box>
                                         ))}
                                     </Box>
-                                    {/* Aquí va tu código de planificación por día */}
                                 </Box>
                             </Box>
                         </DragDropContext>

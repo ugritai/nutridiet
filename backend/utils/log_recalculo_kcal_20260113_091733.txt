@@ -1,0 +1,907 @@
+=== INICIO RECALCULO KCAL ===
+
+--- RECETA: Tacos Dorados de Papa ---
+NO RESUELTO: ½ taza de cilantro finamente picado
+NO RESUELTO: 1 taza de tomate picadito y sin semillas
+NO RESUELTO: 1 cucharada de jugo de limón
+NO RESUELTO: 12 to rtillas de maíz
+NO RESUELTO: ⅔ de taza de aceite vegetal para freír los taquitos
+NO RESUELTO: 2 chiles serranos en cubitos
+IGNORADO: Sal al gusto
+NO RESUELTO: 2 tazas de repollo en tiras finas
+NO RESUELTO: ½ taza de crema mexicana
+IGNORADO: Salsa roja
+NO RESUELTO: ½ taza de cebolla blanca en cubitos
+NO RESUELTO: 3 papas rojas de tamaño mediano ~510 gr. *
+IGNORADO: 24 palillos de madera para sostener los taquitos enrollados
+IGNORADO: 1 aguacate opcional
+IGNORADO: Sal y pimienta al gusto
+NO RESUELTO: ½ taza de Queso Cotija o Queso Fresco desmenuzado**
+TOTAL KCAL: 0.00
+INGREDIENTES CON PROBLEMAS:
+  - ½ taza de cilantro finamente picado
+  - 1 taza de tomate picadito y sin semillas
+  - 1 cucharada de jugo de limón
+  - 12 to rtillas de maíz
+  - ⅔ de taza de aceite vegetal para freír los taquitos
+  - 2 chiles serranos en cubitos
+  - 2 tazas de repollo en tiras finas
+  - ½ taza de crema mexicana
+  - ½ taza de cebolla blanca en cubitos
+  - 3 papas rojas de tamaño mediano ~510 gr. *
+  - ½ taza de Queso Cotija o Queso Fresco desmenuzado**
+
+--- RECETA: Ensalada de Chayotes ---
+IGNORADO: ½ cucharadita sal
+IGNORADO: ¼ cucharadita de pimienta recién molida
+NO RESUELTO: ¼ de cebolla blanca o roja cortada en rodajas finas o picada
+NO RESUELTO: 1 cucharada de vinagre suave
+IGNORADO: 1 cucharada de agua
+NO RESUELTO: ½ taza de Queso Fresco mexicano
+NO RESUELTO: cortado en cubitos
+NO RESUELTO: 2 chayotes grandes
+NO RESUELTO: 1 cucharadita de orégano Mexicano
+NO RESUELTO: 2 cucharadas de aceite de oliva
+TOTAL KCAL: 0.00
+INGREDIENTES CON PROBLEMAS:
+  - ¼ de cebolla blanca o roja cortada en rodajas finas o picada
+  - 1 cucharada de vinagre suave
+  - ½ taza de Queso Fresco mexicano
+  - cortado en cubitos
+  - 2 chayotes grandes
+  - 1 cucharadita de orégano Mexicano
+  - 2 cucharadas de aceite de oliva
+
+--- RECETA: Huevos a la Mexicana ---
+NO RESUELTO: ½ Chile Serrano cortado en pequeños trocitos*
+NO RESUELTO: 2 huevos quebrados en un tazón
+IGNORADO: Sal al gusto
+NO RESUELTO: 2 o 3 tortillas Chips
+NO RESUELTO: 2 cucharadas de cebolla blanca picada
+NO RESUELTO: ½ cucharada de aceite vegetal
+NO RESUELTO: 1 cucharada de queso fresco desmenuzado
+NO RESUELTO: 3 tortillas de maíz calientes
+NO RESUELTO: 1 jitomate cortado en cubitos (aproximadamente ½ taza)
+NO RESUELTO: ½ taza de frijoles refritos negros o pintos
+TOTAL KCAL: 0.00
+INGREDIENTES CON PROBLEMAS:
+  - ½ Chile Serrano cortado en pequeños trocitos*
+  - 2 huevos quebrados en un tazón
+  - 2 o 3 tortillas Chips
+  - 2 cucharadas de cebolla blanca picada
+  - ½ cucharada de aceite vegetal
+  - 1 cucharada de queso fresco desmenuzado
+  - 3 tortillas de maíz calientes
+  - 1 jitomate cortado en cubitos (aproximadamente ½ taza)
+  - ½ taza de frijoles refritos negros o pintos
+
+--- RECETA: Rajas de Chile Poblano con Crema ---
+IGNORADO: ½ cucharadita Sal
+NO RESUELTO: 2 cucharadas de aceite vegetal
+NO RESUELTO: 1 cebolla de tamaño mediano cortada en rodajas
+NO RESUELTO: 1 diente de ajo finamente picado opcional
+NO RESUELTO: 4 Chiles Poblanos asados y pelados (ver instrucciones a continuación).
+NO RESUELTO: ¾ taza de crema mexicana o crema batida
+TOTAL KCAL: 0.00
+INGREDIENTES CON PROBLEMAS:
+  - 2 cucharadas de aceite vegetal
+  - 1 cebolla de tamaño mediano cortada en rodajas
+  - 1 diente de ajo finamente picado opcional
+  - 4 Chiles Poblanos asados y pelados (ver instrucciones a continuación).
+  - ¾ taza de crema mexicana o crema batida
+
+--- RECETA: Papas a la Mexicana ---
+NO RESUELTO: ⅓ taza de cebolla blanca en cubitos
+IGNORADO: Sal al gusto.
+NO RESUELTO: 6 Tortillas de Maíz
+NO RESUELTO: 2 cucharadas de aceite vegetal
+NO RESUELTO: 1 Chile Serrano o Chile Jalapeño picado finamente
+NO RESUELTO: 2 to mates Roma cortados en cubitos alrededor de 1 ¼ taza
+NO RESUELTO: 2 tazas de papas peladas y cortadas en cubitos
+TOTAL KCAL: 0.00
+INGREDIENTES CON PROBLEMAS:
+  - ⅓ taza de cebolla blanca en cubitos
+  - 6 Tortillas de Maíz
+  - 2 cucharadas de aceite vegetal
+  - 1 Chile Serrano o Chile Jalapeño picado finamente
+  - 2 to mates Roma cortados en cubitos alrededor de 1 ¼ taza
+  - 2 tazas de papas peladas y cortadas en cubitos
+
+--- RECETA: Nopalitos navegantes ---
+NO RESUELTO: 4 huevos
+IGNORADO: Sal y pimienta al gusto.
+NO RESUELTO: 3 Nopales grandes cocidos y cortados en cubitos (alrededor de 2-1 / 2 tazas)
+NO RESUELTO: 2 cucharadas de aceite vegetal
+NO RESUELTO: 1 rama de cilantro
+NO RESUELTO: 1 Diente de ajo grande
+NO RESUELTO: 4  tomates grandes ciruela
+NO RESUELTO: 1 Chile Serrano picado
+NO RESUELTO: 3 tazas de caldo de pollo *
+NO RESUELTO: ⅓ de una cebolla blanca de tamaño mediano
+TOTAL KCAL: 0.00
+INGREDIENTES CON PROBLEMAS:
+  - 4 huevos
+  - 3 Nopales grandes cocidos y cortados en cubitos (alrededor de 2-1 / 2 tazas)
+  - 2 cucharadas de aceite vegetal
+  - 1 rama de cilantro
+  - 1 Diente de ajo grande
+  - 4  tomates grandes ciruela
+  - 1 Chile Serrano picado
+  - 3 tazas de caldo de pollo *
+  - ⅓ de una cebolla blanca de tamaño mediano
+
+--- RECETA: Guacamole Casero ---
+NO RESUELTO: 1 chile serrano
+NO RESUELTO: 4-5 Ramitas de Cilantro
+IGNORADO: Sal al gusto
+NO RESUELTO: 1 jitomate ciruela
+IGNORADO: 1 aguacate grande maduro
+NO RESUELTO: pero firme
+NO RESUELTO: Chips de tortilla para servir
+NO RESUELTO: ½ cucharada de zumo de lima opcional
+NO RESUELTO: ⅓ de una cebolla blanca de tamaño mediano
+TOTAL KCAL: 0.00
+INGREDIENTES CON PROBLEMAS:
+  - 1 chile serrano
+  - 4-5 Ramitas de Cilantro
+  - 1 jitomate ciruela
+  - pero firme
+  - Chips de tortilla para servir
+  - ½ cucharada de zumo de lima opcional
+  - ⅓ de una cebolla blanca de tamaño mediano
+
+--- RECETA: Calabacitas al vapor ---
+NO RESUELTO: 2 calabazas de tamaño mediano o calabacín cortada en rodajas de ⅓ pulgadas (aproximadamente 12 onzas)
+NO RESUELTO: ½ taza de queso fresco mexicano desmenuzado.
+IGNORADO: Sal y pimienta al gusto
+NO RESUELTO: 1 cucharada de mantequilla o aceite de oliva
+IGNORADO: 4 cucharadas de agua
+TOTAL KCAL: 0.00
+INGREDIENTES CON PROBLEMAS:
+  - 2 calabazas de tamaño mediano o calabacín cortada en rodajas de ⅓ pulgadas (aproximadamente 12 onzas)
+  - ½ taza de queso fresco mexicano desmenuzado.
+  - 1 cucharada de mantequilla o aceite de oliva
+
+--- RECETA: Sopa de Calabacitas con Elote ---
+NO RESUELTO: 1 Diente de ajo pequeño picado
+NO RESUELTO: 1 Caldo de Pollo Knorr -Tomate Bouillon
+NO RESUELTO: Rodajas de limón
+NO RESUELTO: 1 chile Serrano cortado en rodajas
+NO RESUELTO: 1 ó 2 ramitas de Cilantro
+NO RESUELTO: 1  tomate pequeño Roma cortado en cubitos (2
+NO RESUELTO: 5 onzas)
+NO RESUELTO: 1 ½ taza de calabacín en cubitos 5-oz o 1 calabacín de tamaño mediano
+NO RESUELTO: Una taza de granos de elote 8 onzas o una mazorca de maíz
+IGNORADO: Sal y pimienta al gustoGuarniciones opcionales
+IGNORADO: 2 ½ tazas de agua caliente
+NO RESUELTO: 1 cucharada cilantro picado
+NO RESUELTO: 3 cucharadas Cebolla picada 1 oz
+NO RESUELTO: ¼ taza de Queso Fresco desmenuzado o feta si no encuentras Queso Fresco
+NO RESUELTO: 1 cucharada aceite de oliva
+TOTAL KCAL: 0.00
+INGREDIENTES CON PROBLEMAS:
+  - 1 Diente de ajo pequeño picado
+  - 1 Caldo de Pollo Knorr -Tomate Bouillon
+  - Rodajas de limón
+  - 1 chile Serrano cortado en rodajas
+  - 1 ó 2 ramitas de Cilantro
+  - 1  tomate pequeño Roma cortado en cubitos (2
+  - 5 onzas)
+  - 1 ½ taza de calabacín en cubitos 5-oz o 1 calabacín de tamaño mediano
+  - Una taza de granos de elote 8 onzas o una mazorca de maíz
+  - 1 cucharada cilantro picado
+  - 3 cucharadas Cebolla picada 1 oz
+  - ¼ taza de Queso Fresco desmenuzado o feta si no encuentras Queso Fresco
+  - 1 cucharada aceite de oliva
+
+--- RECETA: Pasta con salsa cremosa de chile poblano ---
+NO RESUELTO: 1 diente de ajo grande o 2 pequeños
+NO RESUELTO: ½ taza de leche
+NO RESUELTO: 2 cucharadita de caldo de pollo en gránulos
+NO RESUELTO: Queso fresco Mexicano desmenuzado para decorar opcional
+NO RESUELTO: 1 cucharada de aceite vegetal
+NO RESUELTO: ½ taza de cebolla blanca picada finamente
+NO RESUELTO: ¾ taza de crema mexicana o crema espesa
+NO RESUELTO: 8 oz. ½ paquete de espagueti o la pasta de tu elección
+NO RESUELTO: ¾ taza de elote opcional
+NO RESUELTO: 3 Chiles Poblano grandes previamente asados y desvenados
+TOTAL KCAL: 0.00
+INGREDIENTES CON PROBLEMAS:
+  - 1 diente de ajo grande o 2 pequeños
+  - ½ taza de leche
+  - 2 cucharadita de caldo de pollo en gránulos
+  - Queso fresco Mexicano desmenuzado para decorar opcional
+  - 1 cucharada de aceite vegetal
+  - ½ taza de cebolla blanca picada finamente
+  - ¾ taza de crema mexicana o crema espesa
+  - 8 oz. ½ paquete de espagueti o la pasta de tu elección
+  - ¾ taza de elote opcional
+  - 3 Chiles Poblano grandes previamente asados y desvenados
+
+--- RECETA: Zanahorias curtidas fáciles ---
+NO RESUELTO: 1 lata de chiles jalapeños La Morena enteros o en rodajas (28 oz)
+IGNORADO: Sal al gusto
+NO RESUELTO: 1 Kilo  de zanahorias
+NO RESUELTO: 1 lata de chiles jalapeños La Morena enteros o en rodajas (13 oz) *
+TOTAL KCAL: 0.00
+INGREDIENTES CON PROBLEMAS:
+  - 1 lata de chiles jalapeños La Morena enteros o en rodajas (28 oz)
+  - 1 Kilo  de zanahorias
+  - 1 lata de chiles jalapeños La Morena enteros o en rodajas (13 oz) *
+
+--- RECETA: Coditos con queso Amarillo y pimiento morrón ---
+NO RESUELTO: 8 onzas coditos "La Moderna"
+IGNORADO: 1 cucharadita de sal
+IGNORADO: Sal y pimienta
+IGNORADO: Pimienta roja machacada opcional
+NO RESUELTO: 1 pimiento morrón asado *
+NO RESUELTO: 8 onzas de queso cheddar rallado o en cubos o queso americano
+NO RESUELTO: 1 hoja de laurel
+IGNORADO: 8 tazas de agua
+NO RESUELTO: 1 taza de leche evaporada **
+NO RESUELTO: 2 cucharadas de mantequilla
+NO RESUELTO: ¼ de una cebolla mediana
+NO RESUELTO: 1 diente de ajo grande
+TOTAL KCAL: 0.00
+INGREDIENTES CON PROBLEMAS:
+  - 8 onzas coditos "La Moderna"
+  - 1 pimiento morrón asado *
+  - 8 onzas de queso cheddar rallado o en cubos o queso americano
+  - 1 hoja de laurel
+  - 1 taza de leche evaporada **
+  - 2 cucharadas de mantequilla
+  - ¼ de una cebolla mediana
+  - 1 diente de ajo grande
+
+--- RECETA: Hongos Guisados ---
+NO RESUELTO: 2 chiles Árbol finamente picados Opcional
+NO RESUELTO: 1 diente de ajo cortado en cubitos
+NO RESUELTO: 1 cucharada de mantequilla
+IGNORADO: Sal y pimienta al gusto.
+NO RESUELTO: 1 caja 10 onzas de hongos picados
+NO RESUELTO: 1 cucharada de aceite de oliva
+NO RESUELTO: 2 cebollines finamente picadas
+NO RESUELTO: 1 chile guajillo sin semillas y cortado en anillos
+NO RESUELTO: 2-4 hojas frescas de Epazote picadas o 1 cucharadita de epazote seco *
+TOTAL KCAL: 0.00
+INGREDIENTES CON PROBLEMAS:
+  - 2 chiles Árbol finamente picados Opcional
+  - 1 diente de ajo cortado en cubitos
+  - 1 cucharada de mantequilla
+  - 1 caja 10 onzas de hongos picados
+  - 1 cucharada de aceite de oliva
+  - 2 cebollines finamente picadas
+  - 1 chile guajillo sin semillas y cortado en anillos
+  - 2-4 hojas frescas de Epazote picadas o 1 cucharadita de epazote seco *
+
+--- RECETA: Cebollas Moradas Curtidas ---
+IGNORADO: Aproximadamente 4-5 tazas de agua suficiente para cubrir las cebollas
+NO RESUELTO: 2 cebollas moradas medianas
+NO RESUELTO: ½ taza de vinagre blanco * VER NOTA
+IGNORADO: Sal al gusto
+IGNORADO: ½ taza de agua
+IGNORADO: 2 granos de pimienta de Jamaica
+NO RESUELTO: 1 hoja de laurel opcional
+NO RESUELTO: 1 cucharadita de orégano mexicano seco
+IGNORADO: 3 granos pimienta negra
+TOTAL KCAL: 0.00
+INGREDIENTES CON PROBLEMAS:
+  - 2 cebollas moradas medianas
+  - ½ taza de vinagre blanco * VER NOTA
+  - 1 hoja de laurel opcional
+  - 1 cucharadita de orégano mexicano seco
+
+--- RECETA: Crema de habas ---
+NO RESUELTO: 2 tazas de tomate picado
+NO RESUELTO: ½ Cucharada Aceite vegetal
+NO RESUELTO: ⅓ Taza de cebolla blanca picada finamente
+NO RESUELTO: 1 cucharada sopera de Caldo de pollo en polvo Knorr
+NO RESUELTO: 1 diente de ajo finamente picado
+NO RESUELTO: 3 tazas de habas cocidas*
+NO RESUELTO: Cilantro o perejil picadito para la hora de servir.
+NO RESUELTO: 1 ½ taza de Nopales cocidos y cortados en cuadritos.
+IGNORADO: Sal y pimienta al gusto
+IGNORADO: 1 taza de agua tibia
+TOTAL KCAL: 0.00
+INGREDIENTES CON PROBLEMAS:
+  - 2 tazas de tomate picado
+  - ½ Cucharada Aceite vegetal
+  - ⅓ Taza de cebolla blanca picada finamente
+  - 1 cucharada sopera de Caldo de pollo en polvo Knorr
+  - 1 diente de ajo finamente picado
+  - 3 tazas de habas cocidas*
+  - Cilantro o perejil picadito para la hora de servir.
+  - 1 ½ taza de Nopales cocidos y cortados en cuadritos.
+
+--- RECETA: Quesadillas de Flor de Calabaza ---
+NO RESUELTO: 2 hojas de Epazote
+NO RESUELTO: 2 cucharadas de manteca de cerdo o aceite vegetal para engrasar el comal.
+IGNORADO: Sal y chile al gusto
+NO RESUELTO: 1 ½ taza de harina de maíz (marcas como Maseca o Minsa)
+NO RESUELTO: 1 cucharada de aceite vegetal
+NO RESUELTO: 12 flores de calabaza
+NO RESUELTO: 1 ½ taza de queso Oaxaca o cualquier otro queso derretido triturado
+NO RESUELTO: 6 tortillas de maíz
+NO RESUELTO: 1 chile serrano pequeño opcional
+NO RESUELTO: 1 diente de ajo pequeño finamente picado
+NO RESUELTO: 2 cucharadas de cebolla blanca finamente picado
+IGNORADO: 3 /4 de taza de agua tibia aproximadamente.
+TOTAL KCAL: 0.00
+INGREDIENTES CON PROBLEMAS:
+  - 2 hojas de Epazote
+  - 2 cucharadas de manteca de cerdo o aceite vegetal para engrasar el comal.
+  - 1 ½ taza de harina de maíz (marcas como Maseca o Minsa)
+  - 1 cucharada de aceite vegetal
+  - 12 flores de calabaza
+  - 1 ½ taza de queso Oaxaca o cualquier otro queso derretido triturado
+  - 6 tortillas de maíz
+  - 1 chile serrano pequeño opcional
+  - 1 diente de ajo pequeño finamente picado
+  - 2 cucharadas de cebolla blanca finamente picado
+
+--- RECETA: Sopa de Letras ---
+NO RESUELTO: 1 Pkg. 7
+NO RESUELTO: 5 onzas sopa de letras
+NO RESUELTO: 8 tazas de caldo de pollo *
+NO RESUELTO: 12 onzas de tomates ciruela
+NO RESUELTO: Rodajas de limón
+IGNORADO: Sal al gusto
+NO RESUELTO: 2 cucharadas de aceite vegetal
+NO RESUELTO: Crema mexicana
+IGNORADO: ½ aguacate cortado en cubitos
+NO RESUELTO: ½ taza de Queso Fresco Mexicano
+NO RESUELTO: ¼ de una cebolla blanca de tamaño mediano
+NO RESUELTO: 2 dientes de ajo pequeños
+TOTAL KCAL: 0.00
+INGREDIENTES CON PROBLEMAS:
+  - 1 Pkg. 7
+  - 5 onzas sopa de letras
+  - 8 tazas de caldo de pollo *
+  - 12 onzas de tomates ciruela
+  - Rodajas de limón
+  - 2 cucharadas de aceite vegetal
+  - Crema mexicana
+  - ½ taza de Queso Fresco Mexicano
+  - ¼ de una cebolla blanca de tamaño mediano
+  - 2 dientes de ajo pequeños
+
+--- RECETA: Chochoyotes en caldo de frijoles negros ---
+NO RESUELTO: ¾  taza de harina de maíz  la que usas para tortillas. O 1-½ taza masa de nixtamal fresca
+NO RESUELTO: 3  tazas de frijoles negros cocidos y con caldo.
+IGNORADO: Sal para sazonar
+NO RESUELTO: Chicharrones de Cerdo Opcionales
+NO RESUELTO: ½  taza de chicharrones de cerdo aproximadamente molidos o asientos de chicharrón
+NO RESUELTO: Para las Albóndigas:
+IGNORADO: Queso fresco  y una salsa a su elección.
+NO RESUELTO: 3  cucharadas de cebolla blanca finamente picada
+NO RESUELTO: 1  cucharada de aceite vegetal o manteca de cerdo
+IGNORADO: ½  cucharadita de sal
+IGNORADO: ½  taza más 2 cucharadas de agua tibia
+NO RESUELTO: 1  rama pequeña de epazote si está disponible
+TOTAL KCAL: 0.00
+INGREDIENTES CON PROBLEMAS:
+  - ¾  taza de harina de maíz  la que usas para tortillas. O 1-½ taza masa de nixtamal fresca
+  - 3  tazas de frijoles negros cocidos y con caldo.
+  - Chicharrones de Cerdo Opcionales
+  - ½  taza de chicharrones de cerdo aproximadamente molidos o asientos de chicharrón
+  - Para las Albóndigas:
+  - 3  cucharadas de cebolla blanca finamente picada
+  - 1  cucharada de aceite vegetal o manteca de cerdo
+  - 1  rama pequeña de epazote si está disponible
+
+--- RECETA: Sopa de Verduras Mexicana ---
+NO RESUELTO: 1 diente de ajo grande picado
+NO RESUELTO: 1 ramita de perejil
+NO RESUELTO: 1 taza de papa en cubos
+NO RESUELTO: ¾ taza de calabacín cortado en cubitos
+NO RESUELTO: 1 cucharada de aceite vegetal
+NO RESUELTO: ¾ taza de zanahorias cortadas en cubitos
+NO RESUELTO: ¼ de taza de cebolla blanca picada
+NO RESUELTO: 1 to mate grande picado
+NO RESUELTO: ¾ taza de habas verdes picadas
+IGNORADO: Sal y pimienta al gusto
+NO RESUELTO: 4 tazas de caldo de pollo o caldo de verduras
+TOTAL KCAL: 0.00
+INGREDIENTES CON PROBLEMAS:
+  - 1 diente de ajo grande picado
+  - 1 ramita de perejil
+  - 1 taza de papa en cubos
+  - ¾ taza de calabacín cortado en cubitos
+  - 1 cucharada de aceite vegetal
+  - ¾ taza de zanahorias cortadas en cubitos
+  - ¼ de taza de cebolla blanca picada
+  - 1 to mate grande picado
+  - ¾ taza de habas verdes picadas
+  - 4 tazas de caldo de pollo o caldo de verduras
+
+--- RECETA: Entomatadas ---
+NO RESUELTO: 3 cucharadas soperas de aceite vegetal para freír las tortillas
+NO RESUELTO: 12 to rtillas de maíz
+NO RESUELTO: ¾ de taza de cebolla blanca cortada en cuadritos
+NO RESUELTO: ¾ kilo de tomate
+IGNORADO: Sal para sazonar
+NO RESUELTO: ¼ de kilo de queso fresco como 2 tazas ya desmoronado
+NO RESUELTO: 2 dientes de ajo pequeños
+NO RESUELTO: 1 cucharada sopera de aceite vegetal
+TOTAL KCAL: 0.00
+INGREDIENTES CON PROBLEMAS:
+  - 3 cucharadas soperas de aceite vegetal para freír las tortillas
+  - 12 to rtillas de maíz
+  - ¾ de taza de cebolla blanca cortada en cuadritos
+  - ¾ kilo de tomate
+  - ¼ de kilo de queso fresco como 2 tazas ya desmoronado
+  - 2 dientes de ajo pequeños
+  - 1 cucharada sopera de aceite vegetal
+
+--- RECETA: Sopa de Milpa ---
+NO RESUELTO: 2 ½ tazas de granos elotes de 2 espigas de maíz
+NO RESUELTO: 6 tazas de caldo de pollo
+NO RESUELTO: ½ taza de cebolla blanca finamente picada
+IGNORADO: 2 tazas de agua
+NO RESUELTO: 1 ½ taza Panela Queso o Queso Fresco.
+NO RESUELTO: 2 ½ tazas de calabaza o calabacín aproximadamente 2 de calabaza de tamaño medio
+IGNORADO: Sal al gusto
+NO RESUELTO: 2 Chiles poblano asados limpios y cortados en tiras o cuadritos.
+NO RESUELTO: 1 cucharada de aceite vegetal
+NO RESUELTO: 2 hojas de epazote
+NO RESUELTO: 2 cucharadas de mantequilla
+NO RESUELTO: 2 pequeños dientes de ajo finamente picados.
+NO RESUELTO: 12 Flores de la calabaza limpias y sin tallos*
+TOTAL KCAL: 0.00
+INGREDIENTES CON PROBLEMAS:
+  - 2 ½ tazas de granos elotes de 2 espigas de maíz
+  - 6 tazas de caldo de pollo
+  - ½ taza de cebolla blanca finamente picada
+  - 1 ½ taza Panela Queso o Queso Fresco.
+  - 2 ½ tazas de calabaza o calabacín aproximadamente 2 de calabaza de tamaño medio
+  - 2 Chiles poblano asados limpios y cortados en tiras o cuadritos.
+  - 1 cucharada de aceite vegetal
+  - 2 hojas de epazote
+  - 2 cucharadas de mantequilla
+  - 2 pequeños dientes de ajo finamente picados.
+  - 12 Flores de la calabaza limpias y sin tallos*
+
+--- RECETA: Calabacitas con Elote a la Mexicana ---
+NO RESUELTO: 1  diente de ajo finamente picado
+NO RESUELTO: 2 Chiles Serranos
+NO RESUELTO: picados finamente
+NO RESUELTO: 2  cucharadas de cilantro picado o Epazote
+NO RESUELTO: 2  calabacitas medianas aproximadamente 3 tazas
+NO RESUELTO: 2  jitomates de tamaño mediano cortados en cubitos  aproximadamente 2 tazas
+NO RESUELTO: 2 ½  tazas de granos de elote.
+NO RESUELTO: 1 ½  cucharada de aceite vegetal o de canola
+IGNORADO: Sal y pimienta al gusto
+NO RESUELTO: ½  taza de cebolla blanca picada
+TOTAL KCAL: 0.00
+INGREDIENTES CON PROBLEMAS:
+  - 1  diente de ajo finamente picado
+  - 2 Chiles Serranos
+  - picados finamente
+  - 2  cucharadas de cilantro picado o Epazote
+  - 2  calabacitas medianas aproximadamente 3 tazas
+  - 2  jitomates de tamaño mediano cortados en cubitos  aproximadamente 2 tazas
+  - 2 ½  tazas de granos de elote.
+  - 1 ½  cucharada de aceite vegetal o de canola
+  - ½  taza de cebolla blanca picada
+
+--- RECETA: Frijoles de la Olla ---
+IGNORADO: * Sal al gusto
+NO RESUELTO: 1 cucharadita de manteca de cerdo o aceite de oliva.
+IGNORADO: 8  tazas de agua
+NO RESUELTO: 500 gramos Frijoles negros  cerca de dos tazas
+NO RESUELTO: 2  dientes de ajo pelados
+NO RESUELTO: 1  chile serrano Opcional
+NO RESUELTO: ¼  de una cebolla blanca grande
+NO RESUELTO: 1  Rama pequeña de Epazote o unas tres hojas grandes
+TOTAL KCAL: 0.00
+INGREDIENTES CON PROBLEMAS:
+  - 1 cucharadita de manteca de cerdo o aceite de oliva.
+  - 500 gramos Frijoles negros  cerca de dos tazas
+  - 2  dientes de ajo pelados
+  - 1  chile serrano Opcional
+  - ¼  de una cebolla blanca grande
+  - 1  Rama pequeña de Epazote o unas tres hojas grandes
+
+--- RECETA: Crema de calabacitas ---
+NO RESUELTO: 2 dientes de ajo
+NO RESUELTO: 1 cucharadita de té de aceite vegetal
+NO RESUELTO: ⅓ taza de cebolla picada
+NO RESUELTO: 1 cucharada sopera de mantequilla
+IGNORADO: Sal y pimienta para probar al gusto
+NO RESUELTO: 2 cucharadas de aceite vegetal
+NO RESUELTO: 1 taza de caldo de pollo *
+NO RESUELTO: 12 rebanadas finas de pan francés
+NO RESUELTO: 2 tazas de leche
+NO RESUELTO: 1 diente de ajo grande cortado en cubitos
+NO RESUELTO: 1-½ cucharada sopera de harina
+NO RESUELTO: 4 tazas aproximadamente 500 gramos de calabacín o calabaza picada
+TOTAL KCAL: 0.00
+INGREDIENTES CON PROBLEMAS:
+  - 2 dientes de ajo
+  - 1 cucharadita de té de aceite vegetal
+  - ⅓ taza de cebolla picada
+  - 1 cucharada sopera de mantequilla
+  - 2 cucharadas de aceite vegetal
+  - 1 taza de caldo de pollo *
+  - 12 rebanadas finas de pan francés
+  - 2 tazas de leche
+  - 1 diente de ajo grande cortado en cubitos
+  - 1-½ cucharada sopera de harina
+  - 4 tazas aproximadamente 500 gramos de calabacín o calabaza picada
+
+--- RECETA: Sopa de Lentejas ---
+NO RESUELTO: 1½  taza de apio finamente cortado 2 tallos grandes
+IGNORADO: Sal y pimienta al gusto.
+NO RESUELTO: 1  diente de ajo grande picado
+NO RESUELTO: 2  ramitas de perejil finamente picado
+NO RESUELTO: 2  cucharadas de aceite de oliva
+NO RESUELTO: ⅔  tazas de cebolla blanca finamente picada
+NO RESUELTO: 6  tazas de caldo de pollo *
+NO RESUELTO: Rodajas de limón para servir
+NO RESUELTO: 250 gramos Lentejas (aproximadamente 1-1 / 8 taza) bien lavadas y enjuagadas
+NO RESUELTO: ⅔  tazas de zanahorias en cubitos
+TOTAL KCAL: 0.00
+INGREDIENTES CON PROBLEMAS:
+  - 1½  taza de apio finamente cortado 2 tallos grandes
+  - 1  diente de ajo grande picado
+  - 2  ramitas de perejil finamente picado
+  - 2  cucharadas de aceite de oliva
+  - ⅔  tazas de cebolla blanca finamente picada
+  - 6  tazas de caldo de pollo *
+  - Rodajas de limón para servir
+  - 250 gramos Lentejas (aproximadamente 1-1 / 8 taza) bien lavadas y enjuagadas
+  - ⅔  tazas de zanahorias en cubitos
+
+--- RECETA: Atún a la Mexicana ---
+NO RESUELTO: 1 cucharada sopera de aceite de maíz Mazola
+NO RESUELTO: 1 chile serrano picadito
+NO RESUELTO: 1 diente de ajo picado finamente
+NO RESUELTO: Una taza de tomate picado en cubos finos
+NO RESUELTO: 2 ramas de perejil fresco y picado
+NO RESUELTO: 1 lata 12 oz/310 g de atún drenado
+NO RESUELTO: 1 ramita de tomillo fresco o ½ cucharadita de tomillo seco
+NO RESUELTO: ½ cucharadita de orégano seco
+IGNORADO: Sal y pimienta al gusto
+NO RESUELTO: ⅓ de taza de cebolla blanca finamente picada
+TOTAL KCAL: 0.00
+INGREDIENTES CON PROBLEMAS:
+  - 1 cucharada sopera de aceite de maíz Mazola
+  - 1 chile serrano picadito
+  - 1 diente de ajo picado finamente
+  - Una taza de tomate picado en cubos finos
+  - 2 ramas de perejil fresco y picado
+  - 1 lata 12 oz/310 g de atún drenado
+  - 1 ramita de tomillo fresco o ½ cucharadita de tomillo seco
+  - ½ cucharadita de orégano seco
+  - ⅓ de taza de cebolla blanca finamente picada
+
+--- RECETA: Tortitas de Papa con Queso ---
+NO RESUELTO: 1 huevo batido
+NO RESUELTO: 2 cucharadas soperas de harina
+NO RESUELTO: 2 papas grandes aprox. 750 gramos sin pelar
+NO RESUELTO: 3 cucharadas soperas de aceite de maíz.
+IGNORADO: Sal y pimienta al gusto
+NO RESUELTO: 1 taza de queso fresco rallado
+TOTAL KCAL: 0.00
+INGREDIENTES CON PROBLEMAS:
+  - 1 huevo batido
+  - 2 cucharadas soperas de harina
+  - 2 papas grandes aprox. 750 gramos sin pelar
+  - 3 cucharadas soperas de aceite de maíz.
+  - 1 taza de queso fresco rallado
+
+--- RECETA: Nopales a la Mexicana ---
+IGNORADO: Sal y pimienta
+NO RESUELTO: 2  tazas de Nopales picados y cocidos
+NO RESUELTO: ¼  taza de cebolla blanca picada
+NO RESUELTO: 1  cucharada de aceite vegetal o de oliva
+NO RESUELTO: 1  diente de ajo picado
+NO RESUELTO: 2  ramitas de cilantro
+NO RESUELTO: 1  taza de tomate picado
+NO RESUELTO: 2  chiles serranos picado muy fino
+TOTAL KCAL: 0.00
+INGREDIENTES CON PROBLEMAS:
+  - 2  tazas de Nopales picados y cocidos
+  - ¼  taza de cebolla blanca picada
+  - 1  cucharada de aceite vegetal o de oliva
+  - 1  diente de ajo picado
+  - 2  ramitas de cilantro
+  - 1  taza de tomate picado
+  - 2  chiles serranos picado muy fino
+
+--- RECETA: Ceviche Verde Mexicano ---
+NO RESUELTO: ½  taza de jugo de limón
+NO RESUELTO: 500 gramos de filete de pescado yo use Barramundi
+NO RESUELTO: 2  cucharadas de aceite de oliva
+IGNORADO: ½  aguacate
+NO RESUELTO: ½  taza de cilantro picado
+NO RESUELTO: 2  chiles serranos o 1 jalapeño
+NO RESUELTO: 8  aceitunas
+IGNORADO: Tostadas de maíz o galletas saladas
+NO RESUELTO: 1  cucharadita de orégano mexicano
+NO RESUELTO: 4 to matillos tomates verdes de tamaño mediano
+IGNORADO: 1  aguacate
+NO RESUELTO: Rodajas de rábanos o tomates para decorar
+IGNORADO: Sal y pimienta al gusto
+NO RESUELTO: ½  cebolla blanca de tamaño mediano
+TOTAL KCAL: 0.00
+INGREDIENTES CON PROBLEMAS:
+  - ½  taza de jugo de limón
+  - 500 gramos de filete de pescado yo use Barramundi
+  - 2  cucharadas de aceite de oliva
+  - ½  taza de cilantro picado
+  - 2  chiles serranos o 1 jalapeño
+  - 8  aceitunas
+  - 1  cucharadita de orégano mexicano
+  - 4 to matillos tomates verdes de tamaño mediano
+  - Rodajas de rábanos o tomates para decorar
+  - ½  cebolla blanca de tamaño mediano
+
+--- RECETA: Filetes de pescado ---
+NO RESUELTO: 6  dientes de ajo en rodajas finas
+NO RESUELTO: 2  cucharadas de harina opcional ver nota
+NO RESUELTO: ¼ de taza de aceite vegetal o una mezcla de aceite de oliva y aceite vegetal
+NO RESUELTO: 1  limón
+NO RESUELTO: ¾ kilo Tilapia u otros filetes de pescado
+NO RESUELTO: 3  cucharadas de perejil finamente picado
+IGNORADO: Sal y pimienta al gusto
+TOTAL KCAL: 0.00
+INGREDIENTES CON PROBLEMAS:
+  - 6  dientes de ajo en rodajas finas
+  - 2  cucharadas de harina opcional ver nota
+  - ¼ de taza de aceite vegetal o una mezcla de aceite de oliva y aceite vegetal
+  - 1  limón
+  - ¾ kilo Tilapia u otros filetes de pescado
+  - 3  cucharadas de perejil finamente picado
+
+--- RECETA: Tilapia a la Veracruzana ---
+NO RESUELTO: 4 Filetes de Tilapia aproximadamente 700 gramos
+NO RESUELTO: ½ cebolla blanca mediana cortada en cubitos
+NO RESUELTO: 4 jitomates Roma cortados en cubitos
+NO RESUELTO: ½ cucharadita de tomillo seco
+NO RESUELTO: 1 ½ cucharadas de alcaparras escurridas
+NO RESUELTO: 2 cucharadas de aceite de oliva
+NO RESUELTO: 1 hoja de laurel
+NO RESUELTO: 1 Rama pequeña de tomillo fresco o
+NO RESUELTO: 2 chiles jalapeños en escabeche rebanados
+NO RESUELTO: 2 dientes de ajo finamente picados
+IGNORADO: Sal y pimienta al gusto
+NO RESUELTO: ⅓ taza de aceitunas rellenas de pimiento enteras o en rodajas
+NO RESUELTO: ¼ taza de vino blanco seco
+NO RESUELTO: ½ Cucharadita de orégano mexicano seco finamente triturado
+TOTAL KCAL: 0.00
+INGREDIENTES CON PROBLEMAS:
+  - 4 Filetes de Tilapia aproximadamente 700 gramos
+  - ½ cebolla blanca mediana cortada en cubitos
+  - 4 jitomates Roma cortados en cubitos
+  - ½ cucharadita de tomillo seco
+  - 1 ½ cucharadas de alcaparras escurridas
+  - 2 cucharadas de aceite de oliva
+  - 1 hoja de laurel
+  - 1 Rama pequeña de tomillo fresco o
+  - 2 chiles jalapeños en escabeche rebanados
+  - 2 dientes de ajo finamente picados
+  - ⅓ taza de aceitunas rellenas de pimiento enteras o en rodajas
+  - ¼ taza de vino blanco seco
+  - ½ Cucharadita de orégano mexicano seco finamente triturado
+
+--- RECETA: Camarones a la diabla en chipotle ---
+NO RESUELTO: 1  cucharada  de jugo de limón
+NO RESUELTO: 2  cucharadas  de aceite de oliva
+NO RESUELTO: 2  chiles Chipotle versión enlatada de adobo
+NO RESUELTO: 500 gramos Camarones crudos limpios y desvenados (16 camarones grandes)
+NO RESUELTO: ⅓  taza de cebolla blanca picada finamente
+NO RESUELTO: 1  diente ajo
+NO RESUELTO: ¼  cucharadita  tomillo seco
+IGNORADO: Sal y pimienta al gusto
+NO RESUELTO: 2  tomates de tamaño mediano asados  aproximadamente 350 gramos
+TOTAL KCAL: 0.00
+INGREDIENTES CON PROBLEMAS:
+  - 1  cucharada  de jugo de limón
+  - 2  cucharadas  de aceite de oliva
+  - 2  chiles Chipotle versión enlatada de adobo
+  - 500 gramos Camarones crudos limpios y desvenados (16 camarones grandes)
+  - ⅓  taza de cebolla blanca picada finamente
+  - 1  diente ajo
+  - ¼  cucharadita  tomillo seco
+  - 2  tomates de tamaño mediano asados  aproximadamente 350 gramos
+
+--- RECETA: Tostadas de tinga de atún ---
+NO RESUELTO: ½ taza de cebolla blanca picada
+NO RESUELTO: 2 tazas de tomate picado
+NO RESUELTO: 2 latas 4 onzas cada una Atún enlatado Bella PORTOFINO
+NO RESUELTO: 1 diente de ajo grande finamente picado
+NO RESUELTO: 2 tazas de lechuga picada
+NO RESUELTO: 8 tostadas de maíz de tamaño mediano
+NO RESUELTO: 1 cucharada de aceite vegetal
+NO RESUELTO: 1 chile chipotle en adobo *
+NO RESUELTO: ½ taza de queso fresco desmenuzado
+NO RESUELTO: 1 cucharadita de orégano mexicano
+NO RESUELTO: ½ taza de crema mexicana
+IGNORADO: Sal y pimienta al gusto
+NO RESUELTO: ¾ tazas de frijoles refritos frijoles negros o pintos
+TOTAL KCAL: 0.00
+INGREDIENTES CON PROBLEMAS:
+  - ½ taza de cebolla blanca picada
+  - 2 tazas de tomate picado
+  - 2 latas 4 onzas cada una Atún enlatado Bella PORTOFINO
+  - 1 diente de ajo grande finamente picado
+  - 2 tazas de lechuga picada
+  - 8 tostadas de maíz de tamaño mediano
+  - 1 cucharada de aceite vegetal
+  - 1 chile chipotle en adobo *
+  - ½ taza de queso fresco desmenuzado
+  - 1 cucharadita de orégano mexicano
+  - ½ taza de crema mexicana
+  - ¾ tazas de frijoles refritos frijoles negros o pintos
+
+--- RECETA: Bacalao a la Vizcaína ---
+NO RESUELTO: 1-½ cucharadita de orégano deshidratado.
+NO RESUELTO: 6 Chiles Güeros en vinagre anaheim
+NO RESUELTO: pepperoncini o jalapeños también pueden servir para la receta**
+NO RESUELTO: 1 Taza de Perejil picado.
+IGNORADO: Sal y Pimienta para el sazón.
+NO RESUELTO: ¾ Taza de aceitunas picadas
+NO RESUELTO: ⅓ Taza de pasas
+NO RESUELTO: ¾ de kilo de Bacalao
+NO RESUELTO: 1 Lb Papas cambray cocidas y peladas*
+NO RESUELTO: 4 Pimientos rojos tatemados y cortados en tiras.
+NO RESUELTO: 1 Cebolla blanca grande finamente picada.
+NO RESUELTO: 4 Dientes de ajo picados
+IGNORADO: 1 Kilo Tomates Saladet
+NO RESUELTO: 2 Cucharada de alcaparras previamente lavadas.
+NO RESUELTO: ¼ Taza de aceite de Oliva
+TOTAL KCAL: 0.00
+INGREDIENTES CON PROBLEMAS:
+  - 1-½ cucharadita de orégano deshidratado.
+  - 6 Chiles Güeros en vinagre anaheim
+  - pepperoncini o jalapeños también pueden servir para la receta**
+  - 1 Taza de Perejil picado.
+  - ¾ Taza de aceitunas picadas
+  - ⅓ Taza de pasas
+  - ¾ de kilo de Bacalao
+  - 1 Lb Papas cambray cocidas y peladas*
+  - 4 Pimientos rojos tatemados y cortados en tiras.
+  - 1 Cebolla blanca grande finamente picada.
+  - 4 Dientes de ajo picados
+  - 2 Cucharada de alcaparras previamente lavadas.
+  - ¼ Taza de aceite de Oliva
+
+--- RECETA: Caldo de Camarón ---
+NO RESUELTO: 2 dientes de ajo
+NO RESUELTO: 4 hojas grandes de Epazote *
+NO RESUELTO: Rodajas de Limón para servir
+NO RESUELTO: 1¼ de taza de zanahorias peladas y cortadas en cubitos
+NO RESUELTO: 500 gramos  camarón crudo sin cáscaras (usa las cáscaras para hacer el caldo)
+NO RESUELTO: 1¼ de taza de papas peladas y cortadas en cubitos
+NO RESUELTO: 1 hoja de laurel
+NO RESUELTO: 500 gramos tomate  alrededor de 4
+NO RESUELTO: 2 cucharadas de aceite de oliva
+IGNORADO: 5 tazas de agua
+NO RESUELTO: ¼ de una cebolla blanca de tamaño mediano
+NO RESUELTO: 1 chile chipotle en lata opcional
+IGNORADO: Sal y pimienta al gusto
+NO RESUELTO: 300 gramos aprox. de las cáscaras de los camarones frescos solo las cáscaras
+TOTAL KCAL: 0.00
+INGREDIENTES CON PROBLEMAS:
+  - 2 dientes de ajo
+  - 4 hojas grandes de Epazote *
+  - Rodajas de Limón para servir
+  - 1¼ de taza de zanahorias peladas y cortadas en cubitos
+  - 500 gramos  camarón crudo sin cáscaras (usa las cáscaras para hacer el caldo)
+  - 1¼ de taza de papas peladas y cortadas en cubitos
+  - 1 hoja de laurel
+  - 500 gramos tomate  alrededor de 4
+  - 2 cucharadas de aceite de oliva
+  - ¼ de una cebolla blanca de tamaño mediano
+  - 1 chile chipotle en lata opcional
+  - 300 gramos aprox. de las cáscaras de los camarones frescos solo las cáscaras
+
+--- RECETA: Bacalao al Estilo Veracruz ---
+NO RESUELTO: 2 cucharadas alcaparras enjuagadas y escurridas
+NO RESUELTO: ¼ taza de aceite de oliva o vegetal
+NO RESUELTO: ¾ taza de aceitunas escurridas
+NO RESUELTO: Perejil para decorar
+NO RESUELTO: 3 dientes de ajo pelados y picados
+NO RESUELTO: 3 chiles pimientos morrón rojos asados ​​*
+NO RESUELTO: 1 chile ancho sin semillas y venas
+NO RESUELTO: ¾ kilo tomates asados
+NO RESUELTO: 6 Chiles gúero o chiles jalapeños en escabeche **
+NO RESUELTO: 2 clavos de olor
+NO RESUELTO: ⅓ taza de almendras enteras
+IGNORADO: Sal y pimienta al gusto
+NO RESUELTO: 1 cebolla blanca grande
+NO RESUELTO: 1 kilo de Bacalao seco o cualquier otro pescado blanco fresco.
+NO RESUELTO: 1/1 kilo papas peladas y cortadas en cubos de ¾ de pulgada
+TOTAL KCAL: 0.00
+INGREDIENTES CON PROBLEMAS:
+  - 2 cucharadas alcaparras enjuagadas y escurridas
+  - ¼ taza de aceite de oliva o vegetal
+  - ¾ taza de aceitunas escurridas
+  - Perejil para decorar
+  - 3 dientes de ajo pelados y picados
+  - 3 chiles pimientos morrón rojos asados ​​*
+  - 1 chile ancho sin semillas y venas
+  - ¾ kilo tomates asados
+  - 6 Chiles gúero o chiles jalapeños en escabeche **
+  - 2 clavos de olor
+  - ⅓ taza de almendras enteras
+  - 1 cebolla blanca grande
+  - 1 kilo de Bacalao seco o cualquier otro pescado blanco fresco.
+  - 1/1 kilo papas peladas y cortadas en cubos de ¾ de pulgada
+
+--- RECETA: Camarones a la mexicana o Rancheros ---
+NO RESUELTO: ½   cebolla blanca mediana finamente picada
+IGNORADO: Sal y pimienta al gusto.
+NO RESUELTO: 500 gramos tomates cortados en cubitos
+NO RESUELTO: 2 chiles Serrano **
+NO RESUELTO: 2  dientes de ajo pequeños  picados
+NO RESUELTO: 500 gramos camarón crudo limpio y desvenado.
+NO RESUELTO: ½ taza de cilantro picado
+NO RESUELTO: 2 cucharadas de aceite de oliva *
+TOTAL KCAL: 0.00
+INGREDIENTES CON PROBLEMAS:
+  - ½   cebolla blanca mediana finamente picada
+  - 500 gramos tomates cortados en cubitos
+  - 2 chiles Serrano **
+  - 2  dientes de ajo pequeños  picados
+  - 500 gramos camarón crudo limpio y desvenado.
+  - ½ taza de cilantro picado
+  - 2 cucharadas de aceite de oliva *
+
+--- RECETA: Arroz a la Tumbada ---
+NO RESUELTO: 500 gr de camarón con cascara sin visera.
+NO RESUELTO: 500 gr de jaiba limpia partidas en por la mitad.
+IGNORADO: 2 litros de caldo de pescado* se puede sustituir por agua.
+NO RESUELTO: 800 gr de almeja se puede usar mejillón.
+NO RESUELTO: 20 gr de hojas de epazote se puede sustituir por cilantro.
+NO RESUELTO: 500 gr de arroz.
+NO RESUELTO: 400 gr de pulpo precocido o calamar.**
+IGNORADO: Sal al gusto.
+IGNORADO: Pimienta al gusto.
+NO RESUELTO: 15 ml aceite.
+NO RESUELTO: 300 gr de cebolla blanca.
+NO RESUELTO: 500 gr de pescado se puede usar pescado en postas o filete de pescado.
+NO RESUELTO: 500 gr de camarón de río o langostino limpio.
+NO RESUELTO: 500 gr de jitomate.
+TOTAL KCAL: 0.00
+INGREDIENTES CON PROBLEMAS:
+  - 500 gr de camarón con cascara sin visera.
+  - 500 gr de jaiba limpia partidas en por la mitad.
+  - 800 gr de almeja se puede usar mejillón.
+  - 20 gr de hojas de epazote se puede sustituir por cilantro.
+  - 500 gr de arroz.
+  - 400 gr de pulpo precocido o calamar.**
+  - 15 ml aceite.
+  - 300 gr de cebolla blanca.
+  - 500 gr de pescado se puede usar pescado en postas o filete de pescado.
+  - 500 gr de camarón de río o langostino limpio.
+  - 500 gr de jitomate.
+
+--- RECETA: Filetes de pescado empapelados ---
+NO RESUELTO: 2 to tomates roma cortados en rodajas
+NO RESUELTO: 1  cucharadita de ajo en polvo
+NO RESUELTO: 1  limón
+NO RESUELTO: 2  cucharadas de aceite de oliva
+NO RESUELTO: ½  taza de hojas de cilantro.
+NO RESUELTO: 1  jalapeño o 2 chiles serranos en rodajas
+IGNORADO: Sal y pimienta al gusto
+NO RESUELTO: ½  taza de cebollitas verdes cortadas muy fino
+NO RESUELTO: 4  pedazos de hojas de plátano * o papel alumínio 10inX
+NO RESUELTO: 8In
+NO RESUELTO: 4  filetes de tilapia de 6 onzas u otros pescados.
+TOTAL KCAL: 0.00
+INGREDIENTES CON PROBLEMAS:
+  - 2 to tomates roma cortados en rodajas
+  - 1  cucharadita de ajo en polvo
+  - 1  limón
+  - 2  cucharadas de aceite de oliva
+  - ½  taza de hojas de cilantro.
+  - 1  jalapeño o 2 chiles serranos en rodajas
+  - ½  taza de cebollitas verdes cortadas muy fino
+  - 4  pedazos de hojas de plátano * o papel alumínio 10inX
+  - 8In
+  - 4  filetes de tilapia de 6 onzas u otros pescados.
+
+--- RECETA: Capirotada ---
+NO RESUELTO: 2 cucharadas soperas de mantequilla en cubos

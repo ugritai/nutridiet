@@ -25,171 +25,170 @@ import AcercaDe from "../features/dashboard/AcercaDe";
 import Comentarios from "../features/dashboard/Comentarios";
 
 function App() {
-  return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Navigate to="/sign-in" />} />
-        <Route path="/sign-in" element={<SignInSide />} />
-        <Route path="/sign-up" element={<SignUp />} />
+    return (
+        <Router>
+            <Routes>
+                <Route path="/" element={<Navigate to="/sign-in" />} />
+                <Route path="/sign-in" element={<SignInSide />} />
+                <Route path="/sign-up" element={<SignUp />} />
 
-        {/* Rutas protegidas*/}
-        <Route path="/inicio" element={
-          <ProtectedRoute>
-            < InicioPage />
-          </ProtectedRoute>}
-        />
+                {/* Rutas protegidas*/}
+                <Route path="/inicio" element={
+                    <ProtectedRoute>
+                        < InicioPage />
+                    </ProtectedRoute>}
+                />
 
-        <Route path="/alimentos" element={
-          <ProtectedRoute>
-            <Alimentos />
-          </ProtectedRoute>}
-        />
+                <Route path="/alimentos" element={
+                    <ProtectedRoute>
+                        <Alimentos />
+                    </ProtectedRoute>}
+                />
 
-        <Route path="/alimentos/detalle_alimento/:nombre" element={
-          <ProtectedRoute>
-            <DetalleAlimentoPage />
-          </ProtectedRoute>}
-        />
+                <Route path="/alimentos/detalle_alimento/:nombre" element={
+                    <ProtectedRoute>
+                        <DetalleAlimentoPage />
+                    </ProtectedRoute>}
+                />
 
-        <Route path="/alimentos/categorias/:categoria" element={
-          <ProtectedRoute>
-            <AlimentosPorCategoriaPage />
-          </ProtectedRoute>
+                <Route path="/alimentos/categorias/:categoria" element={
+                    <ProtectedRoute>
+                        <AlimentosPorCategoriaPage />
+                    </ProtectedRoute>
 
-        } />
+                } />
 
-        <Route path="/recetas" element={
-          <ProtectedRoute>
-            <Recetas />
-          </ProtectedRoute>
+                <Route path="/recetas" element={
+                    <ProtectedRoute>
+                        <Recetas />
+                    </ProtectedRoute>
 
-        } />
+                } />
 
-        <Route path="/recetas/categorias/:categoria" element={
-          <ProtectedRoute>
-            <RecetasPorCategoriaPage />
-          </ProtectedRoute>
+                <Route path="/recetas/categorias/:categoria" element={
+                    <ProtectedRoute>
+                        <RecetasPorCategoriaPage />
+                    </ProtectedRoute>
 
-        } />
+                } />
 
-        <Route path="/recetas/detalle_receta/:nombre" element={
-          <ProtectedRoute>
-            <DetalleRecetasPage />
-          </ProtectedRoute>}
-        />
+                <Route path="/recetas/detalle_receta/:nombre" element={
+                    <ProtectedRoute>
+                        <DetalleRecetasPage />
+                    </ProtectedRoute>}
+                />
 
-        <Route path="/pacientes" element={
-          <ProtectedRoute>
-            <PacientesPage />
-          </ProtectedRoute>
+                <Route path="/pacientes" element={
+                    <ProtectedRoute>
+                        <PacientesPage />
+                    </ProtectedRoute>
 
-        } />
+                } />
 
-        <Route path="/paciente/crear_paciente" element={
-          <ProtectedRoute>
-            <PacientesPage />
-          </ProtectedRoute>
-        } />
+                <Route path="/paciente/crear_paciente" element={
+                    <ProtectedRoute>
+                        <PacientesPage />
+                    </ProtectedRoute>
+                } />
 
-        <Route path="/planificacion_dieta" element={
-          <ProtectedRoute>
-            <PlanificacionDietaPage />
-          </ProtectedRoute>
+                <Route path="/planificacion_dieta" element={
+                    <ProtectedRoute>
+                        <PlanificacionDietaPage />
+                    </ProtectedRoute>
 
-        } />
+                } />
 
-        <Route path="/planificacion_dieta/:pacienteN" element={
-          <ProtectedRoute>
-            <DietaIngePacienteCard />
-          </ProtectedRoute>
+                <Route path="/planificacion_dieta/:patientId" element={
+                    <ProtectedRoute>
+                        <DietaIngePacienteCard />
+                    </ProtectedRoute>
 
-        } />
+                } />
 
-        <Route path="/planificacion_dieta/crear_dieta" element={
-          <ProtectedRoute>
-            <SeleccionPacientePage tipo="dieta" />
-          </ProtectedRoute>
-        } />
+                <Route path="/planificacion_dieta/crear_dieta" element={
+                    <ProtectedRoute>
+                        <SeleccionPacientePage tipo="dieta" />
+                    </ProtectedRoute>
+                } />
 
-        <Route path="/planificacion_dieta/crear_ingesta" element={
-          <ProtectedRoute>
-            <SeleccionPacientePage tipo="ingesta" />
-          </ProtectedRoute>
-        } />
+                <Route path="/planificacion_dieta/crear_ingesta" element={
+                    <ProtectedRoute>
+                        <SeleccionPacientePage tipo="ingesta" />
+                    </ProtectedRoute>
+                } />
 
-        <Route path="/planificacion_dieta/:pacienteN/crear_ingesta" element={
-          <ProtectedRoute>
-            < IngestaNameForm />
-          </ProtectedRoute>
-        } />
+                <Route path="/planificacion_dieta/:patientId/crear_ingesta" element={
+                    <ProtectedRoute>
+                        < IngestaNameForm />
+                    </ProtectedRoute>
+                } />
 
-        <Route
-          path="/planificacion_dieta/:pacienteN/editar_ingesta"
-          element={
-            <ProtectedRoute>
-              <IngestaNameForm />
-            </ProtectedRoute>}
-        />
+                <Route
+                    path="/planificacion_dieta/:patientId/editar_ingesta"
+                    element={
+                        <ProtectedRoute>
+                            <IngestaNameForm />
+                        </ProtectedRoute>}
+                />
 
 
-        <Route path="/planificacion_dieta/:pacienteN/crear_ingesta/:nombreIngesta" element={
-          <ProtectedRoute>
-            < CrearIngestaForm />
-          </ProtectedRoute>
-        } />
+                <Route path="/planificacion_dieta/:patientId/crear_ingesta/:nombreIngesta" element={
+                    <ProtectedRoute>
+                        < CrearIngestaForm />
+                    </ProtectedRoute>
+                } />
 
-        <Route path="/planificacion_dieta/:pacienteN/editar_ingesta/:nombreIngesta" element={
-          <ProtectedRoute>
-            < CrearIngestaForm />
-          </ProtectedRoute>
-        } />
+                <Route path="/planificacion_dieta/:patientId/editar_ingesta/:nombreIngesta" element={
+                    <ProtectedRoute>
+                        < CrearIngestaForm />
+                    </ProtectedRoute>
+                } />
 
-        <Route path="/planificacion_dieta/:pacienteN/crear_dieta/" element={
-          <ProtectedRoute>
-            <CrearDietaForm />
-          </ProtectedRoute>
-        } />
+                <Route path="/planificacion_dieta/:patientId/crear_dieta/" element={
+                    <ProtectedRoute>
+                        <CrearDietaForm />
+                    </ProtectedRoute>
+                } />
 
-        <Route path="/planificacion_dieta/:pacienteN/editar_dieta/:nombreDieta" element={
-          <ProtectedRoute>
-            <CrearDietaForm />
-          </ProtectedRoute>
-        } />
+                <Route path="/planificacion_dieta/:patientId/editar_dieta/:nombreDieta" element={
+                    <ProtectedRoute>
+                        <CrearDietaForm />
+                    </ProtectedRoute>
+                } />
 
-        <Route path="/detalle_dieta/:dietaN" element={
-          <ProtectedRoute>
-            <DetalleDietaPage />
-          </ProtectedRoute>
-        } />
+                <Route path="/detalle_dieta/:dietaN" element={
+                    <ProtectedRoute>
+                        <DetalleDietaPage />
+                    </ProtectedRoute>
+                } />
 
-        <Route path="/mi_cuenta" element={
-          <ProtectedRoute>
-            <PerfilPage />
-          </ProtectedRoute>
-        } />
+                <Route path="/mi_cuenta" element={
+                    <ProtectedRoute>
+                        <PerfilPage />
+                    </ProtectedRoute>
+                } />
 
-        <Route path="/configuracion" element={
-          <ProtectedRoute>
-            <Configuracion />
-          </ProtectedRoute>
-        } />
+                <Route path="/configuracion" element={
+                    <ProtectedRoute>
+                        <Configuracion />
+                    </ProtectedRoute>
+                } />
 
-        <Route path="/acerca_de" element={
-          <ProtectedRoute>
-            <AcercaDe />
-          </ProtectedRoute>
-        } />
-        
-        <Route path="/comentarios" element={
-          <ProtectedRoute>
-            <Comentarios />
-          </ProtectedRoute>
-        } />
+                <Route path="/acerca_de" element={
+                    <ProtectedRoute>
+                        <AcercaDe />
+                    </ProtectedRoute>
+                } />
 
-      </Routes>
-    </Router>
-  );
+                <Route path="/comentarios" element={
+                    <ProtectedRoute>
+                        <Comentarios />
+                    </ProtectedRoute>
+                } />
+
+            </Routes>
+        </Router>
+    );
 }
 
 export default App;
-

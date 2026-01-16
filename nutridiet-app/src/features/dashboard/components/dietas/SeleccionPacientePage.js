@@ -42,8 +42,8 @@ export default function SeleccionPacientePage() {
             alert('Selecciona un paciente');
             return;
         }
-        // Navega a la ruta con paciente id y tipo fijo en ruta
-        navigate(`/planificacion_dieta/${pacienteSeleccionado.name}`);
+        // Navega usando el ID del paciente (no el nombre) para no exponer PII en la URL
+        navigate(`/planificacion_dieta/${pacienteSeleccionado.id}`);
     };
 
     return (
@@ -100,3 +100,4 @@ export default function SeleccionPacientePage() {
         </Box>
     );
 }
+

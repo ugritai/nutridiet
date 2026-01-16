@@ -3,9 +3,9 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from bson import ObjectId
 
 # Configura tu conexión MongoDB
-MONGO_URI = "mongodb://localhost:27018"
-DB_NAME = "nutridiet"  # ajusta si tu DB se llama distinto
-COL_DESTINO = "bedca_FB"
+MONGO_URI = "mongodb://app_user:secure_pass123@127.0.0.1:27018/fooddb?authSource=admin"
+DB_NAME = "fooddb" #"nutridiet"  # ajusta si tu DB se llama distinto
+COL_DESTINO = "bedca_unified" #"bedca_FB"
 
 # Categorías a importar
 CATEGORIAS_OBJETIVO = ["Frutas y productos frutícolas", "Bebidas (no lácteas)"]

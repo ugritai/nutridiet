@@ -193,7 +193,8 @@ def extract_recetas_from_pdf(pdf_path):
     return recetas
 
 if __name__ == '__main__':
-    pdf_path = '/Users/linqi/Downloads/transfer_92036_files_4b2c4082/Recetario_Grupo C.pdf'
+    pdf_path = r"C:\Users\loren\Downloads\transfer_92036_files_4b2c4082 (1)\transfer_92036_files_4b2c4082\Recetario_Grupo C.pdf"
+
     recetas = extract_recetas_from_pdf(pdf_path)
     with open('recetas.json', 'w', encoding='utf-8') as f:
         json.dump(recetas, f, ensure_ascii=False, indent=2)

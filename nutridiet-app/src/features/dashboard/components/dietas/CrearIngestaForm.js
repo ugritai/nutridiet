@@ -40,7 +40,7 @@ export default function CrearIngestaForm({ onClose = null, nombreIngesta: propNo
       : propTipo || location.state?.tipo || '';
   
 
-    const { pacienteN } = useParams();
+    const { patientId } = useParams();
     const navigate = useNavigate();
 
     const [enviando, setEnviando] = useState(false);
@@ -99,15 +99,15 @@ export default function CrearIngestaForm({ onClose = null, nombreIngesta: propNo
     useEffect(() => {
         const fetchInfoPaciente = async () => {
             try {
-                const res = await fetch(`http://localhost:8000/pacientes/paciente_info/${pacienteN}`);
+                const res = await fetchWithAuth(`/pacientes/paciente_info/${patientId}`);
                 if (!res.ok) throw new Error('No se pudo obtener la información del paciente');
                 setNutricion(await res.json());
             } catch (err) {
                 console.error(err);
             }
         };
-        fetchInfoPaciente();
-    }, [pacienteN]);
+        if (patientId) fetchInfoPaciente();
+    }, [patientId]);
 
     const handleSelectReceta = async (nombre) => {
         if (recetasBuscadas.some(r => r.nombre === nombre)) return;
@@ -154,7 +154,7 @@ export default function CrearIngestaForm({ onClose = null, nombreIngesta: propNo
         });
 
         return {
-            kcal: resultado.kcal.toFixed(2),
+            kcal: resultado.kcal.toFixed(22),
             pro: resultado.pro.toFixed(2),
             car: resultado.car.toFixed(2),
         };
@@ -335,8 +335,8 @@ export default function CrearIngestaForm({ onClose = null, nombreIngesta: propNo
             console.log(cuerpo)
 
             const url = modoEdicion
-                ? `/planificacion_ingestas/editar_ingesta/${pacienteN}/${encodeURIComponent(cuerpo.intake_name)}`
-                : `/planificacion_ingestas/crear_ingesta/${pacienteN}`;
+                ? `/planificacion_ingestas/editar_ingesta/${patientId}/${encodeURIComponent(cuerpo.intake_name)}`
+                : `/planificacion_ingestas/crear_ingesta/${patientId}`;
 
             const method = modoEdicion ? 'PUT' : 'POST';
 
@@ -354,7 +354,7 @@ export default function CrearIngestaForm({ onClose = null, nombreIngesta: propNo
             if (isDialogMode) {
                 onClose(); // cerrar diálogo si está en modo modal
             } else {
-                navigate(`/planificacion_dieta/${encodeURIComponent(pacienteN)}`);
+                navigate(`/planificacion_dieta/${encodeURIComponent(patientId)}`);
             }
 
         } catch (err) {
@@ -591,7 +591,7 @@ export default function CrearIngestaForm({ onClose = null, nombreIngesta: propNo
                                     if (modoEdicion) {
                                         navigate(-1);
                                     } else {
-                                        navigate(`/planificacion_dieta/${encodeURIComponent(pacienteN)}/crear_ingesta`);
+                                        navigate(`/planificacion_dieta/${encodeURIComponent(patientId)}/crear_ingesta`);
                                     }
                                 }}
                             >

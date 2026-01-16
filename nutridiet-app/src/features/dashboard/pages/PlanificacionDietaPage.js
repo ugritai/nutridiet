@@ -4,9 +4,9 @@ import SeleccionPacientePage from '../components/dietas/SeleccionPacientePage';
 
 export default function PlanificacionDietasPage() {
 
-  return (
-    <Dashboard>
-      <SeleccionPacientePage/>
-    </Dashboard>
-  );
+    return (
+        <Dashboard>
+            <SeleccionPacientePage />
+        </Dashboard>
+    );
 }

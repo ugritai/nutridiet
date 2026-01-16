@@ -10,9 +10,9 @@ import re
 
 router = APIRouter(tags=["Recipes"])
 
-#collections = ['abuela', 'food.com', 'mealrec', 'recipe1m', 'recipenlg', 'recipeQA']
 collections = ['abuela_bedca', 'GNHD_24_25', 'bedca_FB']
 recetas_collection = recipe_db_host['abuela_bedca']
+
 
 # Mapa de categorías a palabras clave
 PALABRAS_CLAVE = {
@@ -188,7 +188,7 @@ async def get_recetas_por_categoria(
 
     return {"recetas": list(resultados)}
 
-
+'''
 @router.get("/por_categoria_nutri/{categoria}")
 async def get_recetas_por_categoria_nutri(categoria: str):
     categoria_normalizada = unidecode(categoria.lower().strip())
@@ -284,6 +284,72 @@ async def get_recetas_por_categoria_nutri(categoria: str):
         raise HTTPException(status_code=404, detail="No se encontraron recetas para esta categoría")
 
     return {"recetas": resultados}
+'''
+
+@router.get("/por_categoria_nutri/{categoria}")
+async def get_recetas_por_categoria_nutri(categoria: str, por_porcion: bool = True):
+    categoria_normalizada = unidecode(categoria.lower().strip())
+    recetas_unicas = set()
+    resultados = []
+
+    def get_nutri_field(valores: dict, *keys):
+        """Obtiene el primer valor existente de los keys indicados"""
+        for key in keys:
+            if key in valores and valores[key] is not None:
+                return valores[key]
+        return 0
+
+    # Recorrer colecciones y buscar por categoría exacta
+    for collection_name in collections:
+        collection = recipe_db_host[collection_name]
+        cursor = collection.find({
+            'origin_ISO': 'ESP',
+            '$or': [
+                {'category': categoria},
+                {'category': {'$regex': f'^{categoria}$', '$options': 'i'}},
+                {'category': {'$in': [categoria]}}
+            ]
+        }, {'title': 1, 'nutritional_info': 1, 'n_diners': 1})
+
+        async for doc in cursor:
+            titulo = doc.get("title", "").strip()
+            titulo_limpio = titulo.lower()
+            if titulo_limpio in recetas_unicas:
+                continue
+
+            nutricion = doc.get("nutritional_info", {})
+            raciones = doc.get("n_diners", 1) or 1  # evitar división por 0
+
+            # Acceso inteligente a los campos
+            if por_porcion:
+                kcal = round(get_nutri_field(nutricion, "energy_kcal_porcion", "kcal_porcion", "kcal_racion", "energy_kcal") , 2)
+                pro = round(get_nutri_field(nutricion, "proteins_porcion", "pro_porcion", "proteinas_porcion", "proteins_g", "pro") , 2)
+                car = round(get_nutri_field(nutricion, "carbohydrates_porcion", "car_porcion", "carbohidratos_porcion", "carbohydrates_g", "car") , 2)
+            else:
+                kcal = round(get_nutri_field(nutricion, "energy_kcal", "kcal", "kcal_100g") , 2)
+                pro = round(get_nutri_field(nutricion, "proteins_g", "pro", "proteinas") , 2)
+                car = round(get_nutri_field(nutricion, "carbohydrates_g", "car", "carbohidratos") , 2)
+
+                # Si el dato está por porción, multiplicar por raciones
+                if "energy_kcal_porcion" in nutricion:
+                    kcal *= raciones
+                if "proteins_porcion" in nutricion or "pro_porcion" in nutricion:
+                    pro *= raciones
+                if "carbohydrates_porcion" in nutricion or "car_porcion" in nutricion:
+                    car *= raciones
+
+            resultados.append({
+                "nombre": titulo,
+                "kcal": kcal,
+                "pro": pro,
+                "car": car
+            })
+            recetas_unicas.add(titulo_limpio)
+
+    if not resultados:
+        raise HTTPException(status_code=404, detail="No se encontraron recetas para esta categoría")
+
+    return {"categoria": categoria, "por_porcion": por_porcion, "recetas": resultados}
 
 @router.get("/detalle_receta/{nombre}")
 async def get_receta_detalle(nombre: str):
@@ -314,7 +380,7 @@ async def get_receta_detalle(nombre: str):
                     result["title"] = capitalizar_primera_letra(result["title"])
 
                 # Buscar sugerencias relacionadas
-                sugeridos = await sugerir_recetas(nombre)
+                sugeridos = await _sugerir_recetas_logic(nombre)
 
                 return {
                     "receta": jsonable_encoder(result),
@@ -322,7 +388,7 @@ async def get_receta_detalle(nombre: str):
                 }
 
     # Si no se encontró, intentar sugerencias
-    sugeridos = await sugerir_recetas(nombre)
+    sugeridos = await _sugerir_recetas_logic(nombre)
     if sugeridos:
         suggested_titles = [r["titulo"] for r in sugeridos]
         return {
@@ -406,7 +472,6 @@ async def obtener_kcal_pro_car_por_categoria(
             ]
         })
 
-
         async for doc in cursor:
             titulo = doc.get("title", "")
             recetas_encontradas[titulo.lower()] = doc
@@ -430,38 +495,55 @@ async def obtener_kcal_pro_car_por_categoria(
 
     resultados = []
 
-    for receta_doc in recetas_encontradas.values():
+    def safe_round(val):
+        try:
+            return round(float(val), 2)
+        except (TypeError, ValueError):
+            return 0.0
 
+    for receta_doc in recetas_encontradas.values():
         titulo = receta_doc.get("title", "")
-        valores = receta_doc.get("nutritional_info", {})
+        valores = receta_doc.get("nutritional_info", {}) or {}
         receta_doc["_id"] = str(receta_doc["_id"])
-        
-        # Acceso inteligente a los campos por porción o por 100g
+        raciones = receta_doc.get("n_diners", 1) or 1
+
         def get_nutri_field(*keys):
             for key in keys:
-                valor = valores.get(key)
-                if valor is not None:
-                    return valor
-            return 0
-
-
-        def safe_round(val):
-            try:
-                return round(float(val), 2)
-            except (TypeError, ValueError):
-                return 0.0
+                if key in valores and valores[key] is not None:
+                    return valores[key]
+            return None
 
         if por_porcion:
-            kcal = safe_round(get_nutri_field("energy_kcal_porcion", "kcal_porcion", "kcal_racion", "energy_kcal"))
-            pro = safe_round(get_nutri_field("proteins_porcion", "pro_porcion", "proteinas_porcion", "proteins_g", "pro"))
-            car = safe_round(get_nutri_field("carbohydrates_porcion", "car_porcion", "carbohidratos_porcion", "carbohydrates_g", "car"))
+            # intentar campos por-porcion primero
+            kcal_por = get_nutri_field("energy_kcal_porcion", "kcal_porcion", "kcal_racion")
+            pro_por = get_nutri_field("proteins_porcion", "pro_porcion", "proteinas_porcion")
+            car_por = get_nutri_field("carbohydrates_porcion", "car_porcion", "carbohidratos_porcion")
+
+            # si alguno no existe, intentar obtener total y dividir por raciones
+            if kcal_por is None:
+                kcal_total = get_nutri_field("energy_kcal", "kcal", "kcal_100g")
+                kcal = safe_round(kcal_total / raciones) if kcal_total is not None else 0.0
+            else:
+                kcal = safe_round(kcal_por)
+
+            if pro_por is None:
+                pro_total = get_nutri_field("proteins_g", "pro", "proteinas")
+                pro = safe_round(pro_total / raciones) if pro_total is not None else 0.0
+            else:
+                pro = safe_round(pro_por)
+
+            if car_por is None:
+                car_total = get_nutri_field("carbohydrates_g", "car", "carbohidratos")
+                car = safe_round(car_total / raciones) if car_total is not None else 0.0
+            else:
+                car = safe_round(car_por)
         else:
-            kcal = safe_round(get_nutri_field("energy_kcal", "kcal", "kcal_100g"))
-            pro = safe_round(get_nutri_field("proteins_g", "pro", "proteinas"))
-            car = safe_round(get_nutri_field("carbohydrates_g", "car", "carbohidratos"))
+            # pedir valores totales
+            kcal = safe_round(get_nutri_field("energy_kcal", "kcal", "kcal_100g") or 0)
+            pro = safe_round(get_nutri_field("proteins_g", "pro", "proteinas") or 0)
+            car = safe_round(get_nutri_field("carbohydrates_g", "car", "carbohidratos") or 0)
 
-
-        # Filtros
+        # Aplicar filtros
         if (
             (kcal_min is not None and kcal < kcal_min) or
             (kcal_max is not None and kcal > kcal_max) or
@@ -471,7 +553,7 @@ async def obtener_kcal_pro_car_por_categoria(
             (car_max is not None and car > car_max)
         ):
             continue
-        
+
         resultados.append({
             "id": receta_doc["_id"],
             "name": titulo,
@@ -479,8 +561,9 @@ async def obtener_kcal_pro_car_por_categoria(
             "pro": pro,
             "car": car
         })
+
     resultados.sort(key=lambda x: x["name"].lower())
-    
+
     return {
         "categoria": categoria,
         "por_porcion": por_porcion,
@@ -498,45 +581,47 @@ import torch
 
 model = SentenceTransformer('sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2')
 
-@router.get("/sugerir_recetas/{nombre}")
-async def sugerir_recetas(nombre: str, limit: int = 10):
+async def _sugerir_recetas_logic(nombre: str, limit: int = 10):
     nombre_normalizado = unidecode(nombre.strip().lower())
     embedding_input = model.encode(nombre_normalizado)
     embedding_input = torch.tensor(embedding_input, dtype=torch.float32)
 
-    # Obtener todos los embeddings
-    docs = list(embeddings_recipe_collection.find({}, {"_id": 0, "title": 1, "category": 1, "embedding": 1}))
+    docs = list(
+        embeddings_recipe_collection.find(
+            {},
+            {"_id": 0, "title": 1, "category": 1, "embedding": 1}
+        )
+    )
 
     similarities = []
+
     for doc in docs:
         doc_title_normalizado = unidecode(doc["title"].strip().lower())
         if doc_title_normalizado == nombre_normalizado:
             continue
 
-        categoria_doc = doc.get("category", "")
         emb = torch.tensor(doc["embedding"], dtype=torch.float32)
         sim = util.cos_sim(embedding_input, emb)[0][0].item()
 
-        similarities.append((sim, doc, categoria_doc))
+        similarities.append((sim, doc, doc.get("category", "")))
 
     if not similarities:
-        raise HTTPException(status_code=404, detail="No se encontraron sugerencias")
+        return []
 
-    # Ordenar por similitud
     top = sorted(similarities, key=lambda x: x[0], reverse=True)[:limit]
 
-    # Obtener la categoría de la receta objetivo (si existe)
-    categoria_objetivo = None
-    for doc in docs:
-        if unidecode(doc["title"].strip().lower()) == nombre_normalizado:
-            categoria_objetivo = doc.get("category", "")
-            break
+    categoria_objetivo = next(
+        (
+            doc.get("category", "")
+            for doc in docs
+            if unidecode(doc["title"].strip().lower()) == nombre_normalizado
+        ),
+        None
+    )
 
-    # Ordenar para dar preferencia a la misma categoría
     top_ordenado = sorted(top, key=lambda x: x[2] != categoria_objetivo)
 
-    # Formatear resultados
-    resultados = [
+    return [
         {
             "titulo": doc["title"],
             "categoria": categoria_doc,
@@ -545,8 +630,16 @@ async def sugerir_recetas(nombre: str, limit: int = 10):
         for sim, doc, categoria_doc in top_ordenado
     ]
 
+
+@router.get("/sugerir_recetas/{nombre}")
+async def sugerir_recetas(nombre: str, limit: int = 10):
+    resultados = await _sugerir_recetas_logic(nombre, limit)
+
     if not resultados:
-        raise HTTPException(status_code=404, detail="No se encontraron recetas distintas al término de búsqueda")
+        raise HTTPException(
+            status_code=404,
+            detail="No se encontraron sugerencias"
+        )
 
     return resultados
 

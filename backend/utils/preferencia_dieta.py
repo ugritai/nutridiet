@@ -1,8 +1,8 @@
 from pymongo import MongoClient
 
 # Conexión MongoDB
-client = MongoClient("mongodb://localhost:27018")  # Ajusta si es necesario
-db = client["nutridiet"]
+client = MongoClient("mongodb://app_user:secure_pass123@127.0.0.1:27018/fooddb?authSource=admin")  # Ajusta si es necesario
+db = client["fooddb"] #nutridiet
 col = db["GNHD_24_25"]
 
 def etiquetar_receta(receta):

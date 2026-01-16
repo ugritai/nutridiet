@@ -1,0 +1,11 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\fooddb",
+    "\\fooddb\\initdb",
+    "\\nutridietdb",
+    "\\nutridietdb\\initdb"
+  ],
+  "SelectedNode": "\\nutridietdb\\initdb\\01_restore.sh",
+  "PreviewInSolutionExplorer": false
+}

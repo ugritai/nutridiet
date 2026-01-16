@@ -1,0 +1,55 @@
+=== INICIO RECALCULO KCAL ===
+
+--- RECETA: Tacos Dorados de Papa ---
+NO RESUELTO: ½ taza de cilantro finamente picado
+NO RESUELTO: 1 taza de tomate picadito y sin semillas
+NO RESUELTO: 1 cucharada de jugo de limón
+NO RESUELTO: 12 to rtillas de maíz
+NO RESUELTO: ⅔ de taza de aceite vegetal para freír los taquitos
+NO RESUELTO: 2 chiles serranos en cubitos
+IGNORADO: Sal al gusto
+NO RESUELTO: 2 tazas de repollo en tiras finas
+NO RESUELTO: ½ taza de crema mexicana
+IGNORADO: Salsa roja
+NO RESUELTO: ½ taza de cebolla blanca en cubitos
+NO RESUELTO: 3 papas rojas de tamaño mediano ~510 gr. *
+IGNORADO: 24 palillos de madera para sostener los taquitos enrollados
+IGNORADO: 1 aguacate opcional
+IGNORADO: Sal y pimienta al gusto
+NO RESUELTO: ½ taza de Queso Cotija o Queso Fresco desmenuzado**
+TOTAL KCAL: 0.00
+INGREDIENTES CON PROBLEMAS:
+  - ½ taza de cilantro finamente picado
+  - 1 taza de tomate picadito y sin semillas
+  - 1 cucharada de jugo de limón
+  - 12 to rtillas de maíz
+  - ⅔ de taza de aceite vegetal para freír los taquitos
+  - 2 chiles serranos en cubitos
+  - 2 tazas de repollo en tiras finas
+  - ½ taza de crema mexicana
+  - ½ taza de cebolla blanca en cubitos
+  - 3 papas rojas de tamaño mediano ~510 gr. *
+  - ½ taza de Queso Cotija o Queso Fresco desmenuzado**
+
+--- RECETA: Ensalada de Chayotes ---
+IGNORADO: ½ cucharadita sal
+IGNORADO: ¼ cucharadita de pimienta recién molida
+NO RESUELTO: ¼ de cebolla blanca o roja cortada en rodajas finas o picada
+NO RESUELTO: 1 cucharada de vinagre suave
+IGNORADO: 1 cucharada de agua
+NO RESUELTO: ½ taza de Queso Fresco mexicano
+NO RESUELTO: cortado en cubitos
+NO RESUELTO: 2 chayotes grandes
+NO RESUELTO: 1 cucharadita de orégano Mexicano
+NO RESUELTO: 2 cucharadas de aceite de oliva
+TOTAL KCAL: 0.00
+INGREDIENTES CON PROBLEMAS:
+  - ¼ de cebolla blanca o roja cortada en rodajas finas o picada
+  - 1 cucharada de vinagre suave
+  - ½ taza de Queso Fresco mexicano
+  - cortado en cubitos
+  - 2 chayotes grandes
+  - 1 cucharadita de orégano Mexicano
+  - 2 cucharadas de aceite de oliva
+
+--- RECETA: Huevos a la Mexicana ---
