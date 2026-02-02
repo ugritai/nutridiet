@@ -319,7 +319,7 @@ async def get_pixabay_image_api(name_esp: str) -> str:
         print(f"[Pixabay] Imagen descargada: {filename}")
 
     # Guardar en MongoDB
-    local_url = f"http://localhost:8000/static/images/{filename}"
+    local_url = f"http://nutridiet-backend:8000/static/images/{filename}"
     save_image_to_db(name_esp, local_url)
 
     return image_url

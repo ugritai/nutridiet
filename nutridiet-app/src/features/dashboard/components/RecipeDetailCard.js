@@ -151,7 +151,7 @@ export default function RecipeDetailCard() {
 
   useEffect(() => {
     setLoading(true);
-    fetch(`http://localhost:8000/recetas/detalle_receta/${encodeURIComponent(nombre)}`)
+      fetch(`/recetas/detalle_receta/${encodeURIComponent(nombre)}`)
       .then(res => res.json())
       .then(data => {
         // Aseguramos que dietary_preferences y nutritional_reviw son arrays

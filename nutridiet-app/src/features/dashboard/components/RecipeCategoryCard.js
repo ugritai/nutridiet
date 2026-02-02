@@ -37,8 +37,8 @@ export default function RecipeCategoryCard({ categoria }) {
         setLoading(true);
         try {
             const [recetasRes, maximosRes] = await Promise.all([
-                fetch(`http://localhost:8000/recetas/categoria/${encodeURIComponent(categoria)}/nutricion_simplificada?por_porcion=true`),
-                fetch(`http://localhost:8000/recetas/recetas/maximos_nutricionales?categoria=${encodeURIComponent(categoria)}`)
+                fetch(`/recetas/categoria/${encodeURIComponent(categoria)}/nutricion_simplificada?por_porcion=true`),
+                fetch(`/recetas/recetas/maximos_nutricionales?categoria=${encodeURIComponent(categoria)}`)
             ]);
 
             const recetasData = await recetasRes.json();

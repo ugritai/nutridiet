@@ -110,7 +110,7 @@ export default function FoodCategoryCard({ categoria }) {
       Object.entries(newFilters).filter(([k, v]) => v)
     );
 
-    fetch(`http://localhost:8000/alimentos/por_categoria/${encodeURIComponent(categoria)}?${queryParams}`)
+    fetch(`http://nutridiet-backend:8000/alimentos/por_categoria/${encodeURIComponent(categoria)}?${queryParams}`)
       .then(res => res.json())
       .then(data => {
         setAlimentos(data.alimentos || []);

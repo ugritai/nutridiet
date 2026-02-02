@@ -1,16 +1,9 @@
 {
   "ExpandedNodes": [
     "",
-    "\\backend",
-    "\\backend\\routers",
-    "\\nutridiet-app",
-    "\\nutridiet-app\\src",
-    "\\nutridiet-app\\src\\features",
-    "\\nutridiet-app\\src\\features\\dashboard",
-    "\\nutridiet-app\\src\\features\\dashboard\\components",
-    "\\nutridiet-app\\src\\features\\dashboard\\components\\dietas",
-    "\\nutridiet-app\\src\\features\\dashboard\\components\\pacientes"
+    "\\docker",
+    "\\docker\\nginx"
   ],
-  "SelectedNode": "\\backend\\routers\\pacientes.py",
+  "SelectedNode": "\\docker-compose.yml",
   "PreviewInSolutionExplorer": false
 }

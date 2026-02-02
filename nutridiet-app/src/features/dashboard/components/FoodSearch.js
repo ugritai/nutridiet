@@ -50,11 +50,11 @@ export default function FoodSearch({ type = 'alimentos', onSelect }) {
 
     let endpoint = '';
     if (type === 'recetas') {
-      endpoint = `http://localhost:8000/recetas/buscar_recetas/${value}?limit=20`;
+        endpoint = `/recetas/buscar_recetas/${value}?limit=20`;
     } else if (type === 'ingestas') {
-      endpoint = `http://localhost:8000/planificacion_ingestas/buscar_ingestas/${value}`;
+        endpoint = `/planificacion_ingestas/buscar_ingestas/${value}`;
     } else {
-      endpoint = `http://localhost:8000/alimentos/buscar_alimentos/${value}`;
+        endpoint = `/alimentos/buscar_alimentos/${value}`;
     }
 
     try {

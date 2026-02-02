@@ -44,7 +44,7 @@ export default function RecetasPage() {
   }
   
   useEffect(() => {
-    fetch('http://localhost:8000/recetas/all_categories')
+      fetch('/recetas/all_categories')
       .then(res => res.json())
       .then(data => {
         console.log('Data received:', data);

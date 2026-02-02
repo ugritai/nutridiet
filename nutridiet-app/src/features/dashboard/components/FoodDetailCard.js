@@ -109,7 +109,7 @@ export default function FoodDetailCard() {
 
     useEffect(() => {
         setLoading(true);
-        fetch(`http://localhost:8000/alimentos/detalle_alimento/${encodeURIComponent(nombre)}`)
+        fetch(`http://nutridiet-backend:8000/alimentos/detalle_alimento/${encodeURIComponent(nombre)}`)
             .then(res => {
                 if (!res.ok) throw new Error("No encontrado");
                 return res.json();
@@ -126,7 +126,7 @@ export default function FoodDetailCard() {
     useEffect(() => {
         if (!alimento?.name_esp) return;
 
-        fetch(`http://localhost:8000/alimentos/porcion_estandar/${encodeURIComponent(alimento.name_esp)}`)
+        fetch(`http://nutridiet-backend:8000/alimentos/porcion_estandar/${encodeURIComponent(alimento.name_esp)}`)
             .then(res => res.json())
             .then(data => {
                 setPorcionInfo(data);

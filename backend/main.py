@@ -10,9 +10,11 @@ load_dotenv()
 app = FastAPI()
 
 # CORS
+# Add nginx origin (http://localhost) so the browser can call nginx which proxies to backend.
+# For local development you can also use ["*"] but be careful in production.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["http://localhost"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

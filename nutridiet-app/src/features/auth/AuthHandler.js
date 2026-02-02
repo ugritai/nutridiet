@@ -11,7 +11,7 @@ export default function AuthHandler() {
 
             if (!token && refreshToken) {
                 try {
-                    const res = await fetch('http://localhost:8000/api/auth/refresh', {
+                    const res = await fetch('/api/auth/refresh', { // <--- ASÍ
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',

@@ -112,7 +112,7 @@ export default function CrearIngestaForm({ onClose = null, nombreIngesta: propNo
     const handleSelectReceta = async (nombre) => {
         if (recetasBuscadas.some(r => r.nombre === nombre)) return;
         try {
-            const res = await fetch(`http://localhost:8000/recetas/${encodeURIComponent(nombre)}/nutricion`);
+            const res = await fetch(`http://nutridiet-backend:8000/recetas/${encodeURIComponent(nombre)}/nutricion`);
             if (!res.ok) throw new Error('No se pudo obtener la nutrición de la receta');
             const data = await res.json();
             const raciones = data.raciones || 1;
@@ -170,8 +170,8 @@ export default function CrearIngestaForm({ onClose = null, nombreIngesta: propNo
             setLoading(true);
             try {
                 const [recetasRes, maximosRes] = await Promise.all([
-                    fetch(`http://localhost:8000/recetas/categoria/${encodeURIComponent(categoriaFiltro)}/nutricion_simplificada?por_porcion=true`),
-                    fetch(`http://localhost:8000/recetas/recetas/maximos_nutricionales?categoria=${encodeURIComponent(categoriaFiltro)}`)
+                    fetch(`http://nutridiet-backend:8000/recetas/categoria/${encodeURIComponent(categoriaFiltro)}/nutricion_simplificada?por_porcion=true`),
+                    fetch(`http://nutridiet-backend:8000/recetas/recetas/maximos_nutricionales?categoria=${encodeURIComponent(categoriaFiltro)}`)
                 ]);
 
                 if (!recetasRes.ok) throw new Error('Error al obtener recetas');

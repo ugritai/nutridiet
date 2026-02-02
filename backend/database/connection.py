@@ -1,15 +1,16 @@
 import os
-from dotenv import load_dotenv  # <--- nuevo
 from pymongo import MongoClient
 from motor.motor_asyncio import AsyncIOMotorClient
+from dotenv import load_dotenv
 
-# Cargar variables de entorno del archivo .env
 load_dotenv()
 
-MONGO_URI = os.getenv("MONGO_URI")
-RECIPE_MONGO_URI = os.getenv("RECIPE_MONGO_URI")
+# Variables correctas según docker-compose
+MONGO_URI_NUTRIDIET = os.getenv("MONGO_URI_NUTRIDIET")
+MONGO_URI_FOODDB = os.getenv("MONGO_URI_FOODDB")
 
-client_host = MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000)
+# Conexión sincronizada
+client_host = MongoClient(MONGO_URI_NUTRIDIET, serverSelectionTimeoutMS=5000)
 db_host = client_host['nutridiet']
 
 nutritionist_collection = db_host['nutritionist']
@@ -22,6 +23,7 @@ intake_collection = db_host['intake']
 diet_collection = db_host['diet']
 food_portions_collection = db_host['food_portions']
 
-recipe_host = AsyncIOMotorClient(RECIPE_MONGO_URI, serverSelectionTimeoutMS=5000)
+# Conexión asíncrona
+recipe_host = AsyncIOMotorClient(MONGO_URI_FOODDB, serverSelectionTimeoutMS=5000)
 recipe_db_host = recipe_host['fooddb']
 bedca_collection = recipe_db_host['bedca_unified']

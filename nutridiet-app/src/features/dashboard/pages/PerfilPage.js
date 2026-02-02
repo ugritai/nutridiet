@@ -98,8 +98,6 @@ export default function PerfilPage(props) {
     if (!validateInputs()) return;
 
     try {
-      const token = localStorage.getItem('refreshToken') || sessionStorage.getItem('refreshToken');
-
       const bodyData = {
         name: formValues.name,
         phone: formValues.phone,
@@ -112,12 +110,9 @@ export default function PerfilPage(props) {
         bodyData.new_password = formValues.newPassword;
       }
 
-      const response = await fetch('http://localhost:8000/nutricionistas/actualizar_nutricionista', {
+      // Use fetchWithAuth so request goes to /api via nginx and includes auth header
+      const response = await fetchWithAuth('/nutricionistas/actualizar_nutricionista', {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
         body: JSON.stringify(bodyData),
       });
 

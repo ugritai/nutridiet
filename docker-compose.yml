@@ -1,0 +1,101 @@
+﻿version: "3.9"
+
+services:
+
+  nutridietdb:
+    image: mongo:6
+    container_name: nutridietdb
+    ports:
+      - "127.0.0.1:27019:27017"
+    volumes:
+      - nutridiet_data:/data/db
+      - ./docker/mongo-init/nutridiet-init.js:/docker-entrypoint-initdb.d/01-init.js:ro
+    env_file:
+      - ./.env
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASS}
+    restart: unless-stopped
+    healthcheck:
+      test: >
+        mongosh -u ${MONGO_ROOT_USER} -p ${MONGO_ROOT_PASS} --authenticationDatabase admin --eval "db.adminCommand('ping')"
+      interval: 10s
+      timeout: 30s
+      retries: 5
+
+  fooddb:
+    image: mongo:6
+    container_name: fooddb
+    ports:
+      - "127.0.0.1:27018:27017"
+    volumes:
+      - fooddb_data:/data/db
+      - ./docker/mongo-init/fooddb-init.js:/docker-entrypoint-initdb.d/01-init.js:ro
+    env_file:
+      - ./.env
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASS}
+    restart: unless-stopped
+    healthcheck:
+      test: >
+        mongosh -u ${MONGO_ROOT_USER} -p ${MONGO_ROOT_PASS} --authenticationDatabase admin --eval "db.adminCommand('ping')"
+      interval: 10s
+      timeout: 30s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: nutridiet-backend
+    ports:
+      - "8000:8000"
+    depends_on:
+      - nutridietdb
+      - fooddb
+    env_file:
+      - ./.env
+    command:
+      - ./wait-for-it.sh
+      - nutridietdb:27017
+      - "--timeout=60"
+      - "--"
+      - ./wait-for-it.sh
+      - fooddb:27017
+      - "--timeout=60"
+      - "--"
+      - uvicorn
+      - main:app
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8000"
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./nutridiet-app
+      dockerfile: Dockerfile
+    container_name: nutridiet-frontend
+    expose:
+      - "3000"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:stable-alpine
+    container_name: nutridiet-nginx
+    ports:
+      - "80:80"
+    depends_on:
+      - frontend
+      - backend
+    volumes:
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    restart: unless-stopped
+
+volumes:
+  nutridiet_data:
+  fooddb_data:
