@@ -10,7 +10,7 @@ export default function AlimentosPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-      fetch('/alimentos/all_categories')
+      fetch('/api/alimentos/all_categories')
       .then(res => res.json())
       .then(data => {
         console.log('Data received:', data);

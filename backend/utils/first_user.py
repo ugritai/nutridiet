@@ -1,6 +1,6 @@
 import bcrypt
 
-password = b"string"   
+password = b"123456"   
 hashed = bcrypt.hashpw(password, bcrypt.gensalt())
 
 print(hashed.decode())

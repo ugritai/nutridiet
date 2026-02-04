@@ -7,6 +7,8 @@ import {
 import UniversalCard from '../components/UniversalCard';
 import FoodSearch from '../components/FoodSearch';
 import Search from '../components/Search';
+// ✅ 1. IMPORTAR fetchWithAuth
+import { fetchWithAuth } from './api'; 
 
 export default function RecipeCategoryCard({ categoria }) {
     const navigate = useNavigate();
@@ -36,10 +38,17 @@ export default function RecipeCategoryCard({ categoria }) {
     const fetchDatos = async () => {
         setLoading(true);
         try {
+            // ✅ 2. USAR fetchWithAuth EN LAS PETICIONES
+            // fetchWithAuth añade automáticamente el /api y el token Bearer
             const [recetasRes, maximosRes] = await Promise.all([
-                fetch(`/recetas/categoria/${encodeURIComponent(categoria)}/nutricion_simplificada?por_porcion=true`),
-                fetch(`/recetas/recetas/maximos_nutricionales?categoria=${encodeURIComponent(categoria)}`)
+                fetchWithAuth(`/recetas/categoria/${encodeURIComponent(categoria)}/nutricion_simplificada?por_porcion=true`),
+                fetchWithAuth(`/recetas/recetas/maximos_nutricionales?categoria=${encodeURIComponent(categoria)}`)
             ]);
+
+            // Es buena práctica verificar si las respuestas son OK
+            if (!recetasRes.ok || !maximosRes.ok) {
+                throw new Error("Error al cargar datos de recetas");
+            }
 
             const recetasData = await recetasRes.json();
             const maximosData = await maximosRes.json();
@@ -63,7 +72,7 @@ export default function RecipeCategoryCard({ categoria }) {
             setCurrentPage(1);
             setSelectedLetter('');
         } catch (err) {
-            console.error(err);
+            console.error("Error fetching data:", err);
         } finally {
             setLoading(false);
         }
@@ -204,7 +213,7 @@ export default function RecipeCategoryCard({ categoria }) {
                         if (!nombre) return null;
 
                         return (
-                            <Grid size={{ xs: 12, sm: 6, lg: 4, md: 4 }} key={nombre}>
+                            <Grid item xs={12} sm={6} md={4} lg={4} key={nombre}>
                                 <UniversalCard
                                     title={nombre.charAt(0).toUpperCase() + nombre.slice(1)}
                                     onAction={() =>

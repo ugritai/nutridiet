@@ -1,13 +1,18 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import {
   Grid, Typography, CircularProgress, Box, Pagination, Button, IconButton
 } from '@mui/material';
 
-import UniversalCard from '../components/UniversalCard';
-import Search from '../components/Search';
-import FoodSearch from '../components/FoodSearch';
-import FiltrosNutricionales from '../components/FoodFilter';
+import UniversalCard from '../components/UniversalCard'; // Ajusta si es necesario
+import Search from '../components/Search';   // Ajusta si es necesario
+import FoodSearch from '../components/FoodSearch';  // Ajusta si es necesario
+import FiltrosNutricionales from '../components/FoodFilter'; // Ajusta si es necesario
+
+// ✅ Asegúrate de que esta ruta sea correcta según dónde tengas el archivo api.js
+// Si este archivo está en 'components', y api.js también, sería './api' o '../api'
+import { fetchWithAuth } from './api';
+
 
 const FiltrosActivos = ({ filters, handleFilterChange }) => {
   const etiquetas = {
@@ -45,7 +50,7 @@ const FiltrosActivos = ({ filters, handleFilterChange }) => {
           {etiquetas[key]}: {colorInfo.label}
         </Typography>
         <IconButton
-          size=""
+          size="small"
           onClick={() => handleFilterChange(key, '')}
           sx={{ p: 0.5, ml: 0.5 }}
         >
@@ -67,8 +72,6 @@ const FiltrosActivos = ({ filters, handleFilterChange }) => {
     </Box>
   );
 };
-
-
 
 export default function FoodCategoryCard({ categoria }) {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -103,15 +106,20 @@ export default function FoodCategoryCard({ categoria }) {
     fetchFilteredData(params);
   }, [searchParams, categoria]);
 
-  // 🔄 Fetch con filtros
+  // 🔄 Fetch con filtros (CORREGIDO)
   const fetchFilteredData = (newFilters) => {
     setLoading(true);
     const queryParams = new URLSearchParams(
       Object.entries(newFilters).filter(([k, v]) => v)
     );
 
-    fetch(`http://nutridiet-backend:8000/alimentos/por_categoria/${encodeURIComponent(categoria)}?${queryParams}`)
-      .then(res => res.json())
+    // ✅ CAMBIO CLAVE: Usamos fetchWithAuth y ruta relativa
+    // fetchWithAuth añade automáticamente el '/api' y el token
+    fetchWithAuth(`/alimentos/por_categoria/${encodeURIComponent(categoria)}?${queryParams}`)
+      .then(async (res) => {
+         if (!res.ok) throw new Error("Error al obtener alimentos");
+         return res.json();
+      })
       .then(data => {
         setAlimentos(data.alimentos || []);
         setFilteredAlimentos(data.alimentos || []);
@@ -237,7 +245,7 @@ export default function FoodCategoryCard({ categoria }) {
         {/* 🧾 Lista de alimentos */}
         <Grid container spacing={2}>
           {currentAlimentos.map((alimento) => (
-            <Grid size={{ xs: 12, sm: 6, lg: 4, md: 4 }} key={alimento.nombre}>
+            <Grid item xs={12} sm={6} md={4} key={alimento.nombre}>
               <UniversalCard
                 title={alimento.nombre}
                 image={alimento.image_url}
@@ -262,4 +270,3 @@ export default function FoodCategoryCard({ categoria }) {
     </Box>
   );
 }
-

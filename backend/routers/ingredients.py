@@ -7,17 +7,23 @@ from fastapi import Query
 from bson.json_util import dumps
 import re
 
+#VOLVER A PONER PARA EL DESPLIEGUE
 
 from utils.food_utils import remove_stop_words, convert_objectid, get_pixabay_image_api, actualizar_imagen_alimento
+#comentar para hacer pruebas sin torch '''
 from sentence_transformers import SentenceTransformer, util
 import numpy as np
 import torch
+#comentar para hacer pruebas sin torch '''
 
 
 router = APIRouter(tags=["Ingredients"])
 
 alimentos_collection = bedca_collection
-model = SentenceTransformer('sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2')
+
+#VOLVER A PONER PARA EL DESPLIEGUE
+
+#model = SentenceTransformer('sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2')
 
 @router.post("/actualizar_imagen/{name_esp}")
 async def actualizar_imagen_endpoint(name_esp: str):
@@ -120,6 +126,7 @@ async def get_alimentos_por_categoria_imagen(categoria: str):
     return {"alimentos": resultado}
 
 async def _sugerir_alimentos_logic(nombre: str, limit: int = 10):
+    #comentar para hacer pruebas sin torch '''
     nombre_normalizado = unidecode(nombre.strip().lower())
 
     embedding_input = model.encode(nombre_normalizado)
@@ -171,6 +178,8 @@ async def _sugerir_alimentos_logic(nombre: str, limit: int = 10):
         }
         for sim, doc, categoria_doc in top_ordenado
     ]
+    #comentar para hacer pruebas sin torch '''
+    #return [ ]
 
 @router.get("/sugerir_alimentos/{nombre}")
 async def sugerir_alimentos(nombre: str, limit: int = 10):
@@ -186,7 +195,6 @@ async def sugerir_alimentos(nombre: str, limit: int = 10):
 
 
 '''
-
 @router.get("/detalle_alimento/{nombre}")
 async def get_alimento_detalle(nombre: str):
 

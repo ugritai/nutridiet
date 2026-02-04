@@ -1,9 +1,16 @@
 {
   "ExpandedNodes": [
     "",
-    "\\docker",
-    "\\docker\\nginx"
+    "\\backend",
+    "\\backend\\database",
+    "\\nutridiet-app",
+    "\\nutridiet-app\\src",
+    "\\nutridiet-app\\src\\features",
+    "\\nutridiet-app\\src\\features\\dashboard",
+    "\\nutridiet-app\\src\\features\\dashboard\\components",
+    "\\nutridiet-app\\src\\features\\dashboard\\components\\dietas",
+    "\\nutridiet-app\\src\\features\\dashboard\\pages"
   ],
-  "SelectedNode": "\\docker-compose.yml",
+  "SelectedNode": "\\nutridiet-app\\src\\features\\dashboard\\components\\RecipeDetailCard.js",
   "PreviewInSolutionExplorer": false
 }

@@ -30,4 +30,6 @@ passlib[bcrypt]==1.7.4
 requests
 
 Unidecode
+#comentar para hacer pruebas sin torch
+#torch --index-url https://download.pytorch.org/whl/cpu
 sentence-transformers

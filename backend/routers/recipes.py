@@ -575,13 +575,15 @@ async def obtener_kcal_pro_car_por_categoria(
         "resultados": resultados
     }
 
-    
+#comentar para hacer pruebas sin torch '''    
 from sentence_transformers import SentenceTransformer, util
 import torch
 
 model = SentenceTransformer('sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2')
+#comentar para hacer pruebas sin torch '''
 
 async def _sugerir_recetas_logic(nombre: str, limit: int = 10):
+    #comentar para hacer pruebas sin torch '''
     nombre_normalizado = unidecode(nombre.strip().lower())
     embedding_input = model.encode(nombre_normalizado)
     embedding_input = torch.tensor(embedding_input, dtype=torch.float32)
@@ -629,6 +631,9 @@ async def _sugerir_recetas_logic(nombre: str, limit: int = 10):
         }
         for sim, doc, categoria_doc in top_ordenado
     ]
+    
+    #comentar para hacer pruebas sin torch '''
+    #return []
 
 
 @router.get("/sugerir_recetas/{nombre}")

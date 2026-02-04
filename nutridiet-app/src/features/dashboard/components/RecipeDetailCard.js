@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link as RouterLink, data } from 'react-router-dom';
+import { useParams, Link as RouterLink } from 'react-router-dom';
 import {
   Accordion,
   AccordionSummary,
@@ -20,8 +20,12 @@ import {
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { AccessTime, Restaurant, People, Flag, LocalDining } from '@mui/icons-material';
-import RecipeNutritionTable from '../components/RecipeNutritionTable';
+import RecipeNutritionTable from '../components/RecipeNutritionTable'; // Asegúrate de que esta ruta sea correcta
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import { useTheme, alpha } from '@mui/material/styles'; // <--- AÑADE alpha AQUÍ
+
+// ✅ 1. IMPORTAR fetchWithAuth (IMPORTANTE)
+import { fetchWithAuth } from './api'; 
 
 const ListSection = ({ title, icon: Icon, items, filterFn }) => {
   const theme = useTheme();
@@ -62,7 +66,7 @@ const ListSection = ({ title, icon: Icon, items, filterFn }) => {
                     ? item.ingredient.replace(/^'+|'+$/g, '').trim()
                     : item
                       .replace(/^\s*\d+\.\s*/, '')
-                      .replace(/^\s*([\d]+[\.\)]?|[·•])+\s*/g, '')  // Elimina números + punto/paréntesis o símbolos · • al inicio
+                      .replace(/^\s*([\d]+[\.\)]?|[·•])+\s*/g, '') 
                       .replace(/\bPaso\s*\d+\b/gi, '')
                       .replace(/(?:^|,)\s*'?\d+'?(?=\s|$)/g, '')
                       .replace(/(^|[\s])[,]+(?=[\s]|$)/g, ' ')
@@ -106,7 +110,7 @@ const DietaryChip = ({ label }) => {
       sx={{
         borderColor: theme.palette[colorMap[colorKey]]?.main || 'default',
         color: theme.palette[colorMap[colorKey]]?.dark,
-        bgcolor: `${theme.palette[colorMap[colorKey]]?.light}30`,
+        bgcolor: alpha(colorPalette.light || colorPalette[200] || '#ccc', 0.2),
         mr: 1,
         mb: 1
       }}
@@ -151,10 +155,13 @@ export default function RecipeDetailCard() {
 
   useEffect(() => {
     setLoading(true);
-      fetch(`/recetas/detalle_receta/${encodeURIComponent(nombre)}`)
-      .then(res => res.json())
+      // ✅ 2. USAR fetchWithAuth + Ruta Relativa
+      fetchWithAuth(`/recetas/detalle_receta/${encodeURIComponent(nombre)}`)
+      .then(async (res) => {
+          if (!res.ok) throw new Error("Error en la respuesta");
+          return res.json();
+      })
       .then(data => {
-        // Aseguramos que dietary_preferences y nutritional_reviw son arrays
         setSugeridos(data.sugeridos || []);
         setRecipe({
           ...data.receta,
@@ -165,12 +172,14 @@ export default function RecipeDetailCard() {
       .catch(err => console.error("Error:", err))
       .finally(() => setLoading(false));
   }, [nombre]);
-  console.log(recipe)
-  console.log(sugeridos)
+  
+  // Debug
+  // console.log(recipe)
+  // console.log(sugeridos)
+
   if (loading) return <CircularProgress sx={{ mt: 4 }} />;
 
   if (!recipe) {
-    // Si no hay alimento mostrar sugerencias 
     return (
       <Card sx={{
         maxWidth: '100%',
@@ -181,14 +190,14 @@ export default function RecipeDetailCard() {
       }}>
         <CardContent>
           <Typography variant="h6" gutterBottom>
-            No se encontró información para el receta solicitado.
+            No se encontró información para la receta solicitada.
           </Typography>
 
           {sugeridos.length > 0 && (
             <Box sx={{ mt: 3 }}>
               <Divider sx={{ mb: 3 }} />
               <Typography variant="h6" gutterBottom>
-                Recetas relacionados
+                Recetas relacionadas
               </Typography>
               <Box sx={{
                 display: 'flex',
@@ -280,7 +289,7 @@ export default function RecipeDetailCard() {
 
         <Grid container spacing={3}>
           {/* Ingredients Section */}
-          <Grid item size={{ xs: 12, sm: 4, lg: 4, md: 6 }}>
+          <Grid item xs={12} sm={4} lg={4} md={6}>
             <ListSection
               title="Ingredientes"
               icon={Restaurant}
@@ -290,18 +299,18 @@ export default function RecipeDetailCard() {
           </Grid>
 
           {/* Steps Section */}
-          <Grid size={{ xs: 12, sm: 8, lg: 8, md: 6 }}>
+          <Grid item xs={12} sm={8} lg={8} md={6}>
             <ListSection
               title="Preparación"
               icon={AccessTime}
               items={recipe.steps}
               filterFn={(step) => {
                 return step
-                  .replace(/^\s*\d+\.\s*/, '')  // elimina "1. ", "2. " al inicio del paso
-                  .replace(/^\s*([\d]+[\.\)]?|[·•])+\s*/g, '')  // Elimina números + punto/paréntesis o símbolos · • al inicio
-                  .replace(/(Paso\s*\d+|,\s*|'?\d+|'?\s*\d+)/gi, '')  // Eliminar "Paso X", comas y números extra
-                  .replace(/^'+|'+$/g, '')  // Eliminar comillas al inicio y final
-                  .replace(/(^|[\s])[,]+(?=[\s]|$)/g, ' ')  // Eliminar comas sueltas
+                  .replace(/^\s*\d+\.\s*/, '') 
+                  .replace(/^\s*([\d]+[\.\)]?|[·•])+\s*/g, '') 
+                  .replace(/(Paso\s*\d+|,\s*|'?\d+|'?\s*\d+)/gi, '') 
+                  .replace(/^'+|'+$/g, '') 
+                  .replace(/(^|[\s])[,]+(?=[\s]|$)/g, ' ') 
                   .trim() !== "";
               }}
             />
@@ -378,7 +387,7 @@ export default function RecipeDetailCard() {
             <Box sx={{ mt: 3 }}>
               <Divider sx={{ mb: 3 }} />
               <Typography variant="h6" gutterBottom>
-                Recetas relacionados
+                Recetas relacionadas
               </Typography>
               <Box sx={{
                 display: 'flex',
