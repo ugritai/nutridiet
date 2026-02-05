@@ -58,6 +58,7 @@ Desktop.ini
 ############################
 .vscode/
 .idea/
+.vs/
 *.swp
 *.swo
 
@@ -78,3 +79,6 @@ Desktop.ini
 # Docs / TFG
 ############################
 Memoria_TFG/.DS_Store
+
+
+

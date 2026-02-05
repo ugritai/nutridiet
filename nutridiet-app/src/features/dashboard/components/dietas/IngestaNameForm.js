@@ -20,8 +20,9 @@ export default function IngestaNameForm({
     const modo = isDialog ? 'crear' : (propModo || routeLocation.state?.modo || 'crear');
 
     const ingestaOriginal = isDialog ? null : (propIngesta || routeLocation.state?.ingesta || null);
-    const pacienteN = propPaciente || routeParams.pacienteN;
-
+    
+    // Recuperamos el ID con seguridad
+    const pacienteN = propPaciente || routeParams.patientId || routeParams.pacienteN;
 
     const [formData, setFormData] = useState({
         tipo: '',
@@ -44,6 +45,13 @@ export default function IngestaNameForm({
     const manejarSiguiente = () => {
         if (!formData.tipo || !formData.nombre) {
             alert('Por favor completa todos los campos');
+            return;
+        }
+
+        // SEGURIDAD: Si no tenemos ID de paciente, no navegamos
+        if (!isDialog && !pacienteN) {
+            console.error("Error crítico: ID de paciente no encontrado (undefined)");
+            alert("Error: No se ha identificado al paciente.");
             return;
         }
 
@@ -73,7 +81,7 @@ export default function IngestaNameForm({
     };
 
     const content = (
-        <Box sx={{ mx: 'auto', mt: 5 }}>
+        <Box sx={{ mx: 'auto', mt: 5, maxWidth: 600, p: 2 }}>
             <Typography variant="h5" gutterBottom>
                 {modo === 'editar' ? 'Editar Ingesta' : 'Crear nueva Ingesta'}
             </Typography>
@@ -107,13 +115,13 @@ export default function IngestaNameForm({
                 </TextField>
             </FormControl>
 
-            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
                 <Button
                     variant="outlined"
                     onClick={() =>
                         isDialog
                             ? onClose(null)
-                            : routeNavigate(`/planificacion_dieta/${encodeURIComponent(pacienteN)}`)
+                            : routeNavigate(pacienteN ? `/planificacion_dieta/${encodeURIComponent(pacienteN)}` : '/planificacion_dieta')
                     }
                 >
                     Atrás

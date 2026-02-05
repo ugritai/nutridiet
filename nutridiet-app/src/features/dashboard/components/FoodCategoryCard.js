@@ -4,10 +4,10 @@ import {
   Grid, Typography, CircularProgress, Box, Pagination, Button, IconButton
 } from '@mui/material';
 
-import UniversalCard from '../components/UniversalCard'; // Ajusta si es necesario
-import Search from '../components/Search';   // Ajusta si es necesario
-import FoodSearch from '../components/FoodSearch';  // Ajusta si es necesario
-import FiltrosNutricionales from '../components/FoodFilter'; // Ajusta si es necesario
+import UniversalCard from './UniversalCard';
+import Search from './Search';
+import FoodSearch from './FoodSearch';
+import FiltrosNutricionales from './FoodFilter';
 
 // ✅ Asegúrate de que esta ruta sea correcta según dónde tengas el archivo api.js
 // Si este archivo está en 'components', y api.js también, sería './api' o '../api'

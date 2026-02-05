@@ -112,7 +112,9 @@ export default function CrearIngestaForm({ onClose = null, nombreIngesta: propNo
     const handleSelectReceta = async (nombre) => {
         if (recetasBuscadas.some(r => r.nombre === nombre)) return;
         try {
-            const res = await fetch(`http://nutridiet-backend:8000/recetas/${encodeURIComponent(nombre)}/nutricion`);
+            // CORREGIDO: Usar fetchWithAuth y ruta relativa /recetas
+            const res = await fetchWithAuth(`/recetas/${encodeURIComponent(nombre)}/nutricion`);
+            
             if (!res.ok) throw new Error('No se pudo obtener la nutrición de la receta');
             const data = await res.json();
             const raciones = data.raciones || 1;
@@ -169,16 +171,23 @@ export default function CrearIngestaForm({ onClose = null, nombreIngesta: propNo
         const fetchDatos = async () => {
             setLoading(true);
             try {
+                // CORREGIDO: Usar fetchWithAuth y rutas relativas
                 const [recetasRes, maximosRes] = await Promise.all([
-                    fetch(`http://nutridiet-backend:8000/recetas/categoria/${encodeURIComponent(categoriaFiltro)}/nutricion_simplificada?por_porcion=true`),
-                    fetch(`http://nutridiet-backend:8000/recetas/recetas/maximos_nutricionales?categoria=${encodeURIComponent(categoriaFiltro)}`)
+                    fetchWithAuth(`/recetas/categoria/${encodeURIComponent(categoriaFiltro)}/nutricion_simplificada?por_porcion=true`),
+                    fetchWithAuth(`/recetas/recetas/maximos_nutricionales?categoria=${encodeURIComponent(categoriaFiltro)}`)
                 ]);
 
                 if (!recetasRes.ok) throw new Error('Error al obtener recetas');
-                if (!maximosRes.ok) throw new Error('Error al obtener valores máximos');
+                // maximosRes puede fallar sin romper el flujo, pero lo comprobamos
+                if (!maximosRes.ok) console.warn('Error al obtener valores máximos');
 
                 const recetasData = await recetasRes.json();
-                const maximosData = await maximosRes.json();
+                
+                // Si maximos falla, usamos defaults, si no, parseamos
+                let maximosData = { kcal: 1000, pro: 100, car: 100 };
+                if (maximosRes.ok) {
+                    maximosData = await maximosRes.json();
+                }
 
                 const recetasConDatos = recetasData.resultados || [];
                 console.log(recetasConDatos);

@@ -23,7 +23,7 @@ alimentos_collection = bedca_collection
 
 #VOLVER A PONER PARA EL DESPLIEGUE
 
-#model = SentenceTransformer('sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2')
+model = SentenceTransformer('sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2')
 
 @router.post("/actualizar_imagen/{name_esp}")
 async def actualizar_imagen_endpoint(name_esp: str):
@@ -378,3 +378,4 @@ async def obtener_porciones(food: str):
         "units": mejor_match.get("units", []),
         "household_measures": mejor_match.get("household_measures", [])
     }
+

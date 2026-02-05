@@ -18,7 +18,7 @@ import {
   ListItemIcon,
   Avatar,
 } from '@mui/material';
-import { useTheme } from '@mui/material/styles';
+//import { useTheme } from '@mui/material/styles';
 import { AccessTime, Restaurant, People, Flag, LocalDining } from '@mui/icons-material';
 import RecipeNutritionTable from '../components/RecipeNutritionTable'; // Asegúrate de que esta ruta sea correcta
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -100,7 +100,12 @@ const DietaryChip = ({ label }) => {
     'Sin': 'success',
   };
 
-  const colorKey = Object.keys(colorMap).find(key => label.startsWith(key)) || 'default';
+  // Find which key the label starts with
+  const colorKey = Object.keys(colorMap).find(key => label.startsWith(key));
+  
+  // Safely get the theme color, defaulting to 'primary' if no match is found
+  const statusColor = colorKey ? colorMap[colorKey] : 'primary';
+  const mainColor = theme.palette[statusColor]?.main || theme.palette.primary.main;
 
   return (
     <Chip
@@ -108,9 +113,10 @@ const DietaryChip = ({ label }) => {
       variant="outlined"
       size="small"
       sx={{
-        borderColor: theme.palette[colorMap[colorKey]]?.main || 'default',
-        color: theme.palette[colorMap[colorKey]]?.dark,
-        bgcolor: alpha(colorPalette.light || colorPalette[200] || '#ccc', 0.2),
+        borderColor: mainColor,
+        color: theme.palette[statusColor]?.dark || theme.palette.primary.dark,
+        // Use alpha with the theme's main color instead of the undefined colorPalette
+        bgcolor: alpha(mainColor, 0.1), 
         mr: 1,
         mb: 1
       }}
