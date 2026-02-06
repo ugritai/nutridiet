@@ -7,21 +7,9 @@ import {
 import UniversalCard from '../components/UniversalCard';
 import FoodSearch from '../components/FoodSearch';
 import Search from '../components/Search';
-import { fetchWithAuth } from './api'; // ✅ IMPORTAMOS fetchWithAuth
 
-// Mapa de imágenes para RECETAS (Copiado para consistencia)
-const IMAGENES_RECETAS = {
-    sopas: "sopas.jpg",
-    ensaladas: "ensaladas.jpg",
-    arroz: "arroz.jpg",
-    pasta: "pasta.jpg",
-    guisos: "guisos.jpg",
-    pescado: "pescado.jpg",
-    carne: "carne.jpg",
-    fruta: "fruta.jpg",
-    postres: "postres.jpg",
-    varios: "sopas.jpg"
-};
+// ✅ IMPORTACIÓN DE TU API CON AUTH
+import { fetchWithAuth } from './api'; 
 
 export default function RecipeCategoryCard({ categoria }) {
     const navigate = useNavigate();
@@ -48,36 +36,19 @@ export default function RecipeCategoryCard({ categoria }) {
         handleSearch, handleSelectSuggestion, handleSuggestions
     } = FoodSearch({ type: 'recetas' });
 
-    // Función para asignar imagen según el nombre de la receta
-    const getImageForRecipe = (recipeName) => {
-        if (!recipeName) return `/img/${IMAGENES_RECETAS.varios}`;
-        const nameLower = recipeName.toLowerCase();
-        let filename;
-
-        if (nameLower.includes("sopa") || nameLower.includes("crema") || nameLower.includes("caldo") || nameLower.includes("gazpacho")) filename = IMAGENES_RECETAS.sopas;
-        else if (nameLower.includes("ensalada") || nameLower.includes("aderezo") || nameLower.includes("aliño") || nameLower.includes("alcachofa") || nameLower.includes("cebolla")) filename = IMAGENES_RECETAS.ensaladas;
-        else if (nameLower.includes("arroz") || nameLower.includes("paella") || nameLower.includes("risotto")) filename = IMAGENES_RECETAS.arroz;
-        else if (nameLower.includes("pasta") || nameLower.includes("espagueti") || nameLower.includes("macarrones") || nameLower.includes("fideos") || nameLower.includes("pizza") || nameLower.includes("lasaña")) filename = IMAGENES_RECETAS.pasta;
-        else if (nameLower.includes("guiso") || nameLower.includes("estofado") || nameLower.includes("lentejas") || nameLower.includes("garbanzos") || nameLower.includes("cocido")) filename = IMAGENES_RECETAS.guisos;
-        else if (nameLower.includes("pescado") || nameLower.includes("marisco") || nameLower.includes("bacalao") || nameLower.includes("merluza") || nameLower.includes("atun") || nameLower.includes("salmon")) filename = IMAGENES_RECETAS.pescado;
-        else if (nameLower.includes("carne") || nameLower.includes("pollo") || nameLower.includes("cerdo") || nameLower.includes("ternera") || nameLower.includes("hamburguesa") || nameLower.includes("albondigas")) filename = IMAGENES_RECETAS.carne;
-        else if (nameLower.includes("fruta") || nameLower.includes("macedonia") || nameLower.includes("manzana") || nameLower.includes("pera") || nameLower.includes("platano")) filename = IMAGENES_RECETAS.fruta;
-        else if (nameLower.includes("postre") || nameLower.includes("dulce") || nameLower.includes("bizcocho") || nameLower.includes("tarta") || nameLower.includes("flan") || nameLower.includes("chocolate")) filename = IMAGENES_RECETAS.postres;
-        else filename = IMAGENES_RECETAS.varios; 
-
-        return `/img/${filename}`;
-    };
-
     const fetchDatos = async () => {
         setLoading(true);
         try {
-            // ✅ USAMOS fetchWithAuth AQUI
+            // ✅ USANDO fetchWithAuth + Rutas Relativas
+            // Al usar Promise.all, ambas peticiones llevarán el token de autenticación
             const [recetasRes, maximosRes] = await Promise.all([
                 fetchWithAuth(`/recetas/categoria/${encodeURIComponent(categoria)}/nutricion_simplificada?por_porcion=true`),
                 fetchWithAuth(`/recetas/recetas/maximos_nutricionales?categoria=${encodeURIComponent(categoria)}`)
             ]);
 
-            if (!recetasRes.ok || !maximosRes.ok) throw new Error("Error al cargar datos de recetas");
+            if (!recetasRes.ok || !maximosRes.ok) {
+                throw new Error("Error en la carga de datos");
+            }
 
             const recetasData = await recetasRes.json();
             const maximosData = await maximosRes.json();
@@ -101,7 +72,7 @@ export default function RecipeCategoryCard({ categoria }) {
             setCurrentPage(1);
             setSelectedLetter('');
         } catch (err) {
-            console.error("Error fetching data:", err);
+            console.error("Error fetching category data:", err);
         } finally {
             setLoading(false);
         }
@@ -110,6 +81,8 @@ export default function RecipeCategoryCard({ categoria }) {
     useEffect(() => {
         fetchDatos();
     }, [categoria]);
+
+    // ... (El resto de useEffects y funciones handle se mantienen igual)
 
     useEffect(() => {
         const filtro = recetas.filter(r => {
@@ -148,7 +121,11 @@ export default function RecipeCategoryCard({ categoria }) {
     const totalPages = Math.ceil(filteredRecetas.length / itemsPerPage);
     const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 
-    if (loading) return <CircularProgress sx={{ mt: 4 }} />;
+    if (loading) return (
+        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 10 }}>
+            <CircularProgress />
+        </Box>
+    );
 
     return (
         <>
@@ -242,11 +219,9 @@ export default function RecipeCategoryCard({ categoria }) {
                         if (!nombre) return null;
 
                         return (
-                            <Grid item xs={12} sm={6} md={4} lg={4} key={nombre}>
+                            <Grid item xs={12} sm={6} lg={4} md={4} key={nombre}>
                                 <UniversalCard
                                     title={nombre.charAt(0).toUpperCase() + nombre.slice(1)}
-                                    // ✅ PASAMOS LA IMAGEN AQUÍ
-                                    image={getImageForRecipe(nombre)}
                                     onAction={() =>
                                         navigate(`/recetas/detalle_receta/${encodeURIComponent(nombre)}`, {
                                             state: {

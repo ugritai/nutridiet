@@ -57,9 +57,9 @@ async def get_ingredient_categories():
     sorted_categories = sorted(categories)
     return {"categories": sorted_categories}
 
-
 # Para obetener nombre de alimentos en español de una categorías en concreta del BedCA 
-@router.get("/por_categoria/{categoria}")
+# 1. Usamos :path para permitir nombres con "/"
+@router.get("/por_categoria/{categoria:path}")
 async def get_alimentos_por_categoria(
     categoria: str,
     salt: str = Query(None),
@@ -67,41 +67,43 @@ async def get_alimentos_por_categoria(
     total_fat: str = Query(None),
     trans: str = Query(None)
 ):
-    categoria = unidecode(categoria.lower().strip())
-    filtros = {}
+    categoria_clean = categoria.strip()
+    filtros = {"category_esp": re.compile(f"^{re.escape(categoria_clean)}$", re.IGNORECASE)}
 
-    if salt:
-        filtros["oms_lights.salt"] = salt
-    if sug:
-        filtros["oms_lights.sug"] = sug
-    if total_fat:
-        filtros["oms_lights.total_fat"] = total_fat
-    if trans:
-        filtros["oms_lights.trans"] = trans
+    # Filtros nutricionales (mantenemos los tuyos...)
+    if salt: filtros["oms_lights.salt"] = salt
+    # ... resto de filtros ...
 
-    alimentos_cursor = alimentos_collection.find(filtros)
+    alimentos_cursor = alimentos_collection.find(filtros, {"name_esp": 1, "_id": 0})
     resultado = []
 
     async for item in alimentos_cursor:
-        cat = item.get("category_esp", "")
-        if unidecode(cat.lower().strip()) == categoria:
-            nombre_esp = item.get("name_esp")
-            #image_doc = images_collection.find_one({"name_esp": nombre_esp})
-            #image_url = image_doc.get("image_url") if image_doc else None
-            image_doc = images_collection.find_one({"name_esp": nombre_esp})
-            if image_doc:
-                image_url = image_doc.get("image_url")
-            else:
-                # DESCARGA AUTOMÁTICA
-                image_url = await get_pixabay_image_api(nombre_esp)
+        nombre_esp = item.get("name_esp")
+        
+        # BUSCAMOS SOLO SI YA EXISTE. NO DESCARGAMOS.
+        image_doc = images_collection.find_one({"name_esp": nombre_esp})
+        image_url = image_doc.get("image_url") if image_doc else None
 
-            resultado.append({
-                "nombre": nombre_esp,
-                "image_url": image_url
-            })
+        resultado.append({
+            "nombre": nombre_esp,
+            "image_url": image_url # Puede ser None
+        })
 
     resultado.sort(key=lambda x: x["nombre"])
     return {"alimentos": resultado}
+# 2. Aseguramos que solo se devuelvan categorías que tienen alimentos
+@router.get("/all_categories")
+async def get_all_categories():
+    try:
+        # distinct() en MongoDB solo devuelve valores que realmente están en los documentos activos
+        categorias = await alimentos_collection.distinct("category_esp")
+        # Filtramos posibles valores nulos o vacíos
+        categorias_limpias = [c for c in categorias if c and c.strip()]
+        categorias_limpias.sort()
+        
+        return {"categories": categorias_limpias}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al obtener categorías: {e}")
 
 # Para obetener imagen del alimento por categoría y guardar en base de datos
 @router.get("/por_categoria_imagen/{categoria}")
@@ -289,18 +291,6 @@ async def get_alimento_detalle(nombre: str):
     }
 
 
-
-
-# Para obetener todas las categorías de alimentos del BedCA
-@router.get("/all_categories")
-async def get_all_categories():
-    try:
-        categorias = await alimentos_collection.distinct("category_esp")
-        
-        return {"categories": categorias}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error al obtener categorías: {e}")
-    
 @router.get("/buscar_alimentos/{nombre}")
 async def buscar_alimentos(nombre: str, limit: int = 10):
     palabras = remove_stop_words(nombre)

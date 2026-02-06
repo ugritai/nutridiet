@@ -8,11 +8,10 @@ import UniversalCard from './UniversalCard';
 import Search from './Search';
 import FoodSearch from './FoodSearch';
 import FiltrosNutricionales from './FoodFilter';
-
-// ✅ Asegúrate de que esta ruta sea correcta según dónde tengas el archivo api.js
-// Si este archivo está en 'components', y api.js también, sería './api' o '../api'
 import { fetchWithAuth } from './api';
 
+// Definimos el path del placeholder como una constante para fácil mantenimiento
+const FOOD_PLACEHOLDER = '/img/placeholder-food.jpg';
 
 const FiltrosActivos = ({ filters, handleFilterChange }) => {
   const etiquetas = {
@@ -76,7 +75,6 @@ const FiltrosActivos = ({ filters, handleFilterChange }) => {
 export default function FoodCategoryCard({ categoria }) {
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // 📌 Utilidades
   const getFiltersFromParams = () => ({
     salt: searchParams.get('salt') || '',
     sug: searchParams.get('sug') || '',
@@ -84,7 +82,6 @@ export default function FoodCategoryCard({ categoria }) {
     trans: searchParams.get('trans') || ''
   });
 
-  // 🔧 Estados
   const [filters, setFilters] = useState(getFiltersFromParams());
   const [alimentos, setAlimentos] = useState([]);
   const [filteredAlimentos, setFilteredAlimentos] = useState([]);
@@ -93,28 +90,23 @@ export default function FoodCategoryCard({ categoria }) {
   const [selectedLetter, setSelectedLetter] = useState('');
   const itemsPerPage = 9;
 
-  // 🔎 Buscador
   const {
     query, setQuery, suggestions,
     handleSearch, handleSelectSuggestion, handleSuggestions
   } = FoodSearch({ type: 'alimentos' });
 
-  // 🔄 Cuando cambia la URL o la categoría, aplica filtros
   useEffect(() => {
     const params = getFiltersFromParams();
     setFilters(params);
     fetchFilteredData(params);
   }, [searchParams, categoria]);
 
-  // 🔄 Fetch con filtros (CORREGIDO)
   const fetchFilteredData = (newFilters) => {
     setLoading(true);
     const queryParams = new URLSearchParams(
       Object.entries(newFilters).filter(([k, v]) => v)
     );
 
-    // ✅ CAMBIO CLAVE: Usamos fetchWithAuth y ruta relativa
-    // fetchWithAuth añade automáticamente el '/api' y el token
     fetchWithAuth(`/alimentos/por_categoria/${encodeURIComponent(categoria)}?${queryParams}`)
       .then(async (res) => {
          if (!res.ok) throw new Error("Error al obtener alimentos");
@@ -130,7 +122,6 @@ export default function FoodCategoryCard({ categoria }) {
       .finally(() => setLoading(false));
   };
 
-  // 🎯 Cambia filtros y URL
   const handleFilterChange = (key, value) => {
     const newFilters = { ...filters, [key]: value };
     setFilters(newFilters);
@@ -143,10 +134,8 @@ export default function FoodCategoryCard({ categoria }) {
     setSearchParams(newSearchParams);
   };
 
-  // 🔁 Resetea filtros
   const handleResetFilters = () => setSearchParams({});
 
-  // 🔤 Filtro por letra
   const handleLetterClick = (letter) => {
     setSelectedLetter(letter);
     if (letter === '') {
@@ -161,13 +150,11 @@ export default function FoodCategoryCard({ categoria }) {
     setCurrentPage(1);
   };
 
-  // 📄 Paginación
   const handlePageChange = (e, value) => {
     setCurrentPage(value);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // 🔠 Generar conteo por letra
   const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
   const letterCounts = {};
   alphabet.forEach(letter => {
@@ -176,7 +163,6 @@ export default function FoodCategoryCard({ categoria }) {
     ).length;
   });
 
-  // 🧮 Items de paginación
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentAlimentos = filteredAlimentos.slice(indexOfFirstItem, indexOfLastItem);
@@ -217,7 +203,6 @@ export default function FoodCategoryCard({ categoria }) {
         handleFilterChange={handleFilterChange}
       />
 
-      {/* 🔠 Filtro por letra */}
       <Box sx={{ mt: 4 }}>
         <Typography variant="h5" gutterBottom>
           Alimentos en la categoría: {categoria}
@@ -242,20 +227,19 @@ export default function FoodCategoryCard({ categoria }) {
           ))}
         </Box>
 
-        {/* 🧾 Lista de alimentos */}
         <Grid container spacing={2}>
           {currentAlimentos.map((alimento) => (
             <Grid item xs={12} sm={6} md={4} key={alimento.nombre}>
               <UniversalCard
                 title={alimento.nombre}
-                image={alimento.image_url}
+                // ✅ MEJORA: Placeholder si no hay imagen
+                image={alimento.image_url || FOOD_PLACEHOLDER}
                 buttonLink={`/alimentos/detalle_alimento/${encodeURIComponent(alimento.nombre)}`}
               />
             </Grid>
           ))}
         </Grid>
 
-        {/* 📄 Paginación */}
         {totalPages > 1 && (
           <Box sx={{ mt: 4, display: 'flex', justifyContent: 'center' }}>
             <Pagination
