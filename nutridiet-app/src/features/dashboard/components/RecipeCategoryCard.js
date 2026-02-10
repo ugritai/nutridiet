@@ -213,27 +213,35 @@ export default function RecipeCategoryCard({ categoria }) {
                     })}
                 </Box>
 
-                <Grid container spacing={2}>
-                    {currentRecetas.map((recetaObj) => {
-                        const nombre = recetaObj.name;
-                        if (!nombre) return null;
+                <Grid container spacing={2} alignItems="stretch">>
+                  {currentRecetas.map((recetaObj) => {
+                    const nombre = recetaObj.name;
+                    if (!nombre) return null;
 
-                        return (
-                            <Grid item xs={12} sm={6} lg={4} md={4} key={nombre}>
-                                <UniversalCard
-                                    title={nombre.charAt(0).toUpperCase() + nombre.slice(1)}
-                                    onAction={() =>
-                                        navigate(`/recetas/detalle_receta/${encodeURIComponent(nombre)}`, {
-                                            state: {
-                                                desdeDieta: false,
-                                                dietaNombre: nombre
-                                            }
-                                        })
-                                    }
-                                />
-                            </Grid>
-                        );
-                    })}
+                    return (
+                      <Grid 
+                        item 
+                        xs={12} 
+                        sm={6} 
+                        lg={4} 
+                        md={4} 
+                        key={nombre}
+                        // 👇 CRUCIAL: Esto obliga a todos los hijos de la fila a medir lo mismo
+                        sx={{ display: 'flex' }} 
+                      >
+                        <UniversalCard
+                          title={nombre.charAt(0).toUpperCase() + nombre.slice(1)}
+                          // Asegúrate de pasar el placeholder o la imagen real
+                          image={recetaObj.image_url || '/img/placeholder-food.jpg'} 
+                          onAction={() =>
+                            navigate(`/recetas/detalle_receta/${encodeURIComponent(nombre)}`, {
+                              state: { desdeDieta: false, dietaNombre: nombre }
+                            })
+                          }
+                        />
+                      </Grid>
+                    );
+                  })}
                 </Grid>
 
                 {totalPages > 1 && (

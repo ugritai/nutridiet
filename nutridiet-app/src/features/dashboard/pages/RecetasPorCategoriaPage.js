@@ -1,4 +1,4 @@
-// src/pages/AlimentosPorCategoriaPage.jsx
+// src/pages/RecetasPorCategoriaPage.jsx
 import React from 'react';
 import { useParams } from 'react-router-dom';
 import Dashboard from '../Dashboard';

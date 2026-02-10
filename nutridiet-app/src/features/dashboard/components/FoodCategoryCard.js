@@ -170,10 +170,11 @@ export default function FoodCategoryCard({ categoria }) {
 
   if (loading) return <CircularProgress sx={{ mt: 4 }} />;
 
-  return (
-    <Box>
-      <Grid container spacing={2} alignItems="center" sx={{ mb: 2 }} width={'100%'}>
-        <Grid item xs={12} md={10} width={'94%'}>
+return (
+    <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column' }}>
+      {/* Sección de búsqueda y filtros */}
+      <Grid container spacing={2} alignItems="center" sx={{ mb: 2 }}>
+        <Grid item xs={12} md={10}>
           <Search
             value={query}
             onChange={(value) => {
@@ -186,28 +187,23 @@ export default function FoodCategoryCard({ categoria }) {
             suggestionClick={handleSelectSuggestion}
           />
         </Grid>
-
         <Grid item xs={12} md={2}>
-          <Box sx={{ height: '100%', display: 'flex', alignItems: 'center' }}>
-            <FiltrosNutricionales
-              filters={filters}
-              handleFilterChange={handleFilterChange}
-              handleResetFilters={handleResetFilters}
-            />
-          </Box>
+          <FiltrosNutricionales
+            filters={filters}
+            handleFilterChange={handleFilterChange}
+            handleResetFilters={handleResetFilters}
+          />
         </Grid>
       </Grid>
 
-      <FiltrosActivos
-        filters={filters}
-        handleFilterChange={handleFilterChange}
-      />
+      <FiltrosActivos filters={filters} handleFilterChange={handleFilterChange} />
 
       <Box sx={{ mt: 4 }}>
-        <Typography variant="h5" gutterBottom>
+        <Typography variant="h5" gutterBottom sx={{ fontWeight: 600 }}>
           Alimentos en la categoría: {categoria}
         </Typography>
 
+        {/* Abecedario */}
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 3 }}>
           <Button
             variant={selectedLetter === '' ? 'contained' : 'outlined'}
@@ -227,21 +223,40 @@ export default function FoodCategoryCard({ categoria }) {
           ))}
         </Box>
 
-        <Grid container spacing={2}>
+        {/* CUADRÍCULA FORZADA */}
+        <Grid 
+          container 
+          spacing={3} 
+          sx={{ width: '100%', m: 0 }} // El margen 0 evita desbordamientos horizontales
+        >
           {currentAlimentos.map((alimento) => (
-            <Grid item xs={12} sm={6} md={4} key={alimento.nombre}>
+            <Grid 
+              item 
+              key={alimento.nombre} 
+              xs={12} 
+              sm={6} 
+              md={4} 
+              sx={{ 
+                display: 'flex',
+                justifyContent: 'center' // Asegura que la card no se pierda
+              }}
+            >
               <UniversalCard
                 title={alimento.nombre}
-                // ✅ MEJORA: Placeholder si no hay imagen
-                image={alimento.image_url || FOOD_PLACEHOLDER}
+                image={alimento.image_url}
                 buttonLink={`/alimentos/detalle_alimento/${encodeURIComponent(alimento.nombre)}`}
+                sx={{ 
+                  width: '100%', // Obliga a la tarjeta a usar el ancho de la columna
+                  maxWidth: 'none' // Quita cualquier límite previo
+                }}
               />
             </Grid>
           ))}
         </Grid>
 
+        {/* Paginación */}
         {totalPages > 1 && (
-          <Box sx={{ mt: 4, display: 'flex', justifyContent: 'center' }}>
+          <Box sx={{ mt: 4, display: 'flex', justifyContent: 'center', pb: 4 }}>
             <Pagination
               count={totalPages}
               page={currentPage}

@@ -131,7 +131,11 @@ export default function FoodGrid({ categories = [], basePath = "alimentos", imag
     <Box sx={{ width: '100%', maxWidth: { sm: '100%', md: '1700px' }, mt: 4 }}>
       <Grid container spacing={2} columns={12} sx={{ mb: (theme) => theme.spacing(2) }}>
         {currentPageItems.map((category) => (
-          <Grid size={{ xs: 12, sm: 6, lg: 4, md: 4 }} key={category}>
+          <Grid 
+            key={category} 
+            size={{ xs: 12, sm: 6, lg: 4, md: 4 }} 
+            sx={{ display: 'flex' }} // <-- ESTO ES VITAL
+          >
             <UniversalCard
               title={category}
               image={getImageForCategory(category)}
