@@ -80,5 +80,12 @@ Desktop.ini
 ############################
 Memoria_TFG/.DS_Store
 
+# --- LÓGICA DE IMÁGENES ---
+# 1. Ignoramos todo el contenido de la carpeta images (archivos sueltos)
+backend/static/images/*
+
+# 2. Creamos excepciones para las carpetas que SÍ queremos subir
+!backend/static/images/alimentos/
+!backend/static/images/recetas/
 
 
