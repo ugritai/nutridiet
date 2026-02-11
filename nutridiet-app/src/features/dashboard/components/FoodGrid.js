@@ -1,166 +1,140 @@
 import React, { useState, useEffect } from 'react';
-import Grid from '@mui/material/Grid';
-import Box from '@mui/material/Box';
-import UniversalCard from './UniversalCard';
-import Pagination from '@mui/material/Pagination';
-import PaginationItem from '@mui/material/PaginationItem';
 import { useSearchParams, Link } from 'react-router-dom';
+import { Box, Pagination, PaginationItem } from '@mui/material';
+import UniversalCard from './UniversalCard';
 
+// --- UTILIDAD DE NORMALIZACIÓN DE NOMBRES ---
+const sanitizeFilename = (name) => {
+  if (!name) return '';
+  return name
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // Quitar tildes
+    .replace(/[^\w\-]/g, "-")        // Reemplazar especiales por guion
+    .replace(/-+/g, "-")             // Colapsar guiones
+    .trim("-");                      // Limpiar extremos
+};
+
+// --- CONFIGURACIÓN DE MAPEO ROBUSTO ---
 export const CATEGORY_MAPPING = {
-  Verduras: [
-    "Verduras", "Verduras y Productos Vegetales", "Verduras y productos vegetales"
-  ],
-  Legumbres: [
-    "Legumbres y productos de legumbres", "Legumbres, semillas, frutos secos y productos"
-  ],
-  Carne: [
-    "Carne y productos cárnicos", "Productos de carne de res", "Productos de cerdo",
-    "Productos de cordero, ternera y caza", "Embutidos y Embutidos", "Productos avícolas"
-  ],
-  Frutas: [
-    "Frutas y Jugos de Frutas", "Frutas y productos frutícolas", "frutas"
-  ],
-  Pescados: [
-    "Pescado y productos pesqueros", "Pescados, moluscos, reptiles, crustáceos y productos",
-    "Productos de pescado y marisco"
-  ],
-  Lácteos: [
-    "Leche y productos lácteos", "Productos lácteos y huevos"
-  ],
-  Cereales: [
-    "Cereales de desayuno", "Cereales y productos a base de cereales",
-    "Granos de cereales y pastas", "Granos y productos de cereales"
-  ],
-  Bebidas: [
-    "Bebidas", "Bebidas (no lácteas)", "Bebidas alcohólicas"
-  ],
-  Dulces: [
-    "Azúcar, chocolate y productos afines", "Azúcares, conservas y snacks",
-    "Dulces", "Aperitivos"
-  ],
+  Verduras: ["verdura", "vegetal", "hortaliza", "hierba", "especia"],
+  Legumbres: ["legumbre", "semilla", "nuez", "frutos secos"],
+  Carne: ["carne", "res", "cerdo", "cordero", "ternera", "caza", "embutido", "avicola", "pollo", "pavo"],
+  Frutas: ["fruta", "jugo", "zumo", "fruticola"],
+  Pescados: ["pescado", "marisco", "molusco", "reptil", "crustaceo"],
+  Lácteos: ["leche", "lacteo", "huevo", "ovoproducto", "queso", "yogur"],
+  Cereales: ["cereal", "grano", "pasta", "horneado", "pan", "bolleria", "harina", "arroz"],
+  Bebidas: ["bebida", "refresco", "alcohol", "cafe", "te", "infusion"],
+  Dulces: ["azucar", "chocolate", "dulce", "aperitivo", "snack", "golosina", "caramelo"],
+  "Platos Preparados": ["comida", "restaurante", "rapida", "plato", "guarnicion", "sopa", "salsa", "bebe", "infantil", "varios", "indios", "mezcla"],
+  Aceites: ["grasa", "aceite", "mantequilla", "margarina"]
 };
 
 const CARD_CONTENT = {
-  Verduras: {
-    description: "Verduras y productos vegetales.",
-    image: "/img/alimentos/verduras.jpg"
-  },
-  Legumbres: {
-    description: "Legumbres, semillas, frutos secos y productos.",
-    image: "/img/alimentos/legumbres.jpg"
-  },
-  Carne: {
-    description: "Carne y productos cárnicos.",
-    image: "/img/alimentos/carnes.jpg"
-  },
-  Frutas: {
-    description: "Frutas y productos frutícolas.",
-    image: "/img/alimentos/frutas.webp"
-  },
-  Pescados: {
-    description: "Pescados y productos marinos.",
-    image: "/img/alimentos/pescados.jpg"
-  },
-  Lácteos: {
-    description: "Leche y productos lácteos.",
-    image: "/img/alimentos/lacteos.jpg"
-  },
-  Cereales: {
-    description: "Granos y productos de cereales.",
-    image: "/img/alimentos/cereales.jpg"
-  },
-  Bebidas: {
-    description: "Incluye agua, jugos, refrescos y más.",
-    image: "/img/alimentos/bebidas.jpg"
-  },
-  Dulces: {
-    description: "Azúcar, chocolate y productos afines.",
-    image: "/img/alimentos/dulces.jpg"
-  },
+  Verduras: { description: "Verduras, hortalizas y hierbas aromáticas." },
+  Legumbres: { description: "Legumbres, semillas y frutos secos nutritivos." },
+  Carne: { description: "Carnes rojas, blancas y embutidos de calidad." },
+  Frutas: { description: "Frutas frescas y jugos naturales." },
+  Pescados: { description: "Pescados, mariscos y productos del mar." },
+  Lácteos: { description: "Leche, quesos, yogures y huevos." },
+  Cereales: { description: "Granos, pastas, arroces y productos de panadería." },
+  Bebidas: { description: "Agua, jugos, refrescos e infusiones." },
+  Dulces: { description: "Postres, chocolates y snacks dulces." },
+  "Platos Preparados": { description: "Comidas listas, sopas, salsas y alimentación infantil." },
+  Aceites: { description: "Grasas saludables y aceites vegetales." },
+  Otros: { description: "Otros alimentos y categorías misceláneas." }
 };
 
 export function mapCategoryToMain(categoria) {
-  for (const [main, aliases] of Object.entries(CATEGORY_MAPPING)) {
-    if (aliases.some(alias => categoria.toLowerCase().includes(alias.toLowerCase()))) {
+  if (!categoria) return "Otros";
+  
+  // Normalización para búsqueda: minúsculas y sin tildes
+  const cleanCategory = categoria.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  
+  for (const [main, keywords] of Object.entries(CATEGORY_MAPPING)) {
+    // Si la categoría de la DB contiene alguna de nuestras palabras clave
+    if (keywords.some(key => cleanCategory.includes(key))) {
       return main;
     }
-    return categoria;
   }
+
+  // --- MODO DEBUG EN CONSOLA ---
+  console.warn(`[Category Debug] Sin mapeo para: "${categoria}". Agrupado en "Otros".`);
+  return "Otros";
 }
 
-export default function FoodGrid({ categories = [], basePath = "alimentos", imageFolder = "alimentos" }) {
+export default function FoodGrid({ categories = [], basePath = "alimentos" }) {
   const itemsPerPage = 9;
-  const totalPages = Math.ceil(categories.length / itemsPerPage);
-
   const [searchParams, setSearchParams] = useSearchParams();
+
+  // 1. Mapear y eliminar duplicados resultantes
+  const uniqueCategories = Array.from(new Set(categories.map(cat => mapCategoryToMain(cat))));
+  
+  const totalPages = Math.ceil(uniqueCategories.length / itemsPerPage);
   const pageParam = parseInt(searchParams.get('page')) || 1;
   const [page, setPage] = useState(pageParam - 1);
 
+  // Sincronizar página con URL
   useEffect(() => {
     setSearchParams({ page: page + 1 });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [page, setSearchParams]);
 
-  // Ordenar alfabéticamente antes del paginado
-  //const sortedCategories = [...categories].sort((a, b) =>
-    //a.localeCompare(b, 'es', { sensitivity: 'base' })
-  //);
-
-  //const currentPageItems = sortedCategories.slice(page * itemsPerPage, (page + 1) * itemsPerPage);
-
-  const currentPageItems = categories.slice(page * itemsPerPage, (page + 1) * itemsPerPage);
+  const currentPageItems = uniqueCategories.slice(page * itemsPerPage, (page + 1) * itemsPerPage);
 
   const handlePageChange = (event, value) => {
     setPage(value - 1);
   };
 
   const getImageForCategory = (category) => {
-    const formattedCategory = category
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/[^\w\s-]/g, '')
-      .replace(/\s+/g, '-')
-      .replace(/-+/g, '-');
-
-    const imagePath = `/img/${imageFolder}/${formattedCategory}.jpg`;
-    return imagePath;
+    return `/img/${sanitizeFilename(category)}.jpg`;
   };
 
   return (
-    <Box sx={{ width: '100%', maxWidth: { sm: '100%', md: '1700px' }, mt: 4 }}>
-      <Grid container spacing={2} columns={12} sx={{ mb: (theme) => theme.spacing(2) }}>
+    <Box sx={{ width: '100%', mt: 4 }}>
+      {/* GRID DE CATEGORÍAS */}
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: {
+            xs: '1fr',
+            sm: '1fr 1fr',
+            md: '1fr 1fr 1fr'
+          },
+          gap: 3,
+          width: '100%'
+        }}
+      >
         {currentPageItems.map((category) => (
-          <Grid size={{ xs: 12, sm: 6, lg: 4, md: 4 }} key={category}>
-            <UniversalCard
-              title={category}
-              image={getImageForCategory(category)}
-              buttonLink={`/${basePath}/categorias/${encodeURIComponent(category)}`}
-            />
-          </Grid>
+          <UniversalCard
+            key={category}
+            title={category}
+            description={CARD_CONTENT[category]?.description || "Explora los alimentos de esta categoría."}
+            image={getImageForCategory(category)}
+            buttonLink={`/${basePath}/categorias/${encodeURIComponent(category)}`}
+            sx={{ height: '100%' }} 
+          />
         ))}
-      </Grid>
-
-      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-        <Pagination
-          page={page + 1}
-          count={totalPages}
-          onChange={handlePageChange}
-          renderItem={(item) => (
-            <PaginationItem
-              component={Link}
-              to={`?page=${item.page}`}
-              {...item}
-              sx={{
-                '&.Mui-selected': {
-                  backgroundColor: '#f5f5f5',
-                  color: 'primary.main',
-                }
-              }}
-            />
-          )}
-        />
       </Box>
+
+      {/* PAGINACIÓN */}
+      {totalPages > 1 && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 6, mb: 4 }}>
+          <Pagination
+            page={page + 1}
+            count={totalPages}
+            onChange={handlePageChange}
+            color="primary"
+            renderItem={(item) => (
+              <PaginationItem
+                component={Link}
+                to={`?page=${item.page}`}
+                {...item}
+              />
+            )}
+          />
+        </Box>
+      )}
     </Box>
   );
 }

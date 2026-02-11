@@ -8,19 +8,41 @@ import { feedbackCustomizations } from './customizations/feedback.js';
 import { navigationCustomizations } from './customizations/navigation.js';
 import { surfacesCustomizations } from './customizations/surfaces.js';
 import { colorSchemes, typography, shadows, shape, brand } from './themePrimitives.js';
-//HE CAMBIADO EL THEME PARA QUE SE LEAN LOS TEXTOS EN BOTONES DESHABILITADOS
+
 function AppTheme(props) {
     const { children, disableCustomTheme, themeComponents } = props;
     const theme = React.useMemo(() => {
         return disableCustomTheme
             ? {}
             : createTheme({
-                // For more details about CSS variables configuration, see [https://mui.com/material-ui/customization/css-theme-variables/configuration/](https://mui.com/material-ui/customization/css-theme-variables/configuration/)
                 cssVariables: {
                     colorSchemeSelector: 'data-mui-color-scheme',
                     cssVarPrefix: 'template',
                 },
-                colorSchemes, // Recently added in v6 for building light & dark mode app, see [https://mui.com/material-ui/customization/palette/#color-schemes](https://mui.com/material-ui/customization/palette/#color-schemes)
+                // Sobrescribimos la paleta primaria para que sea el verde de NutriDiet
+                colorSchemes: {
+                    ...colorSchemes,
+                    light: {
+                        ...colorSchemes?.light,
+                        palette: {
+                            ...colorSchemes?.light?.palette,
+                            primary: {
+                                main: '#4CAF50', // El verde principal (puedes usar brand[500])
+                                contrastText: '#ffffff',
+                            },
+                        },
+                    },
+                    dark: {
+                        ...colorSchemes?.dark,
+                        palette: {
+                            ...colorSchemes?.dark?.palette,
+                            primary: {
+                                main: '#66BB6A', // Verde un poco más claro para modo oscuro
+                                contrastText: '#ffffff',
+                            },
+                        },
+                    },
+                },
                 typography,
                 shadows,
                 shape,
@@ -33,11 +55,18 @@ function AppTheme(props) {
                     ...themeComponents,
                     MuiButton: {
                         styleOverrides: {
+                            root: {
+                                borderRadius: 8, // Botones un poco más redondeados para suavizar el diseño
+                            },
                             containedPrimary: {
+                                backgroundColor: '#2E7D32', // Verde oscuro para el estado normal
+                                '&:hover': {
+                                    backgroundColor: '#1B5E20', // Verde más oscuro al pasar el ratón
+                                },
                                 '&.Mui-disabled': {
-                                    color: brand[50], // Forzamos color del texto aunque esté deshabilitado
-                                    backgroundColor: brand[400], // Opcional: fondo igual que activo
-                                    opacity: 0.5, // Mantener efecto visual de deshabilitado
+                                    color: brand[50], 
+                                    backgroundColor: '#A5D6A7', // Verde muy pálido cuando está deshabilitado
+                                    opacity: 0.7, 
                                 },
                             },
                         },
@@ -45,20 +74,19 @@ function AppTheme(props) {
                 },
             });
     }, [disableCustomTheme, themeComponents]);
+
     if (disableCustomTheme) {
         return <React.Fragment>{children}</React.Fragment>;
     }
-    return (<ThemeProvider theme={theme} disableTransitionOnChange>
-        {children} </ThemeProvider>
+    return (
+        <ThemeProvider theme={theme} disableTransitionOnChange>
+            {children}
+        </ThemeProvider>
     );
 }
 
 AppTheme.propTypes = {
     children: PropTypes.node,
-    /**
-    
-    * This is for the docs site. You can ignore it or remove it.
-      */
     disableCustomTheme: PropTypes.bool,
     themeComponents: PropTypes.object,
 };
