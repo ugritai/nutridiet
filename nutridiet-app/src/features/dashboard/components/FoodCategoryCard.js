@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
-  Grid, Typography, CircularProgress, Box, Pagination, Button, IconButton
+  Typography, CircularProgress, Box, Pagination, Button, IconButton
 } from '@mui/material';
 
 import UniversalCard from './UniversalCard';
@@ -10,9 +10,20 @@ import FoodSearch from './FoodSearch';
 import FiltrosNutricionales from './FoodFilter';
 import { fetchWithAuth } from './api';
 
-// Definimos el path del placeholder como una constante para fácil mantenimiento
-const FOOD_PLACEHOLDER = '/img/placeholder-food.jpg';
+// --- UTILIDAD DE NORMALIZACIÓN DE NOMBRES ---
+// Debe coincidir con la lógica de Python: sin tildes, minúsculas, guiones simples
+const sanitizeFilename = (name) => {
+  if (!name) return '';
+  return name
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // Quitar tildes
+    .replace(/[^\w\-]/g, "-")        // Reemplazar caracteres especiales por guion
+    .replace(/-+/g, "-")             // Colapsar múltiples guiones (--) a uno solo (-)
+    .trim("-");                      // Eliminar guiones al inicio o final
+};
 
+// Componente de Filtros Activos (Sin cambios)
 const FiltrosActivos = ({ filters, handleFilterChange }) => {
   const etiquetas = {
     salt: 'Sodio',
@@ -35,14 +46,8 @@ const FiltrosActivos = ({ filters, handleFilterChange }) => {
       <Box
         key={key}
         sx={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 0.5,
-          px: 1,
-          py: 0.25,
-          bgcolor: colorInfo.color,
-          borderRadius: 2,
-          fontSize: '0.75rem',
+          display: 'flex', alignItems: 'center', gap: 0.5, px: 1, py: 0.25,
+          bgcolor: colorInfo.color, borderRadius: 2, fontSize: '0.75rem',
         }}
       >
         <Typography variant="caption" fontWeight={500}>
@@ -53,16 +58,13 @@ const FiltrosActivos = ({ filters, handleFilterChange }) => {
           onClick={() => handleFilterChange(key, '')}
           sx={{ p: 0.5, ml: 0.5 }}
         >
-          <Typography variant="caption" sx={{ lineHeight: 1 }}>
-            ✕
-          </Typography>
+          <Typography variant="caption" sx={{ lineHeight: 1 }}>✕</Typography>
         </IconButton>
       </Box>
     );
   };
 
   const filtrosActivos = Object.entries(filters).filter(([_, v]) => v);
-
   if (filtrosActivos.length === 0) return null;
 
   return (
@@ -109,8 +111,8 @@ export default function FoodCategoryCard({ categoria }) {
 
     fetchWithAuth(`/alimentos/por_categoria/${encodeURIComponent(categoria)}?${queryParams}`)
       .then(async (res) => {
-         if (!res.ok) throw new Error("Error al obtener alimentos");
-         return res.json();
+        if (!res.ok) throw new Error("Error al obtener alimentos");
+        return res.json();
       })
       .then(data => {
         setAlimentos(data.alimentos || []);
@@ -125,12 +127,10 @@ export default function FoodCategoryCard({ categoria }) {
   const handleFilterChange = (key, value) => {
     const newFilters = { ...filters, [key]: value };
     setFilters(newFilters);
-
     const newSearchParams = new URLSearchParams();
     Object.entries(newFilters).forEach(([k, v]) => {
       if (v) newSearchParams.set(k, v);
     });
-
     setSearchParams(newSearchParams);
   };
 
@@ -170,11 +170,11 @@ export default function FoodCategoryCard({ categoria }) {
 
   if (loading) return <CircularProgress sx={{ mt: 4 }} />;
 
-return (
-    <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column' }}>
-      {/* Sección de búsqueda y filtros */}
-      <Grid container spacing={2} alignItems="center" sx={{ mb: 2 }}>
-        <Grid item xs={12} md={10}>
+  return (
+    <Box sx={{ width: '100%' }}>
+      {/* Buscador y Filtros */}
+      <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 2, alignItems: 'center', mb: 2 }}>
+        <Box sx={{ flex: 1, width: '100%' }}>
           <Search
             value={query}
             onChange={(value) => {
@@ -186,15 +186,15 @@ return (
             placeholder="Buscar alimentos..."
             suggestionClick={handleSelectSuggestion}
           />
-        </Grid>
-        <Grid item xs={12} md={2}>
+        </Box>
+        <Box>
           <FiltrosNutricionales
             filters={filters}
             handleFilterChange={handleFilterChange}
             handleResetFilters={handleResetFilters}
           />
-        </Grid>
-      </Grid>
+        </Box>
+      </Box>
 
       <FiltrosActivos filters={filters} handleFilterChange={handleFilterChange} />
 
@@ -203,7 +203,7 @@ return (
           Alimentos en la categoría: {categoria}
         </Typography>
 
-        {/* Abecedario */}
+        {/* Selector de Letras */}
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 3 }}>
           <Button
             variant={selectedLetter === '' ? 'contained' : 'outlined'}
@@ -223,36 +223,39 @@ return (
           ))}
         </Box>
 
-        {/* CUADRÍCULA FORZADA */}
-        <Grid 
-          container 
-          spacing={3} 
-          sx={{ width: '100%', m: 0 }} // El margen 0 evita desbordamientos horizontales
+        {/* CUADRÍCULA FORZADA CON CSS GRID */}
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: {
+              xs: '1fr',           // 1 columna móvil
+              sm: '1fr 1fr',       // 2 columnas tablet
+              md: '1fr 1fr 1fr'    // 3 columnas escritorio
+            },
+            gap: 3,
+            width: '100%'
+          }}
         >
-          {currentAlimentos.map((alimento) => (
-            <Grid 
-              item 
-              key={alimento.nombre} 
-              xs={12} 
-              sm={6} 
-              md={4} 
-              sx={{ 
-                display: 'flex',
-                justifyContent: 'center' // Asegura que la card no se pierda
-              }}
-            >
+          {currentAlimentos.map((alimento) => {
+            // LÓGICA DE IMAGEN MEJORADA:
+            // Si la URL viene de la DB y parece válida (empieza por /img/), la usamos.
+            // Si no, construimos la ruta manualmente usando la normalización y forzando la subcarpeta.
+            const finalImageUrl = alimento.image_url 
+              ? alimento.image_url 
+              : `/img/${sanitizeFilename(alimento.nombre)}.jpg`; 
+              // OJO: Quité la carpeta "alimentos/" para que coincida con donde guarda Python
+
+            return (
               <UniversalCard
+                key={alimento.nombre}
                 title={alimento.nombre}
-                image={alimento.image_url}
+                image={finalImageUrl}
                 buttonLink={`/alimentos/detalle_alimento/${encodeURIComponent(alimento.nombre)}`}
-                sx={{ 
-                  width: '100%', // Obliga a la tarjeta a usar el ancho de la columna
-                  maxWidth: 'none' // Quita cualquier límite previo
-                }}
+                sx={{ height: '100%' }}
               />
-            </Grid>
-          ))}
-        </Grid>
+            );
+          })}
+        </Box>
 
         {/* Paginación */}
         {totalPages > 1 && (

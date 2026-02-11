@@ -3,81 +3,138 @@ import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import CardMedia from '@mui/material/CardMedia';
 import Button from '@mui/material/Button';
-import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import ChevronRightRoundedIcon from '@mui/icons-material/ChevronRightRounded';
+import useMediaQuery from '@mui/material/useMediaQuery';
+import { useTheme } from '@mui/material/styles';
 import { Link } from 'react-router-dom';
 import defaultImage from '../../../assets/logo_192.png';
-
 
 const UniversalCard = ({
   title,
   description,
+  icon,
   image,
   buttonText = 'Más detalles',
+  buttonColor = 'primary',
   onAction,
-  buttonLink,
-  sx = {} 
+  buttonLink
 }) => {
+  const theme = useTheme();
+  const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
+
+  // Determinar si es una tarjeta simple (solo título y botón)
+  const isSimpleCard = !image && !description && !icon;
+
   const [imgSrc, setImgSrc] = useState(image && image.trim() !== '' ? image : defaultImage);
   const isDefaultImage = imgSrc === defaultImage;
 
   return (
     <Card
       sx={{
+        height: '100%',
+        width: '100%',
         display: 'flex',
         flexDirection: 'column',
-        width: '100%', // Asegura que no se pase del ancho del Grid
-        height: '100%', // Para que todas midan lo mismo
-        boxShadow: 3,
-        borderRadius: 4,
+        justifyContent: 'space-between',
+        boxShadow: theme.shadows[3],
+        borderRadius: 3,
         overflow: 'hidden',
         transition: 'transform 0.3s',
         '&:hover': { transform: 'scale(1.02)' },
-        ...sx, 
+        minHeight: isSimpleCard ? 180 : (image ? 300 : 240),
       }}
     >
-      {/* IMAGEN: Altura fija */}
-      <Box sx={{ width: '100%', height: 160, bgcolor: '#f5f5f5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <CardMedia
-          component="img"
-          image={imgSrc}
-          sx={{
-            height: isDefaultImage ? '100px' : '100%',
-            width: isDefaultImage ? 'auto' : '100%',
-            objectFit: isDefaultImage ? 'contain' : 'cover',
-          }}
-          onError={() => setImgSrc(defaultImage)}
-        />
-      </Box>
+      {image && image.trim() !== '' ? (
+        <>
+          <div style={{ position: 'relative', height: 160 }}>
+            <CardMedia
+              component="img"
+              image={imgSrc}
+              alt={title}
+              sx={{
+                height: 160,
+                width: '100%',
+                objectFit: isDefaultImage ? 'contain' : 'cover',
+                objectPosition: 'center',
+                backgroundColor: '#f5f5f5',
+                p: isDefaultImage ? 2 : 0,
+              }}
+              onError={(e) => {
+                setImgSrc(defaultImage); // cambia dinámicamente si la imagen falla
+              }}
+            />
+          </div>
 
-      {/* CONTENIDO: Título multilínea ajustable */}
-      <CardContent sx={{ flexGrow: 1, p: 2, pb: 1 }}>
         <Typography
           variant="subtitle1"
           sx={{
             fontWeight: 700,
-            fontSize: '0.9rem',
-            lineHeight: '1.2rem',
-            textAlign: 'center',
-            // Altura fija para 3 líneas: si es más largo sale "...", si es más corto queda el hueco
-            height: '3.6rem', 
+            fontSize: '1rem',
+            lineHeight: '1.4rem', // Altura de cada línea
+            height: '4.2rem',     // 1.4 * 3 líneas = 4.2rem fijo
             display: '-webkit-box',
-            WebkitLineClamp: 3,
+            WebkitLineClamp: 3,    // Corta a la tercera línea
             WebkitBoxOrient: 'vertical',
             overflow: 'hidden',
+            textAlign: 'center',
             mb: 1
           }}
         >
           {title}
         </Typography>
 
+        </>
+      ) : (
+        <CardContent
+          sx={{
+            position: 'relative',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'flex-start',
+            pt: 2,
+            pb: 0,
+          }}
+        >
+          {icon && (
+            <div
+              style={{
+                position: 'absolute',
+                top: 8,
+                left: 8,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: 40,
+                height: 40,
+              }}
+            >
+              {icon}
+            </div>
+          )}
+
+          <Typography
+            variant="h6"
+            sx={{
+              color: 'text.primary',
+              fontWeight: 600,
+              fontSize: '1rem',
+              textAlign: 'left',
+              mt: icon ? 6 : 2,
+              mb: description ? 0 : 1,
+            }}
+          >
+            {title}
+          </Typography>
+        </CardContent>
+      )}
+
+      <CardContent sx={{ pt: description ? 1 : 0, pb: 2 }}>
         {description && (
           <Typography
-            variant="body2"
             sx={{
               color: 'text.secondary',
-              textAlign: 'center',
+              mb: 2,
               display: '-webkit-box',
               WebkitLineClamp: 2,
               WebkitBoxOrient: 'vertical',
@@ -87,22 +144,24 @@ const UniversalCard = ({
             {description}
           </Typography>
         )}
-      </CardContent>
 
-      {/* BOTÓN: Siempre al final */}
-      <Box sx={{ p: 2, mt: 'auto' }}>
         <Button
           component={buttonLink ? Link : 'button'}
           to={buttonLink}
           variant="contained"
-          fullWidth
-          onClick={!buttonLink ? onAction : undefined}
-          sx={{ fontWeight: 700, textTransform: 'none' }}
+          size="small"
+          color={buttonColor}
           endIcon={<ChevronRightRoundedIcon />}
+          fullWidth={isSmallScreen}
+          onClick={!buttonLink ? onAction : undefined}
+          sx={{
+            fontWeight: 500,
+            mt: !description && !image ? 1 : 0
+          }}
         >
           {buttonText}
         </Button>
-      </Box>
+      </CardContent>
     </Card>
   );
 };

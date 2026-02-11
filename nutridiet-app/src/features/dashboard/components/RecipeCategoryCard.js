@@ -1,14 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-    Grid, Typography, CircularProgress, Box,
+    Typography, CircularProgress, Box,
     Pagination, Button, Slider, Checkbox, FormControlLabel
 } from '@mui/material';
 import UniversalCard from '../components/UniversalCard';
 import FoodSearch from '../components/FoodSearch';
 import Search from '../components/Search';
-
-// ✅ IMPORTACIÓN DE TU API CON AUTH
 import { fetchWithAuth } from './api'; 
 
 export default function RecipeCategoryCard({ categoria }) {
@@ -39,16 +37,12 @@ export default function RecipeCategoryCard({ categoria }) {
     const fetchDatos = async () => {
         setLoading(true);
         try {
-            // ✅ USANDO fetchWithAuth + Rutas Relativas
-            // Al usar Promise.all, ambas peticiones llevarán el token de autenticación
             const [recetasRes, maximosRes] = await Promise.all([
                 fetchWithAuth(`/recetas/categoria/${encodeURIComponent(categoria)}/nutricion_simplificada?por_porcion=true`),
                 fetchWithAuth(`/recetas/recetas/maximos_nutricionales?categoria=${encodeURIComponent(categoria)}`)
             ]);
 
-            if (!recetasRes.ok || !maximosRes.ok) {
-                throw new Error("Error en la carga de datos");
-            }
+            if (!recetasRes.ok || !maximosRes.ok) throw new Error("Error en la carga de datos");
 
             const recetasData = await recetasRes.json();
             const maximosData = await maximosRes.json();
@@ -62,7 +56,6 @@ export default function RecipeCategoryCard({ categoria }) {
             setKcalMax(kcal);
             setProMax(pro);
             setCarMax(car);
-
             setKcalRange([0, kcal]);
             setProRange([0, pro]);
             setCarRange([0, car]);
@@ -81,8 +74,6 @@ export default function RecipeCategoryCard({ categoria }) {
     useEffect(() => {
         fetchDatos();
     }, [categoria]);
-
-    // ... (El resto de useEffects y funciones handle se mantienen igual)
 
     useEffect(() => {
         const filtro = recetas.filter(r => {
@@ -105,9 +96,7 @@ export default function RecipeCategoryCard({ categoria }) {
         if (type === 'car') setCarRange(value);
     };
 
-    const handleLetterClick = (letter) => {
-        setSelectedLetter(letter);
-    };
+    const handleLetterClick = (letter) => setSelectedLetter(letter);
 
     const handleResetFilters = () => {
         setKcalRange([0, kcalMax]);
@@ -128,7 +117,7 @@ export default function RecipeCategoryCard({ categoria }) {
     );
 
     return (
-        <>
+        <Box sx={{ width: '100%' }}>
             <Search
                 value={query}
                 onChange={(value) => {
@@ -140,8 +129,9 @@ export default function RecipeCategoryCard({ categoria }) {
                 placeholder="Buscar recetas..."
                 suggestionClick={handleSelectSuggestion}
             />
+            
             <Box sx={{ mt: 4 }}>
-                <Typography variant="h5" gutterBottom>
+                <Typography variant="h5" gutterBottom sx={{ fontWeight: 600 }}>
                     Recetas en la categoría: {categoria}
                 </Typography>
 
@@ -151,110 +141,84 @@ export default function RecipeCategoryCard({ categoria }) {
                 />
 
                 {enableFilters && (
-                    <Box sx={{ display: 'flex', gap: 4, mt: 3, flexWrap: 'wrap' }}>
-                        <Box sx={{ width: 300 }}>
-                            <Typography variant="subtitle1">Calorías (kcal)</Typography>
-                            <Slider
-                                value={kcalRange}
-                                min={0}
-                                max={kcalMax}
-                                onChange={(e, val) => handleSliderChange('kcal', val)}
-                                valueLabelDisplay="auto"
-                            />
+                    <Box sx={{ display: 'flex', gap: 4, mt: 3, flexWrap: 'wrap', mb: 2 }}>
+                        <Box sx={{ width: 250 }}>
+                            <Typography variant="subtitle2">Calorías: {kcalRange[0]} - {kcalRange[1]} kcal</Typography>
+                            <Slider value={kcalRange} min={0} max={kcalMax} onChange={(e, val) => handleSliderChange('kcal', val)} valueLabelDisplay="auto" />
                         </Box>
-                        <Box sx={{ width: 300 }}>
-                            <Typography variant="subtitle1">Proteínas (g)</Typography>
-                            <Slider
-                                value={proRange}
-                                min={0}
-                                max={proMax}
-                                onChange={(e, val) => handleSliderChange('pro', val)}
-                                valueLabelDisplay="auto"
-                            />
+                        <Box sx={{ width: 250 }}>
+                            <Typography variant="subtitle2">Proteínas: {proRange[0]} - {proRange[1]} g</Typography>
+                            <Slider value={proRange} min={0} max={proMax} onChange={(e, val) => handleSliderChange('pro', val)} valueLabelDisplay="auto" />
                         </Box>
-                        <Box sx={{ width: 300 }}>
-                            <Typography variant="subtitle1">Carbohidratos (g)</Typography>
-                            <Slider
-                                value={carRange}
-                                min={0}
-                                max={carMax}
-                                onChange={(e, val) => handleSliderChange('car', val)}
-                                valueLabelDisplay="auto"
-                            />
+                        <Box sx={{ width: 250 }}>
+                            <Typography variant="subtitle2">Carbohidratos: {carRange[0]} - {carRange[1]} g</Typography>
+                            <Slider value={carRange} min={0} max={carMax} onChange={(e, val) => handleSliderChange('car', val)} valueLabelDisplay="auto" />
+                        </Box>
+                        <Box sx={{ display: 'flex', alignItems: 'flex-end', pb: 1 }}>
+                            <Button variant="outlined" size="small" onClick={handleResetFilters}>Resetear</Button>
                         </Box>
                     </Box>
                 )}
 
-                {enableFilters && (
-                    <Box sx={{ mt: 2, display: 'flex', gap: 2 }}>
-                        <Button variant="outlined" onClick={handleResetFilters}>
-                            Resetear filtros
-                        </Button>
-                    </Box>
-                )}
-
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 4, mb: 3 }}>
-                    <Button variant={selectedLetter === '' ? 'contained' : 'outlined'} onClick={() => handleLetterClick('')}>Todas</Button>
+                {/* Abecedario */}
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 2, mb: 3 }}>
+                    <Button size="small" variant={selectedLetter === '' ? 'contained' : 'outlined'} onClick={() => handleLetterClick('')}>Todas</Button>
                     {alphabet.map((letter) => {
-                        const count = recetas.filter(r =>
-                            r.name && r.name.toLowerCase().startsWith(letter.toLowerCase())
-                        ).length;
-
+                        const count = recetas.filter(r => r.name && r.name.toLowerCase().startsWith(letter.toLowerCase())).length;
                         return (
-                            <Button
-                                key={letter}
-                                variant={selectedLetter === letter ? 'contained' : 'outlined'}
-                                onClick={() => handleLetterClick(letter)}
-                                disabled={count === 0}
-                            >
+                            <Button key={letter} size="small" variant={selectedLetter === letter ? 'contained' : 'outlined'} onClick={() => handleLetterClick(letter)} disabled={count === 0}>
                                 {letter}
                             </Button>
                         );
                     })}
                 </Box>
 
-                <Grid container spacing={2} alignItems="stretch">>
-                  {currentRecetas.map((recetaObj) => {
-                    const nombre = recetaObj.name;
-                    if (!nombre) return null;
+                {/* CUADRÍCULA FORZADA CON CSS GRID */}
+                <Box
+                    sx={{
+                        display: 'grid',
+                        gridTemplateColumns: {
+                            xs: '1fr',           // 1 columna móvil
+                            sm: '1fr 1fr',       // 2 columnas tablet
+                            md: '1fr 1fr 1fr'    // 3 columnas escritorio
+                        },
+                        gap: 3,
+                        width: '100%'
+                    }}
+                >
+                    {currentRecetas.map((recetaObj) => {
+                        const nombre = recetaObj.name;
+                        return (
+                            <UniversalCard
+                                key={nombre}
+                                title={nombre.charAt(0).toUpperCase() + nombre.slice(1)}
+                                image={recetaObj.image_url || '/img/placeholder-food.jpg'}
+                                sx={{ height: '100%' }} // La tarjeta llena su celda perfectamente
+                                onAction={() =>
+                                    navigate(`/recetas/detalle_receta/${encodeURIComponent(nombre)}`, {
+                                        state: { desdeDieta: false, dietaNombre: nombre }
+                                    })
+                                }
+                            />
+                        );
+                    })}
+                </Box>
 
-                    return (
-                      <Grid 
-                        item 
-                        xs={12} 
-                        sm={6} 
-                        lg={4} 
-                        md={4} 
-                        key={nombre}
-                        // 👇 CRUCIAL: Esto obliga a todos los hijos de la fila a medir lo mismo
-                        sx={{ display: 'flex' }} 
-                      >
-                        <UniversalCard
-                          title={nombre.charAt(0).toUpperCase() + nombre.slice(1)}
-                          // Asegúrate de pasar el placeholder o la imagen real
-                          image={recetaObj.image_url || '/img/placeholder-food.jpg'} 
-                          onAction={() =>
-                            navigate(`/recetas/detalle_receta/${encodeURIComponent(nombre)}`, {
-                              state: { desdeDieta: false, dietaNombre: nombre }
-                            })
-                          }
-                        />
-                      </Grid>
-                    );
-                  })}
-                </Grid>
-
+                {/* Paginación */}
                 {totalPages > 1 && (
-                    <Box sx={{ mt: 4, display: 'flex', justifyContent: 'center' }}>
+                    <Box sx={{ mt: 6, display: 'flex', justifyContent: 'center', pb: 4 }}>
                         <Pagination
                             count={totalPages}
                             page={currentPage}
-                            onChange={(e, value) => setCurrentPage(value)}
+                            onChange={(e, value) => {
+                                setCurrentPage(value);
+                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                            }}
                             color="primary"
                         />
                     </Box>
                 )}
             </Box>
-        </>
+        </Box>
     );
 }
