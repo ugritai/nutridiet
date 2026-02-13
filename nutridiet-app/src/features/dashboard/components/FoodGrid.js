@@ -44,93 +44,71 @@ const CARD_CONTENT = {
   Aceites: { description: "Grasas saludables y aceites vegetales." },
   Otros: { description: "Otros alimentos y categorías misceláneas." }
 };
-
 export function mapCategoryToMain(categoria) {
   if (!categoria) return "Otros";
-  
-  // Normalización para búsqueda: minúsculas y sin tildes
   const cleanCategory = categoria.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   
   for (const [main, keywords] of Object.entries(CATEGORY_MAPPING)) {
-    // Si la categoría de la DB contiene alguna de nuestras palabras clave
     if (keywords.some(key => cleanCategory.includes(key))) {
       return main;
     }
   }
-
-  // --- MODO DEBUG EN CONSOLA ---
-  console.warn(`[Category Debug] Sin mapeo para: "${categoria}". Agrupado en "Otros".`);
-  return "Otros";
+  return categoria; // Si no hay match, devolvemos la original en lugar de "Otros"
 }
 
-export default function FoodGrid({ categories = [], basePath = "alimentos" }) {
+export default function FoodGrid({ categories = [], basePath = "alimentos", shouldMap = false }) {
   const itemsPerPage = 9;
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // 1. Mapear y eliminar duplicados resultantes
-  const uniqueCategories = Array.from(new Set(categories.map(cat => mapCategoryToMain(cat))));
-  
-  const totalPages = Math.ceil(uniqueCategories.length / itemsPerPage);
+  // 1. Procesar categorías
+  const processedCategories = Array.from(new Set(
+    categories
+      .filter(cat => cat !== null && cat !== undefined)
+      .map(cat => {
+        const name = typeof cat === 'object' ? cat.category_esp : cat;
+        // Solo mapeamos si shouldMap es true (para Alimentos)
+        return shouldMap ? mapCategoryToMain(name) : name;
+      })
+  )).filter(c => c !== "Otros");
+
+  const totalPages = Math.ceil(processedCategories.length / itemsPerPage);
   const pageParam = parseInt(searchParams.get('page')) || 1;
   const [page, setPage] = useState(pageParam - 1);
 
-  // Sincronizar página con URL
   useEffect(() => {
     setSearchParams({ page: page + 1 });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [page, setSearchParams]);
 
-  const currentPageItems = uniqueCategories.slice(page * itemsPerPage, (page + 1) * itemsPerPage);
-
-  const handlePageChange = (event, value) => {
-    setPage(value - 1);
-  };
-
-  const getImageForCategory = (category) => {
-    return `/img/${sanitizeFilename(category)}.jpg`;
-  };
+  const currentPageItems = processedCategories.slice(page * itemsPerPage, (page + 1) * itemsPerPage);
 
   return (
     <Box sx={{ width: '100%', mt: 4 }}>
-      {/* GRID DE CATEGORÍAS */}
-      <Box
-        sx={{
-          display: 'grid',
-          gridTemplateColumns: {
-            xs: '1fr',
-            sm: '1fr 1fr',
-            md: '1fr 1fr 1fr'
-          },
-          gap: 3,
-          width: '100%'
-        }}
-      >
+      <Box sx={{ 
+        display: 'grid', 
+        gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '1fr 1fr 1fr' }, 
+        gap: 3 
+      }}>
         {currentPageItems.map((category) => (
           <UniversalCard
             key={category}
             title={category}
-            description={CARD_CONTENT[category]?.description || "Explora los alimentos de esta categoría."}
-            image={getImageForCategory(category)}
+            description={CARD_CONTENT[category]?.description || `Explora recetas y productos de ${category}.`}
+            image={`/img/${basePath}/${sanitizeFilename(category)}.jpg`} // Carpeta dinámica
             buttonLink={`/${basePath}/categorias/${encodeURIComponent(category)}`}
-            sx={{ height: '100%' }} 
           />
         ))}
       </Box>
 
-      {/* PAGINACIÓN */}
       {totalPages > 1 && (
         <Box sx={{ display: 'flex', justifyContent: 'center', mt: 6, mb: 4 }}>
-          <Pagination
-            page={page + 1}
-            count={totalPages}
-            onChange={handlePageChange}
+          <Pagination 
+            page={page + 1} 
+            count={totalPages} 
+            onChange={(e, v) => setPage(v - 1)} 
             color="primary"
             renderItem={(item) => (
-              <PaginationItem
-                component={Link}
-                to={`?page=${item.page}`}
-                {...item}
-              />
+              <PaginationItem component={Link} to={`?page=${item.page}`} {...item} />
             )}
           />
         </Box>
