@@ -1,5 +1,5 @@
-# routers/ingredients.py
-from fastapi import APIRouter, HTTPException, Query, BackgroundTasks  # ✅ Añadido BackgroundTasks
+﻿# routers/ingredients.py
+from fastapi import APIRouter, HTTPException, Query, BackgroundTasks
 from database.connection import recipe_db_host, bedca_collection, embeddings_collection, images_collection, food_portions_collection
 from unidecode import unidecode
 from fastapi.encoders import jsonable_encoder
@@ -16,6 +16,21 @@ router = APIRouter(tags=["Ingredients"])
 alimentos_collection = bedca_collection
 
 model = SentenceTransformer('sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2')
+
+# --- CONFIGURACIÓN DE MAPEO ROBUSTO ---
+CATEGORY_KEYWORDS = {
+    "Verduras": ["verdura", "vegetal", "hortaliza", "hierba", "especia"],
+    "Legumbres": ["legumbre", "semilla", "nuez", "frutos secos"],
+    "Carne": ["carne", "res", "cerdo", "cordero", "ternera", "caza", "embutido", "avicola", "pollo", "pavo"],
+    "Frutas": ["fruta", "jugo", "zumo", "fruticola"],
+    "Pescados": ["pescado", "marisco", "molusco", "reptil", "crustaceo"],
+    "Lácteos": ["leche", "lacteo", "huevo", "ovoproducto", "queso", "yogur"],
+    "Cereales": ["cereal", "grano", "pasta", "horneado", "pan", "bolleria", "harina", "arroz"],
+    "Bebidas": ["bebida", "refresco", "alcohol", "cafe", "te", "infusion"],
+    "Dulces": ["azucar", "chocolate", "dulce", "aperitivo", "snack", "golosina", "caramelo"],
+    "Platos Preparados": ["comida", "restaurante", "rapida", "plato", "guarnicion", "sopa", "salsa", "bebe", "infantil", "varios"],
+    "Aceites": ["grasa", "aceite", "mantequilla", "margarina"]
+}
 
 @router.post("/actualizar_imagen/{name_esp}")
 async def actualizar_imagen_endpoint(name_esp: str):
@@ -53,15 +68,21 @@ async def get_ingredient_categories():
 @router.get("/por_categoria/{categoria:path}")
 async def get_alimentos_por_categoria(
     categoria: str,
-    background_tasks: BackgroundTasks,  # ✅ Inyectamos tareas en segundo plano
+    background_tasks: BackgroundTasks,
     salt: str = Query(None),
     sug: str = Query(None),
     total_fat: str = Query(None),
     trans: str = Query(None)
 ):
     categoria_clean = categoria.strip()
-    # MongoDB Regex para ignorar mayúsculas/minúsculas y manejar "/"
-    filtros = {"category_esp": re.compile(f"^{re.escape(categoria_clean)}$", re.IGNORECASE)}
+    
+    # Lógica de filtrado por palabras clave
+    if categoria_clean in CATEGORY_KEYWORDS:
+        keywords = CATEGORY_KEYWORDS[categoria_clean]
+        regex_pattern = "|".join([re.escape(k) for k in keywords])
+        filtros = {"category_esp": re.compile(regex_pattern, re.IGNORECASE)}
+    else:
+        filtros = {"category_esp": re.compile(f"^{re.escape(categoria_clean)}$", re.IGNORECASE)}
 
     if salt: filtros["oms_lights.salt"] = salt
     if sug: filtros["oms_lights.sug"] = sug
@@ -73,16 +94,12 @@ async def get_alimentos_por_categoria(
 
     async for item in alimentos_cursor:
         nombre_esp = item.get("name_esp")
-        
-        # 1. Buscar si ya existe en la colección de imágenes
         image_doc = images_collection.find_one({"name_esp": nombre_esp})
         
         if image_doc:
             image_url = image_doc.get("image_url")
         else:
-            # 2. Si no existe, usamos placeholder...
             image_url = "/img/placeholder-food.jpg"
-            # 3. ...y programamos la descarga real SIN bloquear al usuario
             background_tasks.add_task(actualizar_imagen_alimento, nombre_esp)
 
         resultado.append({
@@ -133,7 +150,6 @@ async def sugerir_alimentos(nombre: str, limit: int = 10):
         raise HTTPException(status_code=404, detail="No se encontraron sugerencias")
     return resultados
 
-# --- DETALLE DE ALIMENTO CON CARGA EN SEGUNDO PLANO ---
 @router.get("/detalle_alimento/{nombre:path}")
 async def get_alimento_detalle(nombre: str, background_tasks: BackgroundTasks):
     nombre_limpio = nombre.strip()
@@ -149,14 +165,11 @@ async def get_alimento_detalle(nombre: str, background_tasks: BackgroundTasks):
         }
 
     doc = convert_objectid(doc)
-
-    # Buscar imagen
     image_doc = images_collection.find_one({"name_esp": pattern}, {"_id": 0, "image_url": 1})
     
     if image_doc:
         image_url = image_doc.get("image_url")
     else:
-        # Si entran al detalle y no hay imagen, intentamos descargarla ahora
         image_url = "/img/placeholder-food.jpg"
         background_tasks.add_task(actualizar_imagen_alimento, nombre_limpio)
 

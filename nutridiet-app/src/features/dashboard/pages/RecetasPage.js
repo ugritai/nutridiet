@@ -10,7 +10,7 @@ export default function RecetasPage() {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Categorías base que siempre queremos mostrar
+  // Categorías base que SIEMPRE queremos mostrar y que tienen imagen
   const RecetaCategories = [
     'Sopas',
     'Ensaladas',
@@ -22,13 +22,15 @@ export default function RecetasPage() {
     'Fruta',
     'Postres'
   ];
-  
-  // Función para convertir nombres largos de BedCA a tus nombres cortos
+
+  /**
+   * Mapea categorías de la API a nuestro set cerrado de categorías.
+   * Si no reconoce la categoría, devuelve null para filtrarla.
+   */
   function normalizeCategory(cat) {
-    if (!cat) return 'Otros';
+    if (!cat) return null;
     const lower = cat.toLowerCase();
 
-    // Lógica de palabras clave para unificar categorías
     if (lower.includes('sopa') || lower.includes('caldo')) return 'Sopas';
     if (lower.includes('ensalada') || lower.includes('verdura') || lower.includes('hortaliza')) return 'Ensaladas';
     if (lower.includes('arroz') || lower.includes('grano') || lower.includes('cereal')) return 'Arroz';
@@ -38,43 +40,32 @@ export default function RecetasPage() {
     if (lower.includes('carne') || lower.includes('pollo') || lower.includes('cerdo') || lower.includes('embutido')) return 'Carne';
     if (lower.includes('fruta')) return 'Fruta';
     if (lower.includes('postre') || lower.includes('dulce') || lower.includes('azucar') || lower.includes('chocolate')) return 'Postres';
-    
-    // Si no coincide con nada conocido, lo dejamos tal cual (o podrías retornas null para filtrarlo)
-    return capitalize(cat);
+
+    return null; // Categoría no reconocida (evita errores 404 de imágenes)
   }
-  
-  function capitalize(text) {
-    if (!text) return '';
-    return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
-  }
-  
+
   useEffect(() => {
-      fetchWithAuth('/recetas/all_categories')
+    fetchWithAuth('/recetas/all_categories')
       .then(res => res.json())
       .then(data => {
-        console.log('Data received:', data);
-        
-        // 1. Normalizamos las categorías que vienen de la API
-        const apiCategories = data.categories.map(normalizeCategory);
-        
-        // 2. Unificamos con tus categorías base
-        const allCategories = [...RecetaCategories, ...apiCategories];
-        
-        // 3. Eliminamos duplicados usando un Set
-        const uniqueCategories = Array.from(new Set(allCategories)); // "Carne" de la lista y "Carne" normalizado se fusionan aquí
+        // 1. Normalizamos las categorías de la API y filtramos los null
+        const apiCategories = (data.categories || [])
+          .map(normalizeCategory)
+          .filter(cat => cat !== null);
+
+        // 2. Unificamos con las base y eliminamos duplicados
+        const uniqueCategories = Array.from(new Set([...RecetaCategories, ...apiCategories]));
 
         setCategories(uniqueCategories);
       })
       .catch(err => {
-        console.error("Error al obtener categorías:", err)
-        // Si falla la API, al menos mostramos las categorías base
+        console.error("Error al obtener categorías:", err);
         setCategories(RecetaCategories);
       })
       .finally(() => {
         setLoading(false);
       });
   }, []);
-  
 
   const {
     query,
@@ -99,7 +90,7 @@ export default function RecetasPage() {
         suggestionClick={handleSelectSuggestion}
       />
 
-      <Typography variant="h4" gutterBottom>
+      <Typography variant="h4" gutterBottom sx={{ mt: 3 }}>
         Categorías de Recetas
       </Typography>
 
@@ -108,12 +99,15 @@ export default function RecetasPage() {
       ) : (
         <>
           {categories.length === 0 ? (
-            <Typography variant="h6" color="error">No se encontraron categorías.</Typography>
+            <Typography variant="h6" color="error">
+              No se encontraron categorías.
+            </Typography>
           ) : (
-            <>
-              {/* Pasamos 'recetas' para que busque en /img/recetas/ y use nombres cortos */}
-              <FoodGrid categories={categories} basePath="recetas" imageFolder="recetas" />
-            </>
+            <FoodGrid 
+              categories={categories} 
+              basePath="recetas" 
+              shouldMap={false} 
+            />
           )}
         </>
       )}

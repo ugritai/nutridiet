@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     Typography, CircularProgress, Box,
@@ -8,6 +8,17 @@ import UniversalCard from '../components/UniversalCard';
 import FoodSearch from '../components/FoodSearch';
 import Search from '../components/Search';
 import { fetchWithAuth } from './api'; 
+
+const sanitizeFilename = (name) => {
+  if (!name) return '';
+  return name
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // Quitar tildes
+    .replace(/[^\w\-]/g, "-")        // Caracteres especiales a guion
+    .replace(/-+/g, "-")             // Colapsar guiones
+    .trim("-");                      // Limpiar extremos
+};
 
 export default function RecipeCategoryCard({ categoria }) {
     const navigate = useNavigate();
@@ -188,19 +199,23 @@ export default function RecipeCategoryCard({ categoria }) {
                 >
                     {currentRecetas.map((recetaObj) => {
                         const nombre = recetaObj.name;
-                        return (
-                            <UniversalCard
-                                key={nombre}
-                                title={nombre.charAt(0).toUpperCase() + nombre.slice(1)}
-                                image={recetaObj.image_url || '/img/placeholder-food.jpg'}
-                                sx={{ height: '100%' }} // La tarjeta llena su celda perfectamente
-                                onAction={() =>
-                                    navigate(`/recetas/detalle_receta/${encodeURIComponent(nombre)}`, {
-                                        state: { desdeDieta: false, dietaNombre: nombre }
-                                    })
-                                }
-                            />
-                        );
+                        // LÓGICA DE IMAGEN:
+                            // 1. Si la DB ya tiene el campo images (array), usamos el primer elemento
+                            // 2. Si no, construimos la ruta basada en el nombre normalizado + .webp
+                            const generatedImageName = `${sanitizeFilename(nombre)}.webp`;
+                            const imagePath = recetaObj.images && recetaObj.images.length > 0 
+                                ? recetaObj.images[0] 
+                                : `/static/images_recipies/${generatedImageName}`;
+
+                            return (
+                                <UniversalCard
+                                    key={nombre}
+                                    title={nombre.charAt(0).toUpperCase() + nombre.slice(1)}
+                                    image={imagePath} // Usamos la ruta calculada
+                                    sx={{ height: '100%' }}
+                                    // ... resto de props ...
+                                />
+                            );
                     })}
                 </Box>
 

@@ -35,4 +35,4 @@ if __name__ == "__main__":
 
 # para el server
 # docker cp backend\utils\descarga_masiva.py nutridiet-backend:/app/utils/descarga_masiva.py
-# docker exec -it nutridiet-backend python utils/descarga_masiva.py
+# docker exec -it nutridiet-backend python -m utils.descarga_masiva

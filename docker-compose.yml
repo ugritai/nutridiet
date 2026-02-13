@@ -22,6 +22,8 @@
   fooddb:
     image: mongo:6
     container_name: fooddb
+    ports:
+      - "27017:27017" #acuerdate de quitaro despues de generar las imagenes
     # Puertos eliminados para seguridad; solo accesibles internamente
     volumes:
       - fooddb_data:/data/db
@@ -53,6 +55,7 @@
       - ./.env
     volumes:
       - ./backend/static/images:/app/static/images # Persistencia de fotos descargadas
+      - ./backend/static/images_recipies:/app/static/images_recipies # <-- Donde guarda el script
     command: >
       bash -c "./wait-for-it.sh nutridietdb:27017 --timeout=60 -- 
       ./wait-for-it.sh fooddb:27017 --timeout=60 -- 
@@ -76,6 +79,7 @@
     volumes:
       - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
       - ./backend/static/images:/app/static/images:ro # Nginx sirve las imágenes directamente
+      - ./backend/static/images_recipies:/app/static/images_recipies:ro # Recetas (NUEVO)
     depends_on:
       - frontend
       - backend

@@ -60,7 +60,7 @@ export default function AlimentosPage() {
             <Typography variant="h6" color="error">No se encontraron categorías.</Typography>
           ) : (
             <>
-              <FoodGrid categories={categories} basePath="alimentos" imageFolder="alimentos" />
+              <FoodGrid categories={categories} basePath="alimentos" imageFolder="alimentos" shouldMap={true}/>
             </>
           )}
         </>
