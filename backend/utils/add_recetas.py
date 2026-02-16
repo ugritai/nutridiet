@@ -51,7 +51,7 @@ async def cargar_recetas_fieles():
                 "title": limpiar_titulo(nombre_orig),
                 "title_full": nombre_orig,
                 "ingredients": [{"ingredient": f"100g de {nombre_orig}"}],
-                "steps": ["Preparar para su consumo directo.", "Servir a temperatura adecuada."],
+                "steps": ["Consumo directo.", "Lavar y preparar si es necesario."], # Cambiado de 'instructions' a 'steps' para tu frontend
                 "nutritional_info": {
                     "energy_kcal": info.get("energy_kcal", 0),
                     "pro": info.get("pro", 0),
@@ -60,12 +60,15 @@ async def cargar_recetas_fieles():
                     "sug": info.get("sug", 0),
                     "salt": info.get("salt", 0)
                 },
-                "categoria": cat_app,      # Para Iconos y Grid
-                "category": cat_app.lower(), # Para lógica de búsqueda Backend
-                "origin_ISO": "ESP",       # Para que aparezca en el buscador
-                "n_diners": 1,
+                "categoria": cat_app,      
+                "category": cat_app.lower(), 
+                "origin_ISO": "ESP",       
+                "n_diners": 1,             # Campo esperado por el front
+                "minutes": 5,              # Campo esperado por el front
+                "dificultad": ["Dificultad baja"], # Campo esperado por el front
                 "images": [],
-                "source": "Generacion Automatica Nutridiet"
+                "source": "Generacion Automatica Nutridiet",
+                "dietary_preferences": ["Natural", "Monoinrediente"]
             }
             
             await recetas_col.insert_one(nueva_receta)
