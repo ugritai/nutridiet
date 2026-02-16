@@ -269,10 +269,10 @@ export default function RecipeDetailCard() {
           {/* Ingredients Section */}
           <Grid item xs={12} md={5} lg={4}>
             <ListSection
-              title="Ingredientes"
-              icon={Restaurant}
-              items={recipe.ingredients}
-              filterFn={(ing) => ing.ingredient && ing.ingredient.trim() !== ""}
+                title="Ingredientes"
+                icon={Restaurant}
+                items={recipe.ingredients || []} // Protegido
+                filterFn={(ing) => ing?.ingredient && ing.ingredient.trim() !== ""}
             />
           </Grid>
 
