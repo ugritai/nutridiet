@@ -1,42 +1,25 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link as RouterLink } from 'react-router-dom';
 import {
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
-  Grid,
-  Card,
-  CardContent,
-  Typography,
-  CircularProgress,
-  Divider,
-  Chip,
-  Box,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
-  Avatar,
+  Accordion, AccordionSummary, AccordionDetails, Grid, Card, CardContent,
+  Typography, CircularProgress, Divider, Chip, Box, List, ListItem,
+  ListItemText, ListItemIcon, Avatar,
 } from '@mui/material';
 import { useTheme, alpha } from '@mui/material/styles';
 import { AccessTime, Restaurant, People, Flag, LocalDining } from '@mui/icons-material';
 import RecipeNutritionTable from '../components/RecipeNutritionTable';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-
-// ✅ IMPORTACIÓN DE TU API CON AUTH
 import { fetchWithAuth } from './api'; 
 
-const ListSection = ({ title, icon: Icon, items, filterFn }) => {
+const ListSection = ({ title, icon: Icon, items = [], filterFn }) => {
   const theme = useTheme();
-  const filteredItems = items.filter(filterFn);
+  // ✅ Protección: Asegurar que items sea siempre un array antes de filtrar
+  const safeItems = Array.isArray(items) ? items : [];
+  const filteredItems = safeItems.filter(filterFn);
 
   return (
     <Accordion sx={{ borderRadius: 3, boxShadow: 1 }}>
-      <AccordionSummary
-        expandIcon={<ExpandMoreIcon />}
-        aria-controls={`${title}-content`}
-        id={`${title}-header`}
-      >
+      <AccordionSummary expandIcon={<ExpandMoreIcon />}>
         <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center' }}>
           <Icon sx={{ mr: 1 }} />
           {title} ({filteredItems.length})
@@ -47,31 +30,15 @@ const ListSection = ({ title, icon: Icon, items, filterFn }) => {
           {filteredItems.map((item, index) => (
             <ListItem key={index} sx={{ alignItems: 'flex-start', py: 1.5 }}>
               <ListItemIcon sx={{ mt: '4px', minWidth: 32 }}>
-                <Avatar
-                  sx={{
-                    width: 24,
-                    height: 24,
-                    bgcolor: theme.palette.primary.main,
-                    color: theme.palette.primary.contrastText,
-                    fontSize: '0.75rem'
-                  }}
-                >
+                <Avatar sx={{ width: 24, height: 24, bgcolor: theme.palette.primary.main, fontSize: '0.75rem' }}>
                   {index + 1}
                 </Avatar>
               </ListItemIcon>
               <ListItemText
                 primary={
-                  item.ingredient
+                  typeof item === 'object' && item?.ingredient
                     ? item.ingredient.replace(/^'+|'+$/g, '').trim()
-                    : item
-                      .replace(/^\s*\d+\.\s*/, '')
-                      .replace(/^\s*([\d]+[\.\)]?|[·•])+\s*/g, '') 
-                      .replace(/\bPaso\s*\d+\b/gi, '')
-                      .replace(/(?:^|,)\s*'?\d+'?(?=\s|$)/g, '')
-                      .replace(/(^|[\s])[,]+(?=[\s]|$)/g, ' ')
-                      .replace(/^'+|'+$/g, '')
-                      .replace(/\s+/g, ' ')
-                      .trim()
+                    : String(item).replace(/^\s*([\d]+[\.\)]?|[·•])+\s*/g, '').trim()
                 }
               />
             </ListItem>
@@ -159,18 +126,17 @@ export default function RecipeDetailCard() {
     const fetchData = async () => {
       setLoading(true);
       try {
-        // ✅ USANDO fetchWithAuth SEGÚN TU ESTRUCTURA DE GIT
         const response = await fetchWithAuth(`/recetas/detalle_receta/${encodeURIComponent(nombre)}`);
-        
         if (!response.ok) throw new Error("Error al obtener la receta");
-
         const data = await response.json();
         
         setSugeridos(data.sugeridos || []);
         setRecipe({
           ...data.receta,
-          dietary_preferences: Array.isArray(data.receta.dietary_preferences) ? data.receta.dietary_preferences : [],
-          nutritional_reviw: Array.isArray(data.receta.nutritional_reviw) ? data.receta.nutritional_reviw : []
+          dietary_preferences: Array.isArray(data.receta?.dietary_preferences) ? data.receta.dietary_preferences : [],
+          nutritional_reviw: Array.isArray(data.receta?.nutritional_reviw) ? data.receta.nutritional_reviw : [],
+          ingredients: Array.isArray(data.receta?.ingredients) ? data.receta.ingredients : [],
+          steps: Array.isArray(data.receta?.steps) ? data.receta.steps : []
         });
       } catch (err) {
         console.error("Error:", err);
@@ -179,198 +145,63 @@ export default function RecipeDetailCard() {
         setLoading(false);
       }
     };
-
     fetchData();
   }, [nombre]);
 
-  if (loading) return (
-    <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-      <CircularProgress />
-    </Box>
-  );
+  if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}><CircularProgress /></Box>;
+  if (!recipe) return <Card sx={{ mt: 4 }}><CardContent><Typography>No se encontró información.</Typography></CardContent></Card>;
 
-  if (!recipe) {
-    return (
-      <Card sx={{ maxWidth: '100%', mx: 'auto', mt: 4, boxShadow: 3, borderRadius: 4 }}>
-        <CardContent>
-          <Typography variant="h6" gutterBottom>
-            No se encontró información para la receta solicitada.
-          </Typography>
-          {sugeridos.length > 0 && (
-            <Box sx={{ mt: 3 }}>
-              <Divider sx={{ mb: 3 }} />
-              <Typography variant="h6" gutterBottom>Recetas relacionadas</Typography>
-              <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-                {sugeridos.map((item, index) => {
-                  const nombreSugerido = typeof item === 'string' ? item : item.titulo;
-                  return (
-                    <Chip
-                      key={index}
-                      label={nombreSugerido}
-                      component={RouterLink}
-                      to={`/recetas/detalle_receta/${encodeURIComponent(nombreSugerido)}`}
-                      clickable
-                    />
-                  );
-                })}
-              </Box>
-            </Box>
-          )}
-        </CardContent>
-      </Card>
-    );
-  }
-
-  const difficulties = Array.isArray(recipe.dificultad)
-    ? recipe.dificultad.filter((difficulty) => difficulty !== "")
+  // ✅ Protección definitiva para dificultades (Línea que causaba el error)
+  const difficulties = Array.isArray(recipe.dificultad) 
+    ? recipe.dificultad.filter(d => d && d.trim() !== "") 
     : [];
 
   return (
     <Card sx={{ width: '100%', mx: 'auto', mt: 4, boxShadow: 3, borderRadius: 4 }}>
       <CardContent>
-        {/* Header Section */}
         <Box sx={{ mb: 3 }}>
-          <Typography variant="h3" gutterBottom sx={{ fontWeight: 'bold' }}>
-            {recipe.title.charAt(0).toUpperCase() + recipe.title.slice(1)}
+          <Typography variant="h3" sx={{ fontWeight: 'bold' }}>
+            {recipe.title?.charAt(0).toUpperCase() + recipe.title?.slice(1)}
           </Typography>
-
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2, flexWrap: 'wrap' }}>
-            <Chip
-              icon={<LocalDining />}
-              label={recipe.categoria}
-              color="secondary"
-              component={RouterLink}
-              to={`/recetas/categorias/${encodeURIComponent(recipe.categoria)}`}
-              clickable
-            />
-            <Chip
-              icon={<Flag />}
-              label={recipe.origin_ISO}
-              variant="outlined"
-              sx={{ borderColor: theme.palette.primary.main }}
-            />
-            <Chip icon={<People />} label={`${recipe.n_diners} personas`} />
-            {recipe.minutes != null && (
-              <Chip icon={<AccessTime />} label={`${recipe.minutes} minutos`} />
-            )}
+          
+          <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap' }}>
+            <Chip icon={<LocalDining />} label={recipe.categoria || 'General'} color="secondary" />
+            <Chip icon={<Flag />} label={recipe.origin_ISO || 'ESP'} variant="outlined" />
+            <Chip icon={<People />} label={`${recipe.n_diners || 1} personas`} />
+            {recipe.minutes != null && <Chip icon={<AccessTime />} label={`${recipe.minutes} min`} />}
           </Box>
 
           <Box sx={{ display: 'flex', flexWrap: 'wrap' }}>
-            {recipe.dietary_preferences.map((pref, index) => (
-              <DietaryChip key={index} label={pref} />
-            ))}
-            {difficulties.map((difficulty, index) => (
-              <DifficultyChip key={index} label={difficulty} />
-            ))}
+            {recipe.dietary_preferences?.map((pref, i) => <DietaryChip key={i} label={pref} />)}
+            {difficulties.map((diff, i) => <DifficultyChip key={i} label={diff} />)}
           </Box>
         </Box>
 
         <Grid container spacing={3}>
-          {/* Ingredients Section */}
-          <Grid item xs={12} md={5} lg={4}>
+          <Grid item xs={12} md={5}>
             <ListSection
-                title="Ingredientes"
-                icon={Restaurant}
-                items={recipe.ingredients || []} // Protegido
-                filterFn={(ing) => ing?.ingredient && ing.ingredient.trim() !== ""}
+              title="Ingredientes"
+              icon={Restaurant}
+              items={recipe.ingredients}
+              filterFn={(ing) => ing?.ingredient && ing.ingredient.trim() !== ""}
             />
           </Grid>
-
-          {/* Steps Section */}
-          <Grid item xs={12} md={7} lg={8}>
+          <Grid item xs={12} md={7}>
             <ListSection
               title="Preparación"
               icon={AccessTime}
               items={recipe.steps}
-              filterFn={(step) => {
-                return step
-                  .replace(/^\s*\d+\.\s*/, '') 
-                  .replace(/^\s*([\d]+[\.\)]?|[·•])+\s*/g, '') 
-                  .replace(/(Paso\s*\d+|,\s*|'?\d+|'?\s*\d+)/gi, '') 
-                  .replace(/^'+|'+$/g, '') 
-                  .replace(/(^|[\s])[,]+(?=[\s]|$)/g, ' ') 
-                  .trim() !== "";
-              }}
+              filterFn={(step) => typeof step === 'string' && step.trim() !== ""}
             />
           </Grid>
         </Grid>
 
         <Box sx={{ mt: 3 }}>
-          <RecipeNutritionTable
-            nutritionalInfo={recipe.nutritional_info}
-            raciones={recipe.n_diners}
+          <RecipeNutritionTable 
+            nutritionalInfo={recipe.nutritional_info || {}} 
+            raciones={recipe.n_diners || 1} 
           />
         </Box>
-
-        {(recipe.nutritional_reviw?.length > 0 || recipe.descripcion) && (
-          <Box sx={{ mt: 3 }}>
-            <Accordion sx={{ borderRadius: 3, boxShadow: 1 }}>
-              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Typography variant="h6">Comentario Nutricional</Typography>
-              </AccordionSummary>
-              <AccordionDetails>
-                <List dense>
-                  {recipe.nutritional_reviw?.map((review, index) => (
-                    <ListItem key={index}>
-                      <Typography variant="body2">{review}</Typography>
-                    </ListItem>
-                  ))}
-                  {recipe.descripcion && (
-                    <ListItem>
-                      <Typography variant="body2">{recipe.descripcion}</Typography>
-                    </ListItem>
-                  )}
-                </List>
-              </AccordionDetails>
-            </Accordion>
-          </Box>
-        )}
-
-        <Box sx={{ mt: 3, pt: 2, borderTop: `1px solid ${theme.palette.divider}` }}>
-          <Typography variant="body2" color="textSecondary">
-            Fuente:
-            {recipe.url ? (
-              <Chip
-                component="a"
-                href={recipe.url}
-                label={getDomainFromUrl(recipe.url)}
-                target="_blank"
-                clickable
-                size="small"
-                sx={{ ml: 1 }}
-              />
-            ) : (
-              <Chip label={recipe.source || "Desconocida"} size="small" sx={{ ml: 1 }} />
-            )}
-          </Typography>
-        </Box>
-
-        {/* Relacionados en Footer */}
-        {sugeridos.length > 0 && (
-          <Box sx={{ mt: 4 }}>
-            <Divider sx={{ mb: 3 }} />
-            <Typography variant="h6" gutterBottom>Recetas relacionadas</Typography>
-            <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
-              {sugeridos.map((item, index) => {
-                const nombreSugerido = typeof item === 'string' ? item : item.titulo;
-                return (
-                  <Chip
-                    key={index}
-                    label={nombreSugerido}
-                    component={RouterLink}
-                    to={`/recetas/detalle_receta/${encodeURIComponent(nombreSugerido)}`}
-                    clickable
-                    sx={{
-                      borderRadius: 1,
-                      transition: '0.2s',
-                      '&:hover': { transform: 'scale(1.05)', boxShadow: 1 }
-                    }}
-                  />
-                );
-              })}
-            </Box>
-          </Box>
-        )}
       </CardContent>
     </Card>
   );
