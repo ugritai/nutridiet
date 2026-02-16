@@ -76,34 +76,54 @@ async def get_all_categories():
 
 @router.get("/buscar_recetas/{nombre}")
 async def buscar_recetas(nombre: str, limit: int = Query(20, ge=1, le=100)):
-    palabras = remove_stop_words(nombre)
-    sugerencias = set()
+    nombre_raw = nombre.strip()
+    nombre_normalizado = unidecode(nombre_raw.lower())
+    palabras = remove_stop_words(nombre_normalizado)
+    
+    if not palabras:
+        return []
 
-    for palabra in palabras:
-        for collection_name in collections:
-            collection = recipe_db_host[collection_name]
-            cursor = collection.find({'origin_ISO': 'ESP'})
+    # Listas para organizar por relevancia
+    exactos = []
+    empiezan_por = []
+    contienen = []
 
-            async for doc in cursor:
-                title = doc.get("title", "")
-                if not title:
-                    continue
+    # Regex que busca palabras completas para evitar "Cocotte" si buscas "Coco"
+    # Usamos \b para marcar límites de palabra
+    regex_pattern = "".join([f"(?=.*\\b{re.escape(unidecode(p))})" for p in palabras])
 
-                title_sin_tildes = unidecode(title.lower())
+    for collection_name in collections:
+        collection = recipe_db_host[collection_name]
+        
+        # Buscamos en la DB (origin_ISO: 'ESP' es vital para ver las nuevas)
+        cursor = collection.find({
+            'origin_ISO': 'ESP',
+            'title': {'$regex': regex_pattern, '$options': 'i'}
+        }, {'title': 1}).limit(limit * 2)
 
-                if palabra in title_sin_tildes:
-                    sugerencias.add(capitalizar_primera_letra(title))
+        async for doc in cursor:
+            titulo_db = doc.get("title")
+            if not titulo_db: continue
+            
+            titulo_cap = capitalizar_primera_letra(titulo_db)
+            titulo_db_norm = unidecode(titulo_db.lower())
 
-                if len(sugerencias) >= limit:
-                    break  
+            # --- CLASIFICACIÓN POR RELEVANCIA ---
+            if titulo_db_norm == nombre_normalizado:
+                if titulo_cap not in exactos:
+                    exactos.append(titulo_cap)
+            elif titulo_db_norm.startswith(nombre_normalizado):
+                if titulo_cap not in empiezan_por:
+                    empiezan_por.append(titulo_cap)
+            else:
+                if titulo_cap not in contienen:
+                    contienen.append(titulo_cap)
 
-        if len(sugerencias) >= limit:
-            break 
-
-    if sugerencias:
-        return [{"nombre": s} for s in list(sugerencias)[:limit]]
-    else:
-        raise HTTPException(status_code=404, detail="Receta no encontrada")
+    # Combinamos en orden de importancia
+    resultado_final = (exactos + empiezan_por + contienen)[:limit]
+    
+    # Devolvemos [] en lugar de 404 para evitar errores en la consola del navegador
+    return [{"nombre": r} for r in resultado_final]
 
 from fastapi import Query
 from typing import Optional

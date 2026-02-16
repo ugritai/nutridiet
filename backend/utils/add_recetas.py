@@ -2,80 +2,83 @@ import asyncio
 import re
 from motor.motor_asyncio import AsyncIOMotorClient
 
-MONGO_URI = "mongodb://root:RootPass123%21@127.0.0.1:27017/fooddb?authSource=admin&directConnection=true"
+MONGO_URI = "mongodb://root:RootPass123%21@fooddb:27017/fooddb?authSource=admin"
 
-# Usamos las categorías oficiales de BEDCA que detectamos en tu DB
-CATEGORIAS_ORIGEN = {
-    "Frutas": "Frutas y derivados",
-    "Bebidas": "Bebidas (no lácteas)"
-}
+# Mapeo completo basado en tu CATEGORY_MAPPING de React
+CONFIG_CATEGORIAS = [
+    {"app": "Frutas", "keywords": ["fruta", "jugo", "zumo", "fruticola"]},
+    {"app": "Verduras", "keywords": ["verdura", "vegetal", "hortaliza", "hierba", "especia"]},
+    {"app": "Carne", "keywords": ["carne", "res", "cerdo", "cordero", "ternera", "caza", "embutido", "avicola", "pollo"]},
+    {"app": "Pescados", "keywords": ["pescado", "marisco", "molusco", "crustaceo"]},
+    {"app": "Lácteos", "keywords": ["leche", "lacteo", "huevo", "queso", "yogur"]},
+    {"app": "Legumbres", "keywords": ["legumbre", "semilla", "nuez", "frutos secos"]},
+    {"app": "Cereales", "keywords": ["cereal", "grano", "pasta", "horneado", "pan", "arroz"]},
+    {"app": "Bebidas", "keywords": ["bebida", "refresco", "alcohol", "cafe", "te", "infusion"]},
+    {"app": "Aceites", "keywords": ["grasa", "aceite", "mantequilla", "margarina"]}
+]
 
 def limpiar_titulo(t):
-    # "Manzana, cruda, con piel" -> "Manzana"
-    # "Zumo de naranja, natural" -> "Zumo de naranja"
     nombre = t.split(',')[0].strip()
     return nombre.capitalize()
 
 async def cargar_recetas_fieles():
     client = AsyncIOMotorClient(MONGO_URI)
     db = client['fooddb']
-    
     alimentos_col = db['all_ingredients'] 
     recetas_col = db['abuela_bedca']
 
-    # 1. Limpieza de seguridad de intentos previos
-    print("🧹 Borrando rastro de experimentos anteriores...")
-    await recetas_col.delete_many({"source": "Generación Automática Nutridiet"})
+    print("🧹 Limpiando base de datos para carga completa...")
+    await recetas_col.delete_many({"source": "Generacion Automatica Nutridiet"})
 
-    for cat_app, cat_bedca in CATEGORIAS_ORIGEN.items():
-        print(f"[*] Importando desde categoría BEDCA: {cat_bedca}...")
+    for item in CONFIG_CATEGORIAS:
+        cat_app = item["app"]
+        regex_pattern = "|".join(item["keywords"])
+        # Buscamos en category_esp de all_ingredients
+        query = {"category_esp": {"$regex": regex_pattern, "$options": "i"}}
         
-        # Buscamos por la categoría exacta de BEDCA para evitar meter corderos o aceites
-        cursor = alimentos_col.find({"category_esp": cat_bedca})
+        cursor = alimentos_col.find(query)
         contador = 0
 
         async for alimento in cursor:
             nombre_orig = alimento.get("name_esp", "")
             if not nombre_orig: continue
 
-            # Extraemos la info del sub-objeto correcto: nutritional_info_100g
             info = alimento.get("nutritional_info_100g", {})
             fats = info.get("fats", {})
-
-            # Si no hay calorías, probablemente sea un registro incompleto, saltamos
-            if not info.get("energy_kcal"):
-                continue
+            if not info.get("energy_kcal"): continue
 
             nueva_receta = {
                 "title": limpiar_titulo(nombre_orig),
-                "title_full": nombre_orig, # Guardamos el original por si acaso
-                "ingredients": [f"100g de {nombre_orig}"],
-                "instructions": [
-                    f"Seleccionar {limpiar_titulo(nombre_orig)} de buena calidad.",
-                    "Preparar para su consumo directo o mezcla.",
-                    "Servir a temperatura adecuada."
-                ],
+                "title_full": nombre_orig,
+                "ingredients": [{"ingredient": f"100g de {nombre_orig}"}],
+                "steps": ["Preparar para su consumo directo.", "Servir a temperatura adecuada."],
                 "nutritional_info": {
                     "energy_kcal": info.get("energy_kcal", 0),
                     "pro": info.get("pro", 0),
                     "car": info.get("car", 0),
-                    "fats.total_fat": fats.get("total_fat", 0),
+                    "fats": fats.get("total_fat", 0),
                     "sug": info.get("sug", 0),
                     "salt": info.get("salt", 0)
                 },
-                "category_esp": cat_app, # "Frutas" o "Bebidas"
-                "images": [], # Para tu ComfyUI
-                "source": "Generación Automática Nutridiet",
-                "dietary_preferences": ["Natural", "Monoinrediente"]
+                "categoria": cat_app,      # Para Iconos y Grid
+                "category": cat_app.lower(), # Para lógica de búsqueda Backend
+                "origin_ISO": "ESP",       # Para que aparezca en el buscador
+                "n_diners": 1,
+                "images": [],
+                "source": "Generacion Automatica Nutridiet"
             }
             
             await recetas_col.insert_one(nueva_receta)
             contador += 1
         
-        print(f"✅ Añadidas {contador} recetas reales de {cat_app}.")
+        print(f"✅ Categoría '{cat_app}': {contador} recetas añadidas.")
 
     client.close()
-    print("\n--- PROCESO FINALIZADO CON ÉXITO ---")
+    print("\n--- CARGA MASIVA FINALIZADA ---")
 
 if __name__ == "__main__":
     asyncio.run(cargar_recetas_fieles())
+
+    
+# docker cp add_recetas.py nutridiet-backend:/app/add_recetas.py
+# docker exec -it nutridiet-backend python /app/add_recetas.py
