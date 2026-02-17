@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from database.connection import client_host
-from routers import auth, nutritionists, recipes, pacientes, ingredients, intakes,diets
+from routers import auth, nutritionists, recipes, pacientes, ingredients, intakes,diets, reports
 from dotenv import load_dotenv
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
@@ -33,6 +33,8 @@ app.include_router(ingredients.router, prefix=f"{api_prefix}/alimentos")
 app.include_router(pacientes.router, prefix=f"{api_prefix}/pacientes")
 app.include_router(intakes.router, prefix=f"{api_prefix}/planificacion_ingestas")
 app.include_router(diets.router, prefix=f"{api_prefix}/planificacion_dietas")
+app.include_router(reports.router, prefix=f"{api_prefix}/reports") # Cambia recipes por reports
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client_host.close()

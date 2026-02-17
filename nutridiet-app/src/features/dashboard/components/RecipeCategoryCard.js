@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     Typography, CircularProgress, Box,
@@ -45,21 +45,30 @@ export default function RecipeCategoryCard({ categoria }) {
         handleSearch, handleSelectSuggestion, handleSuggestions
     } = FoodSearch({ type: 'recetas' });
 
-    const fetchDatos = async () => {
+const fetchDatos = async () => {
         setLoading(true);
         try {
+            // Asegúrate de que las URLs coincidan con tus prefijos de FastAPI (/api/recetas/...)
             const [recetasRes, maximosRes] = await Promise.all([
                 fetchWithAuth(`/recetas/categoria/${encodeURIComponent(categoria)}/nutricion_simplificada?por_porcion=true`),
                 fetchWithAuth(`/recetas/recetas/maximos_nutricionales?categoria=${encodeURIComponent(categoria)}`)
             ]);
 
-            if (!recetasRes.ok || !maximosRes.ok) throw new Error("Error en la carga de datos");
+            // Verificación individual para depurar mejor
+            if (!recetasRes.ok) console.error("Fallo en recetasRes");
+            if (!maximosRes.ok) console.error("Fallo en maximosRes");
 
             const recetasData = await recetasRes.json();
             const maximosData = await maximosRes.json();
 
-            const recetasConDatos = (recetasData.resultados || []).filter(r => r.name);
+            // CORRECCIÓN: Algunos resultados podrían venir con 'name' o 'title'
+            // Normalizamos para asegurar que siempre haya un campo 'name'
+            const recetasConDatos = (recetasData.resultados || []).map(r => ({
+                ...r,
+                name: r.name || r.title || "Receta sin título"
+            }));
 
+            // Configuración de máximos con valores por defecto seguros
             const kcal = maximosData.kcal || 1000;
             const pro = maximosData.pro || 100;
             const car = maximosData.car || 100;
@@ -76,7 +85,7 @@ export default function RecipeCategoryCard({ categoria }) {
             setCurrentPage(1);
             setSelectedLetter('');
         } catch (err) {
-            console.error("Error fetching category data:", err);
+            console.error("Error crítico en RecipeCategoryCard:", err);
         } finally {
             setLoading(false);
         }

@@ -4,7 +4,6 @@ from motor.motor_asyncio import AsyncIOMotorClient
 
 MONGO_URI = "mongodb://root:RootPass123%21@fooddb:27017/fooddb?authSource=admin"
 
-# Mapeo completo basado en tu CATEGORY_MAPPING de React
 CONFIG_CATEGORIAS = [
     {"app": "Frutas", "keywords": ["fruta", "jugo", "zumo", "fruticola"]},
     {"app": "Verduras", "keywords": ["verdura", "vegetal", "hortaliza", "hierba", "especia"]},
@@ -27,13 +26,13 @@ async def cargar_recetas_fieles():
     alimentos_col = db['all_ingredients'] 
     recetas_col = db['abuela_bedca']
 
-    print("🧹 Limpiando base de datos para carga completa...")
-    await recetas_col.delete_many({"source": "Generacion Automatica Nutridiet"})
+    # ✅ LIMPIEZA BLINDADA: Borra versiones con y sin tilde usando regex
+    print("🧹 Limpiando rastro de versiones antiguas en la DB...")
+    await recetas_col.delete_many({"source": {"$regex": "Generaci.n Autom.tica Nutridiet", "$options": "i"}})
 
     for item in CONFIG_CATEGORIAS:
         cat_app = item["app"]
         regex_pattern = "|".join(item["keywords"])
-        # Buscamos en category_esp de all_ingredients
         query = {"category_esp": {"$regex": regex_pattern, "$options": "i"}}
         
         cursor = alimentos_col.find(query)
@@ -51,7 +50,7 @@ async def cargar_recetas_fieles():
                 "title": limpiar_titulo(nombre_orig),
                 "title_full": nombre_orig,
                 "ingredients": [{"ingredient": f"100g de {nombre_orig}"}],
-                "steps": ["Consumo directo.", "Lavar y preparar si es necesario."], # Cambiado de 'instructions' a 'steps' para tu frontend
+                "steps": ["Consumo directo.", "Lavar y preparar si es necesario."],
                 "nutritional_info": {
                     "energy_kcal": info.get("energy_kcal", 0),
                     "pro": info.get("pro", 0),
@@ -63,11 +62,11 @@ async def cargar_recetas_fieles():
                 "categoria": cat_app,      
                 "category": cat_app.lower(), 
                 "origin_ISO": "ESP",       
-                "n_diners": 1,             # Campo esperado por el front
-                "minutes": 5,              # Campo esperado por el front
-                "dificultad": ["Dificultad baja"], # Campo esperado por el front
+                "n_diners": 1,
+                "minutes": 5,
+                "dificultad": ["Dificultad muy baja"],
                 "images": [],
-                "source": "Generacion Automatica Nutridiet",
+                "source": "Generacion Automatica Nutridiet", # Usamos sin tilde para consistencia
                 "dietary_preferences": ["Natural", "Monoinrediente"]
             }
             
@@ -77,11 +76,10 @@ async def cargar_recetas_fieles():
         print(f"✅ Categoría '{cat_app}': {contador} recetas añadidas.")
 
     client.close()
-    print("\n--- CARGA MASIVA FINALIZADA ---")
+    print("\n--- PROCESO FINALIZADO CON ÉXITO ---")
 
 if __name__ == "__main__":
     asyncio.run(cargar_recetas_fieles())
-
     
 # docker cp add_recetas.py nutridiet-backend:/app/add_recetas.py
 # docker exec -it nutridiet-backend python /app/add_recetas.py

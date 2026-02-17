@@ -477,123 +477,87 @@ async def obtener_kcal_pro_car_por_categoria(
     car_max: Optional[float] = Query(None),
 ):
     categoria_normalizada = unidecode(categoria.lower().strip())
-    print(categoria_normalizada)
     recetas_encontradas = {}
 
-    # Buscar por categoría exacta
-    for collection_name in collections:
-        collection = recipe_db_host[collection_name]
-        cursor = collection.find({
-            'origin_ISO': 'ESP',
-            '$or': [
-                {'category': categoria},
-                {'category': {'$regex': f'^{categoria}$', '$options': 'i'}},
-                {'category': {'$in': [categoria]}}
-            ]
-        })
-
-        async for doc in cursor:
-            titulo = doc.get("title", "")
-            recetas_encontradas[titulo.lower()] = doc
-
-    # Buscar por palabras clave
-    if categoria_normalizada in PALABRAS_CLAVE:
-        palabras_clave = [unidecode(p.lower()) for p in PALABRAS_CLAVE[categoria_normalizada]]
-
+    try:
         for collection_name in collections:
             collection = recipe_db_host[collection_name]
-            cursor = collection.find({'origin_ISO': 'ESP'})
-
+            cursor = collection.find({
+                'origin_ISO': 'ESP',
+                '$or': [
+                    {'category': categoria},
+                    {'category': {'$regex': f'^{re.escape(categoria)}$', '$options': 'i'}},
+                    {'category': {'$in': [categoria]}}
+                ]
+            })
             async for doc in cursor:
                 titulo = doc.get("title", "")
-                titulo_sin_tildes = unidecode(titulo.lower())
-                if any(p in titulo_sin_tildes for p in palabras_clave):
+                if titulo:
                     recetas_encontradas[titulo.lower()] = doc
 
-    if not recetas_encontradas:
-        raise HTTPException(status_code=404, detail="No se encontraron recetas para esta categoría")
+        if categoria_normalizada in PALABRAS_CLAVE:
+            palabras_clave = [unidecode(p.lower()) for p in PALABRAS_CLAVE[categoria_normalizada]]
+            for collection_name in collections:
+                collection = recipe_db_host[collection_name]
+                cursor = collection.find({'origin_ISO': 'ESP'})
+                async for doc in cursor:
+                    titulo = doc.get("title", "")
+                    if titulo and any(p in unidecode(titulo.lower()) for p in palabras_clave):
+                        recetas_encontradas[titulo.lower()] = doc
 
-    resultados = []
+        if not recetas_encontradas:
+            return {"categoria": categoria, "resultados": [], "por_porcion": por_porcion}
 
-    def safe_round(val):
-        try:
-            return round(float(val), 2)
-        except (TypeError, ValueError):
-            return 0.0
+        resultados = []
+        def safe_round(val):
+            try: return round(float(val), 2)
+            except: return 0.0
 
-    for receta_doc in recetas_encontradas.values():
-        titulo = receta_doc.get("title", "")
-        valores = receta_doc.get("nutritional_info", {}) or {}
-        receta_doc["_id"] = str(receta_doc["_id"])
-        raciones = receta_doc.get("n_diners", 1) or 1
+        for receta_doc in recetas_encontradas.values():
+            titulo = receta_doc.get("title", "")
+            valores = receta_doc.get("nutritional_info", {}) or {}
+            raciones = receta_doc.get("n_diners", 1) or 1
 
-        def get_nutri_field(*keys):
-            for key in keys:
-                if key in valores and valores[key] is not None:
-                    return valores[key]
-            return None
+            def get_nutri_field(*keys):
+                for key in keys:
+                    if key in valores and valores[key] is not None:
+                        return valores[key]
+                return None
 
-        if por_porcion:
-            # intentar campos por-porcion primero
-            kcal_por = get_nutri_field("energy_kcal_porcion", "kcal_porcion", "kcal_racion")
-            pro_por = get_nutri_field("proteins_porcion", "pro_porcion", "proteinas_porcion")
-            car_por = get_nutri_field("carbohydrates_porcion", "car_porcion", "carbohidratos_porcion")
+            if por_porcion:
+                kcal_val = get_nutri_field("energy_kcal_porcion", "kcal_porcion", "kcal_racion")
+                pro_val = get_nutri_field("proteins_porcion", "pro_porcion", "proteinas_porcion")
+                car_val = get_nutri_field("carbohydrates_porcion", "car_porcion", "carbohidratos_porcion")
 
-            # si alguno no existe, intentar obtener total y dividir por raciones
-            if kcal_por is None:
-                kcal_total = get_nutri_field("energy_kcal", "kcal", "kcal_100g")
-                kcal = safe_round(kcal_total / raciones) if kcal_total is not None else 0.0
+                kcal = safe_round(kcal_val if kcal_val is not None else (get_nutri_field("energy_kcal", "kcal") or 0) / raciones)
+                pro = safe_round(pro_val if pro_val is not None else (get_nutri_field("proteins_g", "pro") or 0) / raciones)
+                car = safe_round(car_val if car_val is not None else (get_nutri_field("carbohydrates_g", "car") or 0) / raciones)
             else:
-                kcal = safe_round(kcal_por)
+                kcal = safe_round(get_nutri_field("energy_kcal", "kcal") or 0)
+                pro = safe_round(get_nutri_field("proteins_g", "pro") or 0)
+                car = safe_round(get_nutri_field("carbohydrates_g", "car") or 0)
 
-            if pro_por is None:
-                pro_total = get_nutri_field("proteins_g", "pro", "proteinas")
-                pro = safe_round(pro_total / raciones) if pro_total is not None else 0.0
-            else:
-                pro = safe_round(pro_por)
+            # Filtros nutricionales (Backend side)
+            if ((kcal_min and kcal < kcal_min) or (kcal_max and kcal > kcal_max) or
+                (pro_min and pro < pro_min) or (pro_max and pro > pro_max) or
+                (car_min and car < car_min) or (car_max and car > car_max)):
+                continue
 
-            if car_por is None:
-                car_total = get_nutri_field("carbohydrates_g", "car", "carbohidratos")
-                car = safe_round(car_total / raciones) if car_total is not None else 0.0
-            else:
-                car = safe_round(car_por)
-        else:
-            # pedir valores totales
-            kcal = safe_round(get_nutri_field("energy_kcal", "kcal", "kcal_100g") or 0)
-            pro = safe_round(get_nutri_field("proteins_g", "pro", "proteinas") or 0)
-            car = safe_round(get_nutri_field("carbohydrates_g", "car", "carbohidratos") or 0)
+            resultados.append({
+                "id": str(receta_doc.get("_id", "")),
+                "name": titulo,
+                "kcal": kcal,
+                "pro": pro,
+                "car": car,
+                # IMPORTANTE: Asegúrate de enviar la lista de imágenes si existe
+                "images": receta_doc.get("images", []) 
+            })
 
-        # Aplicar filtros
-        if (
-            (kcal_min is not None and kcal < kcal_min) or
-            (kcal_max is not None and kcal > kcal_max) or
-            (pro_min is not None and pro < pro_min) or
-            (pro_max is not None and pro > pro_max) or
-            (car_min is not None and car < car_min) or
-            (car_max is not None and car > car_max)
-        ):
-            continue
+        return {"categoria": categoria, "resultados": resultados, "por_porcion": por_porcion}
 
-        resultados.append({
-            "id": receta_doc["_id"],
-            "name": titulo,
-            "kcal": kcal,
-            "pro": pro,
-            "car": car
-        })
-
-    resultados.sort(key=lambda x: x["name"].lower())
-
-    return {
-        "categoria": categoria,
-        "por_porcion": por_porcion,
-        "filtros": {
-            "kcal_min": kcal_min, "kcal_max": kcal_max,
-            "pro_min": pro_min, "pro_max": pro_max,
-            "car_min": car_min, "car_max": car_max
-        },
-        "resultados": resultados
-    }
+    except Exception as e:
+        print(f"❌ Error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 #comentar para hacer pruebas sin torch '''    
 from sentence_transformers import SentenceTransformer, util

@@ -1,8 +1,12 @@
 import React from 'react';
+import { Box } from '@mui/material';
 import Dashboard from '../Dashboard';
 import Search from '../components/Search';
 import FoodSearch from '../components/FoodSearch';
 import FoodDetailCard from '../components/FoodDetailCard';
+import ReportIssueButton from '../components/ReportIssueButton';
+import { fetchWithAuth } from '../components/api';
+
 
 export default function DetalleAlimentoPage() {
   const {
@@ -29,6 +33,11 @@ export default function DetalleAlimentoPage() {
       />
 
       <FoodDetailCard />
+
+      {/* Botón de reporte para alimentos */}
+      <Box sx={{ display: 'flex', justifyContent: 'center', mb: 4 }}>
+        <ReportIssueButton recipeName={query || "Alimento"} />
+      </Box>
     </Dashboard>
   );
 }

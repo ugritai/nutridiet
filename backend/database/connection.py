@@ -29,8 +29,8 @@ client_food = MongoClient(
 )
 db_food = client_food['fooddb']
 
-# Cliente Asíncrono (para recetas/chat)
-# Apunta a FOODDB porque ahí están los embeddings y recetas
+# Cliente AsÃ­ncrono (para recetas/chat)
+# Apunta a FOODDB porque ahÃ­ estÃ¡n los embeddings y recetas
 recipe_host = AsyncIOMotorClient(
     MONGO_URI_FOODDB, 
     serverSelectionTimeoutMS=5000, 
@@ -49,13 +49,16 @@ intake_collection = db_host['intake']
 diet_collection = db_host['diet']
 ingredient_categories_collection = db_host['ingredient_categories'] 
 
+reports_collection = db_host['issue_reports']
+
 # --- Datos de COMIDA (Usan db_food / fooddb) ---
-# ¡IMPORTANTE!: Cambiamos estas para que usen db_food
+# Â¡IMPORTANTE!: Cambiamos estas para que usen db_food
 embeddings_collection = db_food['bedca_embeddings']
 embeddings_recipe_collection = db_food['recetas_embeddings']
 images_collection = db_food['ingredient_image']
 food_portions_collection = db_food['food_portions']
 
-# OJO: En tu dump vi 'abuela_bedca'. Si tu código usaba 'bedca_unified', 
-# verifica cuál es la correcta. Aquí pongo 'abuela_bedca' según tu dump.
+# OJO: En tu dump vi 'abuela_bedca'. Si tu cÃ³digo usaba 'bedca_unified', 
+# verifica cuÃ¡l es la correcta. AquÃ­ pongo 'abuela_bedca' segÃºn tu dump.
 bedca_collection = recipe_db_host['all_ingredients']
+
