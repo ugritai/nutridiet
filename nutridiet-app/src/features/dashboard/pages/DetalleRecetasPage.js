@@ -1,8 +1,11 @@
 import React from 'react';
+import { Box } from '@mui/material';
 import Dashboard from '../Dashboard';
 import Search from '../components/Search';
 import FoodSearch from '../components/FoodSearch';
 import RecipeDetailCard from '../components/RecipeDetailCard';
+import ReportIssueButton from '../components/ReportIssueButton';
+import { fetchWithAuth } from '../components/api';
 
 export default function DetalleRecetasPage() {
   const {
@@ -29,6 +32,11 @@ export default function DetalleRecetasPage() {
       />
 
       <RecipeDetailCard />
+
+      {/* Botón de reporte para recetas */}
+      <Box sx={{ display: 'flex', justifyContent: 'center', mb: 4 }}>
+        <ReportIssueButton recipeName={query || "Receta"} />
+      </Box>
     </Dashboard>
   );
 }
