@@ -208,23 +208,26 @@ const fetchDatos = async () => {
                 >
                     {currentRecetas.map((recetaObj) => {
                         const nombre = recetaObj.name;
-                        // LÓGICA DE IMAGEN:
-                            // 1. Si la DB ya tiene el campo images (array), usamos el primer elemento
-                            // 2. Si no, construimos la ruta basada en el nombre normalizado + .webp
-                            const generatedImageName = `${sanitizeFilename(nombre)}.webp`;
-                            const imagePath = recetaObj.images && recetaObj.images.length > 0 
-                                ? recetaObj.images[0] 
-                                : `/static/images_recipies/${generatedImageName}`;
+                        const generatedImageName = `${sanitizeFilename(nombre)}.webp`;
+                        const imagePath = recetaObj.images && recetaObj.images.length > 0 
+                            ? recetaObj.images[0] 
+                            : `/static/images_recipies/${generatedImageName}`;
 
-                            return (
-                                <UniversalCard
-                                    key={nombre}
-                                    title={nombre.charAt(0).toUpperCase() + nombre.slice(1)}
-                                    image={imagePath} // Usamos la ruta calculada
-                                    sx={{ height: '100%' }}
-                                    // ... resto de props ...
-                                />
-                            );
+                    return (
+                            <UniversalCard
+                                key={nombre}
+                                title={nombre.charAt(0).toUpperCase() + nombre.slice(1)}
+                                image={imagePath}
+                                sx={{ 
+                                    height: '100%', 
+                                    cursor: 'pointer' 
+                                }}
+                                // Acción para el botón interno de la tarjeta
+                                onAction={() => navigate(`/recetas/detalle_receta/${encodeURIComponent(nombre)}`)}
+                                // Acción para que TODA la tarjeta sea clickable (como en alimentos)
+                                onClick={() => navigate(`/recetas/detalle_receta/${encodeURIComponent(nombre)}`)}
+                            />
+                        );
                     })}
                 </Box>
 

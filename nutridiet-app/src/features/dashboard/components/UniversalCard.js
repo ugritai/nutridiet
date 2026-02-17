@@ -18,7 +18,9 @@ const UniversalCard = ({
   buttonText = 'Más detalles',
   buttonColor = 'primary',
   onAction,
-  buttonLink
+  buttonLink,
+  onClick,
+  sx
 }) => {
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
