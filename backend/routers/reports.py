@@ -30,13 +30,13 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
 @router.post("/report_issue")
 async def report_issue(data: dict, current_user: dict = Depends(get_current_user)):
     try:
-        # Imprimimos en consola para debuggear
         print(f"DEBUG: Recibiendo reporte de {current_user.get('email')}")
         
         report = {
             "user_id": str(current_user["_id"]),
             "user_email": current_user.get("email"),
-            "recipe_name": data.get("recipe_name"),
+            "item_name": data.get("item_name"), # Nombre genérico
+            "item_type": data.get("item_type"), # 'alimento' o 'receta'
             "error_type": data.get("error_type"),
             "description": data.get("description"),
             "timestamp": datetime.utcnow(),
@@ -44,9 +44,7 @@ async def report_issue(data: dict, current_user: dict = Depends(get_current_user
             "metadata": data.get("metadata", {})
         }
         
-        # Inserción en MongoDB
         reports_collection.insert_one(report)
-        
         return {"message": "Reporte guardado correctamente"}
     except Exception as e:
         print(f"Error insertando reporte: {e}")

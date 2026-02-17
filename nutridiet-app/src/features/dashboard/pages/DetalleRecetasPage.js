@@ -35,7 +35,7 @@ export default function DetalleRecetasPage() {
 
       {/* Botón de reporte para recetas */}
       <Box sx={{ display: 'flex', justifyContent: 'center', mb: 4 }}>
-        <ReportIssueButton recipeName={query || "Receta"} />
+        <ReportIssueButton itemName={query || "Receta"} itemType="receta" />
       </Box>
     </Dashboard>
   );

@@ -3,7 +3,7 @@ import { Button, Dialog, DialogTitle, DialogContent, TextField, DialogActions, M
 import { BugReport } from '@mui/icons-material';
 import { fetchWithAuth } from '../components/api';
 
-const ReportIssueButton = ({ recipeName }) => {
+const ReportIssueButton = ({ itemName, itemType = 'receta' }) => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({ type: 'Datos incorrectos', description: '' });
@@ -14,10 +14,14 @@ const ReportIssueButton = ({ recipeName }) => {
       await fetchWithAuth('/reports/report_issue', {
         method: 'POST',
         body: JSON.stringify({
-          recipe_name: recipeName,
+          item_name: itemName,
+          item_type: itemType, // 'alimento' o 'receta'
           error_type: form.type,
           description: form.description,
-          metadata: { url: window.location.href, userAgent: navigator.userAgent }
+          metadata: { 
+            url: window.location.href, 
+            userAgent: navigator.userAgent 
+          }
         }),
       });
       alert('¡Gracias! Hemos recibido tu reporte.');
@@ -44,12 +48,12 @@ const ReportIssueButton = ({ recipeName }) => {
 
       <Dialog open={open} onClose={() => setOpen(false)} maxWidth="xs" fullWidth>
         <DialogTitle sx={{ fontWeight: 'bold', pb: 0 }}>
-          Reportar fallo
+          Reportar fallo en {itemType}
         </DialogTitle>
         
         <DialogContent>
           <Typography variant="caption" color="textSecondary" sx={{ mb: 2, display: 'block' }}>
-            En: {recipeName}
+            Nombre: {itemName}
           </Typography>
 
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, mt: 1 }}> 
@@ -57,7 +61,7 @@ const ReportIssueButton = ({ recipeName }) => {
               select
               fullWidth
               label="Tipo de error"
-              variant="standard" // Cambiado a standard para evitar solapamientos de bordes
+              variant="standard"
               value={form.type}
               onChange={(e) => setForm({ ...form, type: e.target.value })}
               InputLabelProps={{ shrink: true }}
@@ -70,7 +74,7 @@ const ReportIssueButton = ({ recipeName }) => {
             <TextField
               fullWidth
               label="Descripción del problema"
-              variant="standard" // Estilo más limpio que no choca con el texto
+              variant="standard"
               multiline
               rows={4}
               value={form.description}
