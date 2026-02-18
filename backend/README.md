@@ -1,76 +1,127 @@
-# Guía de Ejecución de la API
+# 🚀 NutriDiet App - Guía de Despliegue
 
-## Introducción
-Este documento proporciona instrucciones paso a paso para la configuración y ejecución de la API del sistema.  
+Este repositorio contiene el ecosistema completo de NutriDiet: Backend (FastAPI), Frontend (React), Bases de Datos (MongoDB) y Proxy Inverso (Nginx).
 
-## Requisitos Previos
+## 📋 Requisitos Previos
 
-Antes de comenzar, asegúrate de tener instalado lo siguiente:
+* **Docker** y **Docker Compose** instalados.
+* Archivo `.env` en la raíz con las siguientes variables:
+```env
+MONGO_ROOT_USER=tu_usuario
+MONGO_ROOT_PASS=tu_password
+PIXABAY_API_KEY=tu_api_key_aqui
 
-## Requisitos
-
-Antes de comenzar, asegúrate de tener instalado lo siguiente:
-
-- [Python 3.7 o superior](https://www.python.org/downloads/)
-- [pip](https://pip.pypa.io/en/stable/installation/) (gestor de paquetes de Python, normalmente incluido con Python)
-- [MongoDB](https://www.mongodb.com/try/download/community) (puede ejecutarse localmente o desde un servicio en la nube)
-- [Uvicorn](https://www.uvicorn.org/) (servidor ASGI para ejecutar FastAPI)
-
-## Instalación
-
-1. **Clonar el repositorio**
-
-   Clona el repositorio en tu máquina local:
-
-   ```bash
-   git clone https://github.com/ugritai/nutridiet
-   cd nutridiet/backend
-   ```
-
-2. **Crear un entorno virtual**
-
-   Es recomendable crear un entorno virtual para gestionar las dependencias:
-
-   ```bash
-   python3 -m venv myenv
-   source myenv/bin/activate  # En Windows us a `myenv\Scripts\activate`
-   ```
-
-3. **Instalar las dependencias**
-
-   Instala las dependencias necesarias para ejecutar la API:
-
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-## Configuración
-
-### Conexión a MongoDB
-
-Por motivos de confidencialidad y derechos de uso, **los datos necesarios para ejecutar el sistema no están incluidos** en el repositorio. Sin embargo, puedes trabajar con tu propia instancia local de MongoDB.
-
-Asegúrate de tener una base de datos creada y poblada con los datos adecuados. Para conectarte a MongoDB desde la terminal puedes utilizar el siguiente comando:
-
-```bash
-mongosh --host localhost --port 27017
-mongosh --host localhost --port 27018
 ```
 
-## Ejecución
 
-1. **Inicia la API**:
+
+---
+
+## 🛠️ Pasos de Instalación
+
+### 1. Clonar el repositorio
 
 ```bash
- ./myenv/bin/uvicorn main:app --reload
+git clone https://github.com/ugritai/nutridiet/tree/release/1.0.0
+cd nutridiet
+
 ```
-Este comando iniciará el servidor de desarrollo de FastAPI con la recarga automática habilitada. La API estará disponible en [ http://127.0.0.1:8000](http://127.0.0.1:8000).
 
-## Verificación
+### 2. Desplegar los Contenedores
 
-Una vez que hayas iniciado el servidor con `uvicorn`, puedes verificar que la API está funcionando correctamente accediendo a la documentación interactiva generada por FastAPI:
+Levantamos toda la infraestructura en segundo plano:
 
-- Swagger UI: [`http://127.0.0.1:8000/docs`](http://127.0.0.1:8000/docs)
-- Redoc: [`http://127.0.0.1:8000/redoc`](http://127.0.0.1:8000/redoc)
+```bash
+docker-compose up -d --build
 
-Desde estas interfaces puedes explorar y probar los endpoints directamente desde el navegador.
+```
+
+*Esto iniciará las dos bases de datos (nutridietdb y fooddb), el backend, el frontend y Nginx.*
+
+### 3. Restaurar Bases de Datos (Dumps)
+
+Si tienes backups previos de MongoDB, restáuralos ahora:
+
+```bash
+# Ejemplo para fooddb
+docker exec -i fooddb mongorestore --username admin --password password --archive < ruta/al/tu_dump.archive
+
+```
+El nombre y contraseña se configuran desde el `.env`
+
+---
+
+## 📸 Configuración de Imágenes y Datos (Scripts)
+
+Una vez que los contenedores estén corriendo, debemos ejecutar los scripts de utilidad para descargar imágenes y generar recetas automáticas.
+
+### A. Descarga de Imágenes por Categorías
+
+Este script descarga imágenes generales para las categorías de alimentos y recetas desde Pixabay.
+
+```bash
+docker cp backend/utils/descarga_categorias.py nutridiet-backend:/app/utils/descarga_categorias.py
+docker exec -it nutridiet-backend python -m utils.descarga_categorias
+
+```
+
+### B. Descarga Masiva de Alimentos
+
+Para obtener imágenes específicas de cada ingrediente en la base de datos `fooddb`:
+
+```bash
+docker cp backend/utils/descarga_masiva.py nutridiet-backend:/app/utils/descarga_masiva.py
+docker exec -it nutridiet-backend python -m utils.descarga_masiva
+
+```
+
+### C. Generación de Recetas Automáticas (BEDCA)
+
+Este script convierte los ingredientes individuales de BEDCA en "recetas" de un solo ingrediente para el frontend:
+
+```bash
+docker cp add_recetas.py nutridiet-backend:/app/add_recetas.py
+docker exec -it nutridiet-backend python /app/add_recetas.py
+
+```
+
+---
+
+## 🌐 Puertos y Acceso
+
+| Servicio | Puerto Externo | URL de Acceso |
+| --- | --- | --- |
+| **App Web (Nginx)** | 80 | `http://localhost/` |
+| **API Backend** | 8000 (Interno) | `http://localhost/api/` |
+| **Imágenes Estáticas** | - | `http://localhost/img/` |
+
+> **Nota sobre Seguridad:** Las bases de datos MongoDB no tienen puertos expuestos al exterior en el `docker-compose.yml`. Solo son accesibles por el servicio de Backend dentro de la red de Docker.
+
+---
+
+## 📁 Estructura de Volúmenes de Imágenes
+
+Nginx sirve las imágenes directamente desde el sistema de archivos para mayor velocidad:
+
+* `/app/static/images/` -> Imágenes de alimentos.
+* `/app/static/images_recipies/` -> Imágenes de recetas. **(Actualmente no hay imágenes para las recetas)**
+
+Estos directorios están persistidos en el host para evitar que se borren al reiniciar los contenedores.
+
+---
+
+## 🛠️ Comandos de Mantenimiento
+
+**Resetear base de datos de imágenes:**
+
+```bash
+docker exec -it nutridiet-backend python -c "from database.connection import images_collection; images_collection.drop(); print('✅ Base de datos de imágenes reseteada')"
+
+```
+
+**Ver logs del backend:**
+
+```bash
+docker logs -f nutridiet-backend
+
+```
