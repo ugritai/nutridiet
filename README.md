@@ -90,9 +90,19 @@ Este repositorio contiene el ecosistema completo de NutriDiet: Backend (FastAPI)
 * **Docker** y **Docker Compose** instalados.
 * Archivo `.env` en la raíz con las siguientes variables:
 ```env
-MONGO_ROOT_USER=tu_usuario
-MONGO_ROOT_PASS=tu_password
-PIXABAY_API_KEY=tu_api_key_aqui
+PIXABAY_API_KEY= 
+UNSPLASH_ACCESS_KEY= 
+
+MONGO_URI_NUTRIDIET=mongodb://<user>:<user-pass>@nutridietdb:27017/nutridiet?authSource=admin
+MONGO_URI_FOODDB=mongodb://<user>:<user-pass>@fooddb:27017/fooddb?authSource=admin
+
+VITE_API_URL=/api
+
+
+MONGO_ROOT_USER=<root-user>
+MONGO_ROOT_PASS=<root-pass>
+MONGO_APP_USER=<user>
+MONGO_APP_PASS=<user-pass>
 
 ```
 
