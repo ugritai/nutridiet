@@ -135,3 +135,25 @@ class DietCreate(BaseModel):
     patient_id: Optional[str] = None
     patient_name: Optional[str] = None
 
+
+#recetas
+
+class IngredienteRecetaInput(BaseModel):
+    nombre_pantalla: str
+    alimento_id: str
+    cantidad_g: float
+
+class RecetaProfesionalCreate(BaseModel):
+    titulo: str
+    categoria: str
+    # Aceptamos 'minutes' del front y lo mapeamos internamente
+    minutos: int = Field(..., alias="minutes") 
+    dificultad: Optional[str] = ""
+    # Aceptamos 'n_diners' del front o 'comensales'
+    comensales: int = Field(1, alias="n_diners")
+    pasos: List[str]
+    ingredientes: List[IngredienteRecetaInput]
+
+    class Config:
+        # Esto permite que podamos usar tanto el nombre de la variable como el alias
+        populate_by_name = True

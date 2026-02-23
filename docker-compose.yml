@@ -22,8 +22,8 @@ services:
   fooddb:
     image: mongo:6
     container_name: fooddb
-    #ports:
-      #- "27017:27017" #acuerdate de quitaro despues de generar las imagenes
+    ports:
+      - "27017:27017" #acuerdate de quitaro despues de generar las imagenes
     # Puertos eliminados para seguridad; solo accesibles internamente
     volumes:
       - fooddb_data:/data/db

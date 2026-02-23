@@ -36,26 +36,29 @@ const refreshAccessToken = async () => {
     return data.access_token;
 };
 
+// src/api.js corregido
+
 export const fetchWithAuth = async (url, options = {}) => {
     let token = getAccessToken();
 
     if (isTokenExpired(token)) {
         try {
-            console.log('🔄 Access token caducado. Intentando refresh...');
             token = await refreshAccessToken();
-            console.log('✅ Nuevo token obtenido:', token);
         } catch (err) {
-            console.error('⛔ Error al refrescar token:', err);
             window.location.href = '/sign-in';
             return;
         }
     }
 
     const headers = {
-        ...(options.headers || {}),
         Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
+        ...(options.headers || {}),
     };
+
+    // 🚀 LÓGICA CLAVE: Solo añadimos JSON si el body NO es FormData
+    if (options.body && !(options.body instanceof FormData)) {
+        headers['Content-Type'] = 'application/json';
+    }
 
     const response = await fetch(`${BASE_URL}${url}`, {
         ...options,
@@ -63,7 +66,6 @@ export const fetchWithAuth = async (url, options = {}) => {
     });
 
     if (response.status === 401) {
-        console.warn('⚠️ Token inválido o no autorizado. Redirigiendo a login.');
         window.location.href = '/sign-in';
     }
 

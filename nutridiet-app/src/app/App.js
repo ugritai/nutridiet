@@ -24,6 +24,9 @@ import DetalleDietaPage from "../features/dashboard/components/dietas/DetalleDie
 import Configuracion from "../features/dashboard/Configuracion";
 import AcercaDe from "../features/dashboard/AcercaDe";
 import Comentarios from "../features/dashboard/Comentarios";
+import CrearRecetaForm from '../features/dashboard/components/CrearRecetaForm';
+import CrearRecetaPage from '../features/dashboard/pages/CrearRecetaPage';
+
 
 function App() {
     return (
@@ -184,6 +187,12 @@ function App() {
                 <Route path="/comentarios" element={
                     <ProtectedRoute>
                         <Comentarios />
+                    </ProtectedRoute>
+                } />
+
+                <Route path="/recetas/crear" element={
+                    <ProtectedRoute>
+                        <CrearRecetaPage />
                     </ProtectedRoute>
                 } />
 

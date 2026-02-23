@@ -9,6 +9,7 @@ import FoodSearch from '../components/FoodSearch';
 import Search from '../components/Search';
 import { fetchWithAuth } from './api'; 
 
+
 const sanitizeFilename = (name) => {
   if (!name) return '';
   return name
@@ -19,6 +20,8 @@ const sanitizeFilename = (name) => {
     .replace(/-+/g, "-")             // Colapsar guiones
     .trim("-");                      // Limpiar extremos
 };
+
+
 
 export default function RecipeCategoryCard({ categoria }) {
     const navigate = useNavigate();

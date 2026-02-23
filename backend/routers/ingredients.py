@@ -1,4 +1,4 @@
-﻿# routers/ingredients.py
+# routers/ingredients.py
 from fastapi import APIRouter, HTTPException, Query, BackgroundTasks
 from database.connection import recipe_db_host, bedca_collection, embeddings_collection, images_collection, food_portions_collection
 from unidecode import unidecode
@@ -183,22 +183,28 @@ async def get_alimento_detalle(nombre: str, background_tasks: BackgroundTasks):
 
 @router.get("/buscar_alimentos/{nombre}")
 async def buscar_alimentos(nombre: str, limit: int = 10):
+    # Limpiamos y normalizamos la entrada
     palabras = remove_stop_words(nombre)
-    alimentos_sugeridos = set()
-    
-    for palabra in palabras:
-        cursor = alimentos_collection.find()
-        async for doc in cursor:
-            name_esp = doc.get("name_esp", "")
-            name_sin_tildes = unidecode(name_esp.lower())
-            if palabra in name_sin_tildes:
-                alimentos_sugeridos.add(name_esp)
-            if len(alimentos_sugeridos) >= limit: break
-        if len(alimentos_sugeridos) >= limit: break
+    if not palabras:
+        return []
 
-    if alimentos_sugeridos:
-        return [{"nombre": n} for n in list(alimentos_sugeridos)[:limit]]
-    raise HTTPException(status_code=404, detail="Alimento no encontrado")
+    alimentos_sugeridos = []
+    
+    # Búsqueda optimizada por expresión regular en el nombre español
+    # Buscamos coincidencias que contengan el texto (case-insensitive)
+    cursor = alimentos_collection.find(
+        {"name_esp": {"$regex": f".*{re.escape(nombre)}.*", "$options": "i"}},
+        {"name_esp": 1, "_id": 1}
+    ).limit(limit)
+
+    async for doc in cursor:
+        alimentos_sugeridos.append({
+            "nombre": doc.get("name_esp"),
+            "_id": str(doc.get("_id")) # El frontend necesita el ID como string
+        })
+
+    # Devolvemos lista vacía si no hay resultados para evitar errores 404 en el Autocomplete
+    return alimentos_sugeridos
 
 def normalizar_texto(texto: str) -> str:
     texto = texto.lower().strip()
