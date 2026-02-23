@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link as RouterLink } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import {
   Accordion, AccordionSummary, AccordionDetails, Grid, Card, CardContent,
   Typography, CircularProgress, Divider, Chip, Box, List, ListItem,
@@ -9,11 +9,22 @@ import { useTheme, alpha } from '@mui/material/styles';
 import { AccessTime, Restaurant, People, Flag, LocalDining } from '@mui/icons-material';
 import RecipeNutritionTable from '../components/RecipeNutritionTable';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { fetchWithAuth } from './api'; 
+import { fetchWithAuth } from './api';
+
+// Función de sanitización
+const sanitizeFilename = (name) => {
+  if (!name) return '';
+  return name
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^\w\-]/g, "-")
+    .replace(/-+/g, "-")
+    .trim("-");
+};
 
 const ListSection = ({ title, icon: Icon, items = [], filterFn }) => {
   const theme = useTheme();
-  // ✅ Protección: Asegurar que items sea siempre un array antes de filtrar
   const safeItems = Array.isArray(items) ? items : [];
   const filteredItems = safeItems.filter(filterFn);
 
@@ -49,23 +60,9 @@ const ListSection = ({ title, icon: Icon, items = [], filterFn }) => {
   );
 };
 
-const getDomainFromUrl = (url) => {
-  try {
-    return new URL(url).hostname.replace('www.', '');
-  } catch (error) {
-    return url;
-  }
-};
-
 const DietaryChip = ({ label }) => {
   const theme = useTheme();
-
-  const colorMap = {
-    'Alto en': 'error',
-    'Bajo en': 'success',
-    'Sin': 'success',
-  };
-
+  const colorMap = { 'Alto en': 'error', 'Bajo en': 'success', 'Sin': 'success' };
   const colorKey = Object.keys(colorMap).find(key => label.startsWith(key));
   const statusColor = colorKey ? colorMap[colorKey] : 'primary';
   const mainColor = theme.palette[statusColor]?.main || theme.palette.primary.main;
@@ -78,9 +75,8 @@ const DietaryChip = ({ label }) => {
       sx={{
         borderColor: mainColor,
         color: theme.palette[statusColor]?.dark || theme.palette.primary.dark,
-        bgcolor: alpha(mainColor, 0.1), 
-        mr: 1,
-        mb: 1
+        bgcolor: alpha(mainColor, 0.1),
+        mr: 1, mb: 1
       }}
     />
   );
@@ -88,7 +84,6 @@ const DietaryChip = ({ label }) => {
 
 const DifficultyChip = ({ label }) => {
   const theme = useTheme();
-
   const colorMap = {
     'Dificultad muy baja': 'success',
     'Dificultad baja': 'success',
@@ -96,9 +91,7 @@ const DifficultyChip = ({ label }) => {
     'Dificultad alta': 'error',
     'Dificultad muy alta': 'error',
   };
-
   const statusColor = colorMap[label] || 'default';
-
   return (
     <Chip
       label={label}
@@ -108,19 +101,17 @@ const DifficultyChip = ({ label }) => {
         borderColor: theme.palette[statusColor]?.main || 'default',
         color: theme.palette[statusColor]?.dark,
         bgcolor: theme.palette[statusColor] ? alpha(theme.palette[statusColor].main, 0.1) : 'default',
-        mr: 1,
-        mb: 1
+        mr: 1, mb: 1
       }}
     />
   );
 };
 
 export default function RecipeDetailCard() {
-  const theme = useTheme();
   const { nombre } = useParams();
   const [recipe, setRecipe] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [sugeridos, setSugeridos] = useState([]);
+  const [imgSrc, setImgSrc] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -130,14 +121,23 @@ export default function RecipeDetailCard() {
         if (!response.ok) throw new Error("Error al obtener la receta");
         const data = await response.json();
         
-        setSugeridos(data.sugeridos || []);
-        setRecipe({
+        const recetaData = {
           ...data.receta,
           dietary_preferences: Array.isArray(data.receta?.dietary_preferences) ? data.receta.dietary_preferences : [],
-          nutritional_reviw: Array.isArray(data.receta?.nutritional_reviw) ? data.receta.nutritional_reviw : [],
           ingredients: Array.isArray(data.receta?.ingredients) ? data.receta.ingredients : [],
-          steps: Array.isArray(data.receta?.steps) ? data.receta.steps : []
-        });
+          steps: Array.isArray(data.receta?.steps) ? data.receta.steps : [],
+          images: Array.isArray(data.receta?.images) ? data.receta.images : []
+        };
+
+        setRecipe(recetaData);
+
+        // Lógica de imagen inicial
+        const generatedName = `${sanitizeFilename(recetaData.title)}.webp`;
+        const initialPath = recetaData.images && recetaData.images.length > 0 
+          ? recetaData.images[0] 
+          : `/static/images_recipies/${generatedName}`;
+        
+        setImgSrc(initialPath);
       } catch (err) {
         console.error("Error:", err);
         setRecipe(null);
@@ -148,19 +148,43 @@ export default function RecipeDetailCard() {
     fetchData();
   }, [nombre]);
 
-  if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}><CircularProgress /></Box>;
+  const handleImageError = () => {
+    const placeholder = '/static/images/placeholder_receta.webp';
+    if (imgSrc !== placeholder) {
+      setImgSrc(placeholder);
+    }
+  };
+
+  if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 10 }}><CircularProgress /></Box>;
   if (!recipe) return <Card sx={{ mt: 4 }}><CardContent><Typography>No se encontró información.</Typography></CardContent></Card>;
 
-  // ✅ Protección definitiva para dificultades (Línea que causaba el error)
   const difficulties = Array.isArray(recipe.dificultad) 
     ? recipe.dificultad.filter(d => d && d.trim() !== "") 
     : [];
 
   return (
-    <Card sx={{ width: '100%', mx: 'auto', mt: 4, boxShadow: 3, borderRadius: 4 }}>
-      <CardContent>
+    <Card sx={{ width: '100%', mx: 'auto', mt: 4, boxShadow: 3, borderRadius: 4, overflow: 'hidden' }}>
+      
+      {/* IMAGEN DE CABECERA */}
+      <Box sx={{ width: '100%', maxHeight: 400, overflow: 'hidden', display: 'flex', justifyContent: 'center', bgcolor: 'grey.200' }}>
+        <Box
+          component="img"
+          src={imgSrc}
+          alt={recipe.title}
+          onError={handleImageError}
+          sx={{
+            width: '100%',
+            height: 'auto',
+            objectFit: 'cover',
+            maxHeight: 400,
+            display: imgSrc ? 'block' : 'none'
+          }}
+        />
+      </Box>
+
+      <CardContent sx={{ p: { xs: 2, md: 4 } }}>
         <Box sx={{ mb: 3 }}>
-          <Typography variant="h3" sx={{ fontWeight: 'bold' }}>
+          <Typography variant="h3" sx={{ fontWeight: 'bold', mb: 2 }}>
             {recipe.title?.charAt(0).toUpperCase() + recipe.title?.slice(1)}
           </Typography>
           
@@ -177,7 +201,9 @@ export default function RecipeDetailCard() {
           </Box>
         </Box>
 
-        <Grid container spacing={3}>
+        <Divider sx={{ mb: 4 }} />
+
+        <Grid container spacing={4}>
           <Grid item xs={12} md={5}>
             <ListSection
               title="Ingredientes"
@@ -196,7 +222,8 @@ export default function RecipeDetailCard() {
           </Grid>
         </Grid>
 
-        <Box sx={{ mt: 3 }}>
+        <Box sx={{ mt: 5 }}>
+          <Typography variant="h5" sx={{ mb: 2, fontWeight: 600 }}>Información Nutricional</Typography>
           <RecipeNutritionTable 
             nutritionalInfo={recipe.nutritional_info || {}} 
             raciones={recipe.n_diners || 1} 

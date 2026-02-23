@@ -12,8 +12,8 @@ import SettingsRoundedIcon from '@mui/icons-material/SettingsRounded';
 import InfoRoundedIcon from '@mui/icons-material/InfoRounded';
 import HelpRoundedIcon from '@mui/icons-material/HelpRounded';
 import DateRangeIcon from '@mui/icons-material/DateRange';
+import AddBoxIcon from '@mui/icons-material/AddBox';
 import { useNavigate } from 'react-router-dom';
-
 
 export default function MenuContent() {
   const navigate = useNavigate();
@@ -23,7 +23,8 @@ export default function MenuContent() {
     { text: 'Pacientes', icon: <PeopleRoundedIcon />, path: '/pacientes' },
     { text: 'Búsqueda de Alimentos', icon: <SearchIcon />, path: '/alimentos' },
     { text: 'Búsqueda de Recetas', icon: <SearchIcon />, path: '/recetas' },
-    { text: 'Crear Dieta', icon: <DateRangeIcon />, path: '/planificacion_dieta' }
+    { text: 'Crear Dieta', icon: <DateRangeIcon />, path: '/planificacion_dieta' },
+    { text: 'Crear Receta', icon: <AddBoxIcon />, path: '/recetas/crear' },
   ];
 
   const secondaryListItems = [

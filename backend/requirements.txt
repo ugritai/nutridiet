@@ -33,3 +33,6 @@ Unidecode
 #comentar para hacer pruebas sin torch
 #torch --index-url https://download.pytorch.org/whl/cpu
 sentence-transformers
+
+#para añadir recetas
+python-multipart 

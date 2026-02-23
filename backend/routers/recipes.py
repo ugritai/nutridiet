@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Query
 from database.connection import recipe_db_host, bedca_collection, embeddings_recipe_collection
 from utils.food_utils import remove_stop_words, convert_objectid, convertir_a_gramos, extraer_cantidad_y_unidad
+from pydantic import BaseModel #para el añadir recetas
 from unidecode import unidecode
 from fastapi.encoders import jsonable_encoder
 from bson import ObjectId
@@ -712,3 +713,92 @@ async def obtener_maximos_nutricionales(categoria: Optional[str] = None):
     car = await obtener_maximo_para_campos(campos_nutricionales["car"], docs=recetas_filtradas if categoria else None)
 
     return {"kcal": kcal, "pro": pro, "car": car}
+
+
+from fastapi import UploadFile, File, Form
+import json
+import os
+import uuid
+
+# --- En routes/recipes.py ---
+from models.schemas import RecetaProfesionalCreate # Importamos el nuevo esquema
+UPLOAD_DIR = "/app/static/images_recipies"
+
+@router.post("/crear_receta_profesional")
+async def crear_receta_profesional(
+    datos_receta: str = Form(...), 
+    foto: Optional[UploadFile] = File(None)
+):
+    print("\n🚀 [BACKEND] Petición recibida", flush=True)
+
+    # 1. Validar JSON
+    try:
+        data_dict = json.loads(datos_receta)
+        receta_input = RecetaProfesionalCreate(**data_dict)
+    except Exception as e:
+        raise HTTPException(status_code=422, detail=f"Error en datos: {str(e)}")
+
+    # 2. Lógica de Nutrición (Simplificada para el ejemplo)
+    totales = {"energy_kcal": 0.0, "pro": 0.0, "car": 0.0}
+    ingredientes_db = []
+    for item in receta_input.ingredientes:
+        alimento = await bedca_collection.find_one({"_id": ObjectId(item.alimento_id)})
+        if alimento:
+            info = alimento.get("nutritional_info_100g", {})
+            f = item.cantidad_g / 100.0
+            totales["energy_kcal"] += (info.get("energy_kcal") or 0) * f
+            totales["pro"] += (info.get("pro") or 0) * f
+            totales["car"] += (info.get("car") or 0) * f
+
+            ingredientes_db.append({
+                "ingredient": item.nombre_pantalla,
+                "ingredientID": ObjectId(item.alimento_id),
+            })
+
+    # 3. Gestión de imagen FÍSICA
+    # Por defecto usamos el placeholder
+    ruta_final_para_db = "/static/images/placeholder_receta.webp"
+
+    if foto:
+        try:
+            # Asegurar que el directorio existe
+            os.makedirs(UPLOAD_DIR, exist_ok=True)
+            
+            # Crear nombre único
+            nombre_limpio = re.sub(r'[^a-zA-Z0-9.-]', '_', foto.filename)
+            nombre_archivo = f"{uuid.uuid4()}_{nombre_limpio}"
+            
+            # Ruta física donde se guarda el archivo en el contenedor
+            file_path = os.path.join(UPLOAD_DIR, nombre_archivo)
+            
+            # GUARDAR EL ARCHIVO EN DISCO
+            with open(file_path, "wb") as buffer:
+                content = await foto.read()
+                buffer.write(content)
+            
+            # Ruta que guardaremos en la base de datos (la que Nginx entiende)
+            ruta_final_para_db = f"/static/images_recipies/{nombre_archivo}"
+            print(f"✅ Imagen guardada en: {file_path}", flush=True)
+            
+        except Exception as e:
+            print(f"❌ Error guardando imagen: {e}", flush=True)
+            # Si falla el guardado, se queda con el placeholder
+
+    # 4. Insertar en MongoDB
+    nuevo_doc = {
+        "title": receta_input.titulo,
+        "source": "Nutricionista",
+        "origin_ISO": "ESP",
+        "n_diners": receta_input.comensales,
+        "dificultad": receta_input.dificultad,
+        "category": receta_input.categoria.lower(),
+        "minutes": receta_input.minutos,
+        "ingredients": ingredientes_db,
+        "steps": receta_input.pasos,
+        "images": [ruta_final_para_db],  # <-- AQUÍ usamos la ruta real
+        "nutritional_info": {k: round(v, 2) for k, v in totales.items()},
+        "dietary_preferences": []
+    }
+
+    result = await recipe_db_host['abuela_bedca'].insert_one(nuevo_doc)
+    return {"message": "Receta creada", "id": str(result.inserted_id), "img": ruta_final_para_db}
