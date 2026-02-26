@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Box, Button, TextField, Typography, Stack, Autocomplete, 
   IconButton, List, ListItem, Paper, MenuItem 
@@ -7,20 +7,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import { fetchWithAuth } from './api'; 
 
-// Definición de las categorías con descripción
-const CATEGORIAS_RECETAS = [
-  { label: 'Sopas', desc: 'Explora recetas y productos de Sopas.' },
-  { label: 'Ensaladas', desc: 'Explora recetas y productos de Ensaladas.' },
-  { label: 'Arroz', desc: 'Explora recetas y productos de Arroz.' },
-  { label: 'Pasta', desc: 'Explora recetas y productos de Pasta.' },
-  { label: 'Guisos', desc: 'Explora recetas y productos de Guisos.' },
-  { label: 'Pescado', desc: 'Explora recetas y productos de Pescado.' },
-  { label: 'Carne', desc: 'Carnes rojas, blancas y embutidos de calidad.' },
-  { label: 'Fruta', desc: 'Explora recetas y productos de Fruta.' },
-  { label: 'Postres', desc: 'Dulces y repostería.' }
-];
-
-export default function CrearRecetaForm() {
+export default function RecetaForm({ recetaEdit = null, onSuccess }) {
   const [titulo, setTitulo] = useState('');
   const [categoria, setCategoria] = useState('');
   const [minutos, setMinutos] = useState(30);
@@ -28,8 +15,32 @@ export default function CrearRecetaForm() {
   const [comensales, setComensales] = useState(1);
   const [foto, setFoto] = useState(null);
   const [pasos, setPasos] = useState(['']);
+  const [detalles, setDetalles] = useState(''); // <-- NUEVO ESTADO PARA DETALLES
   const [ingredientesSeleccionados, setIngredientesSeleccionados] = useState([]);
   const [busquedaAlimentos, setBusquedaAlimentos] = useState([]); 
+
+  const recetaId = recetaEdit?._id || recetaEdit?.id;
+  const isEdit = Boolean(recetaEdit && recetaId);
+
+  useEffect(() => {
+    if (recetaEdit) {
+      setTitulo(recetaEdit.title || recetaEdit.titulo || '');
+      setCategoria(recetaEdit.category || recetaEdit.categoria || '');
+      setMinutos(recetaEdit.minutes || 30);
+      setDificultad(recetaEdit.dificultad || 'Media');
+      setComensales(recetaEdit.n_diners || 1);
+      setPasos(recetaEdit.steps || recetaEdit.pasos || ['']);
+      setDetalles(recetaEdit.detalles || recetaEdit.details || ''); // <-- CARGAMOS DETALLES
+      
+      const ingredientesOriginales = recetaEdit.ingredients || recetaEdit.ingredientes || [];
+      const ingredientesMapeados = ingredientesOriginales.map(ing => ({
+        nombre_pantalla: ing.ingredient || ing.nombre_pantalla,
+        alimento_id: ing.ingredientID || ing.alimento_id,
+        cantidad_g: ing.cantidad_g || 100 
+      }));
+      setIngredientesSeleccionados(ingredientesMapeados);
+    }
+  }, [recetaEdit]);
 
   const handleBuscarAlimento = async (query) => {
     if (query.length < 3) {
@@ -37,17 +48,13 @@ export default function CrearRecetaForm() {
         return;
     }
     try {
-        // Asegúrate de que esta ruta coincida con ingredients.py (/alimentos)
         const res = await fetchWithAuth(`/alimentos/buscar_alimentos/${query}`);
         if (res.ok) {
             const data = await res.json();
             setBusquedaAlimentos(Array.isArray(data) ? data : []);
-        } else {
-            setBusquedaAlimentos([]);
         }
     } catch (error) {
         console.error("Error buscando alimentos:", error);
-        setBusquedaAlimentos([]);
     }
   };
 
@@ -61,76 +68,82 @@ export default function CrearRecetaForm() {
   };
 
   const handleGuardar = async () => {
-        // Validaciones básicas
-        if (!titulo || !categoria || ingredientesSeleccionados.length === 0) {
-            alert("Por favor, rellena los campos obligatorios.");
-            return;
-        }
+      if (!titulo || !categoria || ingredientesSeleccionados.length === 0) {
+          alert("Por favor, rellena los campos obligatorios.");
+          return;
+      }
 
-        const formData = new FormData();
+      const formData = new FormData();
+      const objetoReceta = {
+          titulo: titulo.trim(),
+          categoria: categoria.trim(),
+          minutes: parseInt(minutos) || 0,
+          dificultad: dificultad,
+          n_diners: parseInt(comensales) || 1,
+          pasos: pasos.filter(p => p.trim() !== ""),
+          detalles: detalles.trim(), // <-- ENVIAMOS DETALLES AL BACKEND
+          ingredientes: ingredientesSeleccionados.map(ing => ({
+              nombre_pantalla: ing.nombre_pantalla || ing.ingredient, 
+              alimento_id: ing.alimento_id || ing.ingredientID,       
+              cantidad_g: parseFloat(ing.cantidad_g) || 100          
+          }))
+      };
 
-        // Creamos el objeto exactamente como lo espera el esquema RecetaProfesionalCreate
-        const objetoReceta = {
-            titulo: titulo,
-            categoria: categoria,
-            minutes: parseInt(minutos),    
-            dificultad: dificultad,
-            n_diners: parseInt(comensales),          
-            pasos: pasos.filter(p => p.trim() !== ""),
-            ingredientes: ingredientesSeleccionados.map(ing => ({
-                nombre_pantalla: ing.nombre_pantalla,
-                alimento_id: ing.alimento_id,
-                cantidad_g: parseFloat(ing.cantidad_g)
-            }))
-        };
+      formData.append('datos_receta', JSON.stringify(objetoReceta));
+      if (foto) formData.append('foto', foto);
 
-        // Enviamos TODO el objeto como un string en el campo 'datos_receta'
-        formData.append('datos_receta', JSON.stringify(objetoReceta));
-    
-        // La foto va aparte como archivo
-        if (foto) formData.append('foto', foto);
+      const url = isEdit 
+          ? `/recetas/actualizar_receta/${recetaId}` 
+          : `/recetas/crear_receta_profesional`;
+  
+      const method = isEdit ? 'PUT' : 'POST';
 
-        try {
-            const response = await fetchWithAuth(`/recetas/crear_receta_profesional`, {
-                method: 'POST',
-                body: formData, // No poner headers de Content-Type, el navegador lo hace solo con FormData
-            });
+      try {
+          const response = await fetchWithAuth(url, {
+              method: method,
+              body: formData, 
+          });
 
-            if (response.ok) {
-                alert('¡Receta creada con éxito!');
-                // Resetear estados...
-            } else {
-                const errorData = await response.json();
-                alert(`Error: ${errorData.detail || 'Revisa los datos'}`);
-            }
-        } catch (error) {
-            console.error("Error de conexión:", error);
-            alert('Error de conexión con el servidor.');
-        }
-  };
+          if (response.ok) {
+              alert(isEdit ? '¡Receta actualizada!' : '¡Receta creada!');
+              if (!isEdit) {
+                  setTitulo(''); setCategoria(''); setPasos(['']); setDetalles(''); setIngredientesSeleccionados([]);
+              }
+              // 🔥 AÑADE ESTA LÍNEA PARA AVISAR A LA PÁGINA PADRE:
+              if (onSuccess) onSuccess(titulo.trim());
+          } else {
+              const errorData = await response.json();
+              console.error("Detalle del error 422:", errorData);
+              alert(`Error: ${JSON.stringify(errorData.detail || 'Error al procesar')}`);
+          }
+      } catch (error) {
+          alert('Error de conexión.');
+      }
+    };
+
+  const inputProps = { fullWidth: true, InputLabelProps: { shrink: true } };
 
   return (
-    <Box sx={{ p: 4, maxWidth: 800, margin: 'auto' }}>
-      <Typography variant="h4" gutterBottom color="green" sx={{ fontWeight: 'bold' }}>
-        Crear Nueva Receta
+    <Box sx={{ p: 2, width: '100%' }}>
+      <Typography variant="h4" gutterBottom color={isEdit ? "primary" : "green"} sx={{ fontWeight: 'bold' }}>
+        {isEdit ? 'Editar Receta' : 'Crear Nueva Receta'}
       </Typography>
       
       <Paper sx={{ p: 3, mb: 3 }}>
         <Stack spacing={3}>
           <TextField 
+            {...inputProps}
             label="Título de la receta" 
-            fullWidth 
             value={titulo}
             onChange={(e) => setTitulo(e.target.value)} 
           />
 
           <TextField
+            {...inputProps}
             select
             label="Categoría"
             value={categoria}
             onChange={(e) => setCategoria(e.target.value)}
-            fullWidth
-            helperText="Selecciona el tipo de plato"
           >
             {CATEGORIAS_RECETAS.map((option) => (
               <MenuItem key={option.label} value={option.label.toLowerCase()}>
@@ -144,16 +157,16 @@ export default function CrearRecetaForm() {
 
           <Stack direction="row" spacing={2}>
             <TextField 
+                {...inputProps}
                 label="Tiempo (minutos)" 
                 type="number" 
-                fullWidth 
                 value={minutos} 
                 onChange={(e) => setMinutos(e.target.value)} 
             />
             <TextField 
+                {...inputProps}
                 select
                 label="Dificultad" 
-                fullWidth 
                 value={dificultad} 
                 onChange={(e) => setDificultad(e.target.value)}
             >
@@ -161,23 +174,24 @@ export default function CrearRecetaForm() {
                 <MenuItem value="Media">Media</MenuItem>
                 <MenuItem value="Difícil">Difícil</MenuItem>
             </TextField>
-        </Stack>
+          </Stack>
 
           <TextField 
+            {...inputProps}
             label="Número de raciones" 
             type="number" 
-            fullWidth 
             value={comensales} 
             onChange={(e) => setComensales(e.target.value)} 
           />
           
-          <Button component="label" variant="outlined" startIcon={<CloudUploadIcon />}>
-            {foto ? `Imagen: ${foto.name}` : "Subir Foto"}
+          <Button component="label" variant="outlined" startIcon={<CloudUploadIcon />} sx={{ py: 1.5 }}>
+            {foto ? `Nueva Imagen: ${foto.name}` : isEdit ? "Cambiar Foto (Opcional)" : "Subir Foto de la Receta"}
             <input type="file" hidden onChange={(e) => setFoto(e.target.files[0])} />
           </Button>
         </Stack>
       </Paper>
 
+      {/* SECCIÓN INGREDIENTES */}
       <Paper sx={{ p: 3, mb: 3 }}>
         <Typography variant="h6" gutterBottom>Ingredientes</Typography>
         <Autocomplete
@@ -185,7 +199,7 @@ export default function CrearRecetaForm() {
           getOptionLabel={(opt) => opt.nombre || ""}
           onInputChange={(e, val) => handleBuscarAlimento(val)}
           onChange={(e, val) => agregarIngrediente(val)}
-          renderInput={(params) => <TextField {...params} label="Buscar en FoodDB..." placeholder="Ej: Pollo, Arroz..." />}
+          renderInput={(params) => <TextField {...params} {...inputProps} label="Buscar en FoodDB..." />}
           noOptionsText="Escribe al menos 3 letras"
         />
         <List>
@@ -197,10 +211,13 @@ export default function CrearRecetaForm() {
                 }>
                     <Typography sx={{ flexGrow: 1 }}>{ing.nombre_pantalla}</Typography>
                     <TextField 
-                        size="small" label="Gramos" type="number" defaultValue={100} sx={{ width: 100, ml: 2 }}
+                        size="small" label="Gramos" type="number" 
+                        value={ing.cantidad_g} 
+                        sx={{ width: 100, ml: 2 }}
+                        InputLabelProps={{ shrink: true }}
                         onChange={(e) => {
                             const newIngs = [...ingredientesSeleccionados];
-                            newIngs[index].cantidad_g = parseFloat(e.target.value);
+                            newIngs[index].cantidad_g = e.target.value;
                             setIngredientesSeleccionados(newIngs);
                         }}
                     />
@@ -209,11 +226,13 @@ export default function CrearRecetaForm() {
         </List>
       </Paper>
 
+      {/* SECCIÓN PREPARACIÓN */}
       <Paper sx={{ p: 3, mb: 3 }}>
-        <Typography variant="h6">Preparación</Typography>
+        <Typography variant="h6" sx={{ mb: 2 }}>Preparación</Typography>
         {pasos.map((paso, index) => (
             <TextField 
-                key={index} fullWidth multiline label={`Paso ${index + 1}`} sx={{ mb: 2 }} value={paso}
+                {...inputProps}
+                key={index} multiline label={`Paso ${index + 1}`} sx={{ mb: 2 }} value={paso}
                 onChange={(e) => {
                     const newPasos = [...pasos];
                     newPasos[index] = e.target.value;
@@ -221,12 +240,37 @@ export default function CrearRecetaForm() {
                 }}
             />
         ))}
-        <Button onClick={() => setPasos([...pasos, ""])}>+ Añadir Paso</Button>
+        <Button variant="text" onClick={() => setPasos([...pasos, ""])}>+ Añadir Paso</Button>
       </Paper>
 
-      <Button variant="contained" color="success" size="large" fullWidth onClick={handleGuardar}>
-        Publicar Receta
+      {/* NUEVA SECCIÓN: DETALLES / NOTAS */}
+      <Paper sx={{ p: 3, mb: 3 }}>
+        <Typography variant="h6" sx={{ mb: 2 }}>Detalles Adicionales / Notas</Typography>
+        <TextField 
+            {...inputProps}
+            multiline 
+            minRows={3}
+            placeholder="Añade notas, consejos, alérgenos o variaciones para esta receta..."
+            value={detalles}
+            onChange={(e) => setDetalles(e.target.value)}
+        />
+      </Paper>
+
+      <Button variant="contained" color={isEdit ? "primary" : "success"} size="large" fullWidth onClick={handleGuardar} sx={{ mt: 2, py: 2, fontWeight: 'bold' }}>
+        {isEdit ? 'Guardar Cambios' : 'Publicar Receta'}
       </Button>
     </Box>
   );
 }
+
+const CATEGORIAS_RECETAS = [
+    { label: 'Sopas', desc: 'Explora recetas y productos de Sopas.' },
+    { label: 'Ensaladas', desc: 'Explora recetas y productos de Ensaladas.' },
+    { label: 'Arroz', desc: 'Explora recetas y productos de Arroz.' },
+    { label: 'Pasta', desc: 'Explora recetas y productos de Pasta.' },
+    { label: 'Guisos', desc: 'Explora recetas y productos de Guisos.' },
+    { label: 'Pescado', desc: 'Explora recetas y productos de Pescado.' },
+    { label: 'Carne', desc: 'Carnes rojas, blancas y embutidos de calidad.' },
+    { label: 'Fruta', desc: 'Explora recetas y productos de Fruta.' },
+    { label: 'Postres', desc: 'Dulces y repostería.' }
+];

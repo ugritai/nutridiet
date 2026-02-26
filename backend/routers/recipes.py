@@ -1,18 +1,31 @@
-from fastapi import APIRouter, HTTPException, Query
-from database.connection import recipe_db_host, bedca_collection, embeddings_recipe_collection
+from fastapi import APIRouter, HTTPException, Query, Depends, Form, File, UploadFile, status
+from database.connection import recipe_db_host, bedca_collection, embeddings_recipe_collection, nutritionist_collection
 from utils.food_utils import remove_stop_words, convert_objectid, convertir_a_gramos, extraer_cantidad_y_unidad
 from pydantic import BaseModel #para el añadir recetas
 from unidecode import unidecode
 from fastapi.encoders import jsonable_encoder
 from bson import ObjectId
 from typing import Optional
+from models.schemas import RecetaProfesionalCreate
+
+import json
+import os
+import uuid
+
+
+from fastapi.security import OAuth2PasswordBearer
+from .security import decode_jwt_token
 
 import re
 
 router = APIRouter(tags=["Recipes"])
 
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/token")
+
 collections = ['abuela_bedca', 'GNHD_24_25', 'bedca_FB']
 recetas_collection = recipe_db_host['abuela_bedca']
+
+UPLOAD_DIR = "static/images_recipies"
 
 
 # Mapa de categorías a palabras clave
@@ -378,7 +391,9 @@ async def get_receta_detalle(nombre: str):
 
     for collection_name in collections:
         collection = recipe_db_host[collection_name]
-        cursor = collection.find({}, {"_id": 0})
+        
+        # 🔥 EL FIX ESTÁ AQUÍ: Quitamos el {"_id": 0} para que Mongo sí envíe el ID
+        cursor = collection.find({})
 
         async for doc in cursor:
             titulo = doc.get("title", "")
@@ -715,32 +730,38 @@ async def obtener_maximos_nutricionales(categoria: Optional[str] = None):
     return {"kcal": kcal, "pro": pro, "car": car}
 
 
-from fastapi import UploadFile, File, Form
-import json
-import os
-import uuid
 
-# --- En routes/recipes.py ---
-from models.schemas import RecetaProfesionalCreate # Importamos el nuevo esquema
-UPLOAD_DIR = "/app/static/images_recipies"
+
 
 @router.post("/crear_receta_profesional")
 async def crear_receta_profesional(
     datos_receta: str = Form(...), 
-    foto: Optional[UploadFile] = File(None)
+    foto: Optional[UploadFile] = File(None),
+    token: str = Depends(oauth2_scheme)
 ):
     print("\n🚀 [BACKEND] Petición recibida", flush=True)
 
-    # 1. Validar JSON
+    payload = decode_jwt_token(token)
+    if not payload:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token inválido o expirado")
+
+    email_nutri = payload.get("sub")
+    if not email_nutri:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token inválido")
+
+    nutricionista = nutritionist_collection.find_one({"email": email_nutri})
+    if not nutricionista:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Nutricionista no encontrado")
+
     try:
         data_dict = json.loads(datos_receta)
         receta_input = RecetaProfesionalCreate(**data_dict)
     except Exception as e:
         raise HTTPException(status_code=422, detail=f"Error en datos: {str(e)}")
 
-    # 2. Lógica de Nutrición (Simplificada para el ejemplo)
     totales = {"energy_kcal": 0.0, "pro": 0.0, "car": 0.0}
     ingredientes_db = []
+    
     for item in receta_input.ingredientes:
         alimento = await bedca_collection.find_one({"_id": ObjectId(item.alimento_id)})
         if alimento:
@@ -753,40 +774,28 @@ async def crear_receta_profesional(
             ingredientes_db.append({
                 "ingredient": item.nombre_pantalla,
                 "ingredientID": ObjectId(item.alimento_id),
+                "cantidad_g": item.cantidad_g
             })
 
-    # 3. Gestión de imagen FÍSICA
-    # Por defecto usamos el placeholder
     ruta_final_para_db = "/static/images/placeholder_receta.webp"
-
     if foto:
         try:
-            # Asegurar que el directorio existe
             os.makedirs(UPLOAD_DIR, exist_ok=True)
-            
-            # Crear nombre único
             nombre_limpio = re.sub(r'[^a-zA-Z0-9.-]', '_', foto.filename)
             nombre_archivo = f"{uuid.uuid4()}_{nombre_limpio}"
-            
-            # Ruta física donde se guarda el archivo en el contenedor
             file_path = os.path.join(UPLOAD_DIR, nombre_archivo)
             
-            # GUARDAR EL ARCHIVO EN DISCO
             with open(file_path, "wb") as buffer:
                 content = await foto.read()
                 buffer.write(content)
             
-            # Ruta que guardaremos en la base de datos (la que Nginx entiende)
             ruta_final_para_db = f"/static/images_recipies/{nombre_archivo}"
-            print(f"✅ Imagen guardada en: {file_path}", flush=True)
-            
         except Exception as e:
-            print(f"❌ Error guardando imagen: {e}", flush=True)
-            # Si falla el guardado, se queda con el placeholder
+            print(f"❌ Error guardando imagen: {e}")
 
-    # 4. Insertar en MongoDB
     nuevo_doc = {
         "title": receta_input.titulo,
+        "owner_id": str(nutricionista["_id"]),
         "source": "Nutricionista",
         "origin_ISO": "ESP",
         "n_diners": receta_input.comensales,
@@ -795,10 +804,147 @@ async def crear_receta_profesional(
         "minutes": receta_input.minutos,
         "ingredients": ingredientes_db,
         "steps": receta_input.pasos,
-        "images": [ruta_final_para_db],  # <-- AQUÍ usamos la ruta real
+        "detalles": getattr(receta_input, "detalles", ""),
+        "images": [ruta_final_para_db],
         "nutritional_info": {k: round(v, 2) for k, v in totales.items()},
         "dietary_preferences": []
     }
 
     result = await recipe_db_host['abuela_bedca'].insert_one(nuevo_doc)
     return {"message": "Receta creada", "id": str(result.inserted_id), "img": ruta_final_para_db}
+
+
+@router.put("/actualizar_receta/{receta_id}")
+async def actualizar_receta_profesional(
+    receta_id: str,
+    datos_receta: str = Form(...), 
+    foto: Optional[UploadFile] = File(None),
+    token: str = Depends(oauth2_scheme)
+):
+    payload = decode_jwt_token(token)
+    if not payload:
+        raise HTTPException(status_code=401, detail="Token inválido o expirado")
+    
+    email_nutri = payload.get("sub")
+    if not email_nutri:
+        raise HTTPException(status_code=401, detail="Token inválido")
+        
+    nutricionista = nutritionist_collection.find_one({"email": email_nutri})
+    if not nutricionista:
+        raise HTTPException(status_code=404, detail="Nutricionista no encontrado")
+
+    try:
+        oid = ObjectId(receta_id)
+    except:
+        raise HTTPException(status_code=400, detail="ID de receta no válido")
+
+    receta_previa = await recipe_db_host['abuela_bedca'].find_one({"_id": oid})
+    if not receta_previa:
+        raise HTTPException(status_code=404, detail="La receta no existe")
+
+    if receta_previa.get("owner_id") != str(nutricionista["_id"]):
+        raise HTTPException(status_code=403, detail="No autorizado para modificar esta receta")
+
+    try:
+        data_dict = json.loads(datos_receta)
+        receta_input = RecetaProfesionalCreate(**data_dict)
+    except Exception as e:
+        raise HTTPException(status_code=422, detail=f"Error en datos: {str(e)}")
+
+    totales = {"energy_kcal": 0.0, "pro": 0.0, "car": 0.0}
+    ingredientes_db = []
+    
+    for item in receta_input.ingredientes:
+        alimento = await bedca_collection.find_one({"_id": ObjectId(item.alimento_id)})
+        if alimento:
+            info = alimento.get("nutritional_info_100g", {})
+            f = item.cantidad_g / 100.0
+            totales["energy_kcal"] += (info.get("energy_kcal") or 0) * f
+            totales["pro"] += (info.get("pro") or 0) * f
+            totales["car"] += (info.get("car") or 0) * f
+
+            ingredientes_db.append({
+                "ingredient": item.nombre_pantalla,
+                "ingredientID": ObjectId(item.alimento_id),
+                "cantidad_g": item.cantidad_g
+            })
+
+    ruta_imagenes = receta_previa.get("images", ["/static/images/placeholder_receta.webp"])
+    if foto:
+        try:
+            os.makedirs(UPLOAD_DIR, exist_ok=True)
+            nombre_limpio = re.sub(r'[^a-zA-Z0-9.-]', '_', foto.filename)
+            nombre_archivo = f"{uuid.uuid4()}_{nombre_limpio}"
+            file_path = os.path.join(UPLOAD_DIR, nombre_archivo)
+            
+            with open(file_path, "wb") as buffer:
+                content = await foto.read()
+                buffer.write(content)
+            
+            ruta_final_para_db = f"/static/images_recipies/{nombre_archivo}"
+            ruta_imagenes = [ruta_final_para_db]
+        except Exception as e:
+            print(f"❌ Error guardando imagen nueva: {e}")
+
+    update_data = {
+        "$set": {
+            "title": receta_input.titulo,
+            "n_diners": receta_input.comensales,
+            "dificultad": receta_input.dificultad,
+            "category": receta_input.categoria.lower(),
+            "minutes": receta_input.minutos,
+            "ingredients": ingredientes_db,
+            "steps": receta_input.pasos,
+            "detalles": getattr(receta_input, "detalles", ""),
+            "images": ruta_imagenes,
+            "nutritional_info": {k: round(v, 2) for k, v in totales.items()}
+        }
+    }
+
+    await recipe_db_host['abuela_bedca'].update_one({"_id": oid}, update_data)
+    return {"message": "Receta actualizada correctamente", "id": receta_id}
+
+
+@router.delete("/eliminar_receta/{receta_id}")
+async def eliminar_receta(receta_id: str, token: str = Depends(oauth2_scheme)):
+    payload = decode_jwt_token(token)
+    if not payload:
+        raise HTTPException(status_code=401, detail="Token inválido o expirado")
+        
+    email_nutri = payload.get("sub")
+    if not email_nutri:
+        raise HTTPException(status_code=401, detail="Token inválido")
+        
+    nutricionista = nutritionist_collection.find_one({"email": email_nutri})
+    if not nutricionista:
+        raise HTTPException(status_code=404, detail="Nutricionista no encontrado")
+
+    try:
+        oid = ObjectId(receta_id)
+    except:
+        raise HTTPException(status_code=400, detail="ID no válido")
+
+    receta = await recipe_db_host['abuela_bedca'].find_one({"_id": oid})
+    if not receta:
+        raise HTTPException(status_code=404, detail="Receta no encontrada")
+
+    if receta.get("owner_id") != str(nutricionista["_id"]):
+        raise HTTPException(status_code=403, detail="No autorizado para eliminar esta receta")
+
+    imagenes = receta.get("images", [])
+    for img_path in imagenes:
+        if "images_recipies" in img_path:
+            file_system_path = img_path.lstrip("/") 
+            if os.path.exists(file_system_path):
+                try:
+                    os.remove(file_system_path)
+                    print(f"🗑️ Archivo eliminado: {file_system_path}")
+                except Exception as e:
+                    print(f"⚠️ No se pudo borrar el archivo: {e}")
+
+    result = await recipe_db_host['abuela_bedca'].delete_one({"_id": oid})
+    
+    if result.deleted_count == 1:
+        return {"message": "Receta y archivos asociados eliminados con éxito"}
+    
+    raise HTTPException(status_code=500, detail="Error al eliminar la receta de la base de datos")

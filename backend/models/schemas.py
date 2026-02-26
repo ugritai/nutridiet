@@ -153,6 +153,7 @@ class RecetaProfesionalCreate(BaseModel):
     comensales: int = Field(1, alias="n_diners")
     pasos: List[str]
     ingredientes: List[IngredienteRecetaInput]
+    detalles: Optional[str] = ""
 
     class Config:
         # Esto permite que podamos usar tanto el nombre de la variable como el alias

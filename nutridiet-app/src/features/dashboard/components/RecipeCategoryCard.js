@@ -212,9 +212,18 @@ const fetchDatos = async () => {
                     {currentRecetas.map((recetaObj) => {
                         const nombre = recetaObj.name;
                         const generatedImageName = `${sanitizeFilename(nombre)}.webp`;
-                        const imagePath = recetaObj.images && recetaObj.images.length > 0 
-                            ? recetaObj.images[0] 
-                            : `/static/images_recipies/${generatedImageName}`;
+                        let imagePath = '/static/images/placeholder_receta.webp';
+
+                        if (recetaObj.images && recetaObj.images.length > 0) {
+                            if (recetaObj.images[0].startsWith('http')) {
+                                imagePath = recetaObj.images[0];
+                            } else {
+                                // 🔥 LA SOLUCIÓN: Usamos la ruta relativa pura
+                                // Ejemplo: se queda como "/static/images_recipies/mifoto.png"
+                                // Así el navegador se la pide a Nginx (puerto 80)
+                                imagePath = recetaObj.images[0]; 
+                            }
+                        }
 
                     return (
                             <UniversalCard

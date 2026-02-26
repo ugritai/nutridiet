@@ -56,9 +56,12 @@ export const fetchWithAuth = async (url, options = {}) => {
     };
 
     // 🚀 LÓGICA CLAVE: Solo añadimos JSON si el body NO es FormData
-    if (options.body && !(options.body instanceof FormData)) {
+    if (!(options.body instanceof FormData)) {
         headers['Content-Type'] = 'application/json';
-    }
+      } else {
+        // Asegurarnos de eliminarlo por si vino en options.headers
+        delete headers['Content-Type']; 
+      }
 
     const response = await fetch(`${BASE_URL}${url}`, {
         ...options,
