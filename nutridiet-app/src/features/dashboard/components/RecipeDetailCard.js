@@ -3,25 +3,13 @@ import { useParams } from 'react-router-dom';
 import {
   Accordion, AccordionSummary, AccordionDetails, Grid, Card, CardContent,
   Typography, CircularProgress, Divider, Chip, Box, List, ListItem,
-  ListItemText, ListItemIcon, Avatar,
+  ListItemText, ListItemIcon, Avatar, Paper // 🔥 Añadido Paper para la caja de detalles
 } from '@mui/material';
 import { useTheme, alpha } from '@mui/material/styles';
 import { AccessTime, Restaurant, People, Flag, LocalDining } from '@mui/icons-material';
-import RecipeNutritionTable from '../components/RecipeNutritionTable';
+import RecipeNutritionTable from '../components/RecipeNutritionTable'; 
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { fetchWithAuth } from './api';
-
-// Función de sanitización
-const sanitizeFilename = (name) => {
-  if (!name) return '';
-  return name
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^\w\-]/g, "-")
-    .replace(/-+/g, "-")
-    .trim("-");
-};
 
 const ListSection = ({ title, icon: Icon, items = [], filterFn }) => {
   const theme = useTheme();
@@ -107,7 +95,7 @@ const DifficultyChip = ({ label }) => {
   );
 };
 
-export default function RecipeDetailCard() {
+export default function RecipeDetailCard({ onDataLoaded }) {
   const { nombre } = useParams();
   const [recipe, setRecipe] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -131,13 +119,19 @@ export default function RecipeDetailCard() {
 
         setRecipe(recetaData);
 
-        // Lógica de imagen inicial
-        const generatedName = `${sanitizeFilename(recetaData.title)}.webp`;
-        const initialPath = recetaData.images && recetaData.images.length > 0 
-          ? recetaData.images[0] 
-          : `/static/images_recipies/${generatedName}`;
+        if (typeof onDataLoaded === 'function') {
+          onDataLoaded(recetaData);
+        }
+
+        // 🔥 FIX DE LA IMAGEN: Usamos placeholder genérico o le añadimos el host del backend
+        let initialPath = '/static/images/placeholder_receta.webp';
         
-        setImgSrc(initialPath);
+        if (recetaData.images && recetaData.images.length > 0) {
+            // 🔥 Igual que arriba, ruta pura para que pase por Nginx
+            initialPath = recetaData.images[0]; 
+        }
+
+        setImgSrc(initialPath)
       } catch (err) {
         console.error("Error:", err);
         setRecipe(null);
@@ -146,10 +140,11 @@ export default function RecipeDetailCard() {
       }
     };
     fetchData();
-  }, [nombre]);
+  }, [nombre, onDataLoaded]);
 
   const handleImageError = () => {
-    const placeholder = '/static/images/placeholder_receta.webp';
+    // Si falla la carga, ponemos la genérica del frontend (React)
+    const placeholder = '/placeholder_receta.webp'; // Asumiendo que está en la carpeta public/ de React
     if (imgSrc !== placeholder) {
       setImgSrc(placeholder);
     }
@@ -221,6 +216,20 @@ export default function RecipeDetailCard() {
             />
           </Grid>
         </Grid>
+
+        {/* 🔥 NUEVA SECCIÓN DE DETALLES / NOTAS */}
+        {recipe.detalles && recipe.detalles.trim() !== "" && (
+          <Box sx={{ mt: 4 }}>
+            <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', color: 'primary.main' }}>
+              Notas y Detalles Adicionales
+            </Typography>
+            <Paper elevation={0} sx={{ p: 2.5, bgcolor: alpha(useTheme().palette.primary.main, 0.05), border: 1, borderColor: 'grey.300', borderRadius: 2 }}>
+              <Typography variant="body1" sx={{ whiteSpace: 'pre-line', color: 'text.secondary' }}>
+                {recipe.detalles}
+              </Typography>
+            </Paper>
+          </Box>
+        )}
 
         <Box sx={{ mt: 5 }}>
           <Typography variant="h5" sx={{ mb: 2, fontWeight: 600 }}>Información Nutricional</Typography>

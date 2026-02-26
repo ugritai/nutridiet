@@ -100,4 +100,10 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
             detail="Usuario no encontrado"
         )
     
-    return {"email": user["email"], "name": user["name"]}  # return informacion usuario actual
+    # Mantenemos email y name EXACTAMENTE IGUAL para no romper el resto de tu app.
+    # Solo añadimos el "id" para la verificación de recetas.
+    return {
+        "id": str(user["_id"]),
+        "email": user["email"], 
+        "name": user["name"]
+    }

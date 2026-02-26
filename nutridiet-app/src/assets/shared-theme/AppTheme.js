@@ -19,7 +19,6 @@ function AppTheme(props) {
                     colorSchemeSelector: 'data-mui-color-scheme',
                     cssVarPrefix: 'template',
                 },
-                // Sobrescribimos la paleta primaria para que sea el verde de NutriDiet
                 colorSchemes: {
                     ...colorSchemes,
                     light: {
@@ -27,7 +26,7 @@ function AppTheme(props) {
                         palette: {
                             ...colorSchemes?.light?.palette,
                             primary: {
-                                main: '#4CAF50', // El verde principal (puedes usar brand[500])
+                                main: '#4CAF50',
                                 contrastText: '#ffffff',
                             },
                         },
@@ -37,7 +36,7 @@ function AppTheme(props) {
                         palette: {
                             ...colorSchemes?.dark?.palette,
                             primary: {
-                                main: '#66BB6A', // Verde un poco m·s claro para modo oscuro
+                                main: '#66BB6A',
                                 contrastText: '#ffffff',
                             },
                         },
@@ -56,17 +55,44 @@ function AppTheme(props) {
                     MuiButton: {
                         styleOverrides: {
                             root: {
-                                borderRadius: 8, // Botones un poco m·s redondeados para suavizar el diseÒo
+                                borderRadius: 8,
                             },
                             containedPrimary: {
-                                backgroundColor: '#2E7D32', // Verde oscuro para el estado normal
+                                backgroundColor: '#2E7D32',
                                 '&:hover': {
-                                    backgroundColor: '#1B5E20', // Verde m·s oscuro al pasar el ratÛn
+                                    backgroundColor: '#1B5E20',
                                 },
                                 '&.Mui-disabled': {
                                     color: brand[50], 
-                                    backgroundColor: '#A5D6A7', // Verde muy p·lido cuando est· deshabilitado
+                                    backgroundColor: '#A5D6A7',
                                     opacity: 0.7, 
+                                },
+                            },
+                        },
+                    },
+                    // SOLUCI√ìN PARA LABELS SUPERPUESTOS
+                    MuiInputLabel: {
+                        styleOverrides: {
+                            root: ({ theme }) => ({
+                                paddingLeft: '4px',
+                                paddingRight: '4px',
+                                marginLeft: '-4px',
+                                backgroundColor: 'white', // Fondo para tapar la l√≠nea
+                                ...theme.applyStyles('dark', {
+                                    backgroundColor: '#121212', // Fondo oscuro si aplica
+                                }),
+                                '&.MuiInputLabel-shrink': {
+                                    margin: '0',
+                                    zIndex: 1,
+                                },
+                            }),
+                        },
+                    },
+                    MuiOutlinedInput: {
+                        styleOverrides: {
+                            notchedOutline: {
+                                '& legend': {
+                                    fontSize: '0.85em', // Mantiene el espacio del corte
                                 },
                             },
                         },
