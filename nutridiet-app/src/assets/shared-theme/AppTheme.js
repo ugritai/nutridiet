@@ -50,58 +50,36 @@ function AppTheme(props) {
                     ...dataDisplayCustomizations,
                     ...feedbackCustomizations,
                     ...navigationCustomizations,
-                    ...surfacesCustomizations, 
+                    ...surfacesCustomizations,
                     ...themeComponents,
-                    // 🔥 REGLAS PARA FORZAR EL FONDO OSCURO EN CONTENEDORES 🔥
-                    MuiPaper: {
-                        styleOverrides: {
-                            root: ({ theme }) => ({
-                                backgroundColor: theme.palette.background.paper,
-                            }),
-                        },
-                    },
-                    MuiCard: {
-                        styleOverrides: {
-                            root: ({ theme }) => ({
-                                backgroundColor: theme.palette.background.paper,
-                            }),
-                        },
-                    },
-                    MuiAccordion: {
-                        styleOverrides: {
-                            root: ({ theme }) => ({
-                                backgroundColor: theme.palette.background.paper,
-                            }),
-                        },
-                    },
-                    // ---------------------------------------------------------
                     MuiButton: {
                         styleOverrides: {
                             root: {
                                 borderRadius: 8,
                             },
-                            containedPrimary: ({ theme }) => ({
+                            containedPrimary: {
                                 backgroundColor: '#2E7D32',
                                 '&:hover': {
                                     backgroundColor: '#1B5E20',
                                 },
                                 '&.Mui-disabled': {
-                                    color: theme.palette.text.disabled,
-                                    backgroundColor: theme.palette.action.disabledBackground,
-                                    opacity: 0.8, 
+                                    color: brand[50], 
+                                    backgroundColor: '#A5D6A7',
+                                    opacity: 0.7, 
                                 },
-                            }),
+                            },
                         },
                     },
+                    // SOLUCIÓN PARA LABELS SUPERPUESTOS
                     MuiInputLabel: {
                         styleOverrides: {
                             root: ({ theme }) => ({
                                 paddingLeft: '4px',
                                 paddingRight: '4px',
                                 marginLeft: '-4px',
-                                backgroundColor: theme.palette.background.default, 
+                                backgroundColor: 'white', // Fondo para tapar la línea
                                 ...theme.applyStyles('dark', {
-                                    backgroundColor: theme.palette.background.default,
+                                    backgroundColor: '#121212', // Fondo oscuro si aplica
                                 }),
                                 '&.MuiInputLabel-shrink': {
                                     margin: '0',
@@ -114,7 +92,7 @@ function AppTheme(props) {
                         styleOverrides: {
                             notchedOutline: {
                                 '& legend': {
-                                    fontSize: '0.85em',
+                                    fontSize: '0.85em', // Mantiene el espacio del corte
                                 },
                             },
                         },
