@@ -84,10 +84,11 @@ MONGO_APP_PASS=<user-pass>
 ### 1. Clonar el repositorio
 
 ```bash
-git clone https://github.com/ugritai/nutridiet/tree/release/1.0.0
+git clone -b release/1.0.0 https://github.com/ugritai/nutridiet.git
 cd nutridiet
 
 ```
+Para seguir desarrollando, se recomienda usar la rama de prueba hasta que haya una versión estable antes de unir con release.
 
 ### 2. Desplegar los Contenedores
 
