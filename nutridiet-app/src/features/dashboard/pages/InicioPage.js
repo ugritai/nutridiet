@@ -1,7 +1,12 @@
+// src/pages/InicioPage.js
 import Dashboard from '../Dashboard';
 import MainGrid from '../components/MainGrid'; 
 
-export default function AlimentosPage() {
+/**
+ * Vista principal tras el inicio de sesión.
+ * Renderiza el dashboard principal (MainGrid).
+ */
+export default function InicioPage() {
   return (
     <Dashboard>
       <MainGrid />

@@ -1,93 +1,61 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-//  1. IMPORTAR fetchWithAuth (Ajusta la ruta si 'api.js' est· en otra carpeta)
-import { fetchWithAuth } from './api'; 
+// src/pages/AlimentosPage.js
+import React, { useEffect, useState } from 'react';
+import Dashboard from '../Dashboard';
+import FoodGrid from '../components/FoodGrid';
+import Search from '../components/Search';
+import FoodSearch from '../components/FoodSearch';
+import { CircularProgress, Typography } from '@mui/material';
+import { fetchWithAuth } from '../components/api';
 
-export default function FoodSearch({ type = 'alimentos', onSelect }) {
-  const [query, setQuery] = useState('');
-  const [suggestions, setSuggestions] = useState([]);
-  const navigate = useNavigate();
+/**
+ * Vista principal del cat√°logo de alimentos.
+ * Carga las categor√≠as desde la API e integra el buscador global de alimentos.
+ */
+export default function AlimentosPage() {
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleSearch = async () => {
-    if (!query.trim()) return;
-    setSuggestions([]);
+  useEffect(() => {
+      fetchWithAuth('/alimentos/all_categories')
+      .then(res => res.json())
+      .then(data => setCategories(data.categories))
+      .catch(err => console.error("[AlimentosPage] Error al obtener categor√≠as:", err))
+      .finally(() => setLoading(false));
+  }, []);
 
-    let detallePath = '';
-    // Estas rutas son de React Router (Frontend), asÌ que NO llevan /api. Est·n bien.
-    if (type === 'recetas') {
-      detallePath = `/recetas/detalle_receta/${encodeURIComponent(query)}`;
-    } else if (type === 'ingestas') {
-      detallePath = `/planificacion_ingestas/ver_ingesta_detalle/${encodeURIComponent(query)}`;
-    } else {
-      detallePath = `/alimentos/detalle_alimento/${encodeURIComponent(query)}`;
-    }
+  // Hook personalizado para abstraer la l√≥gica de autocompletado y b√∫squeda
+  const {
+    query, setQuery, suggestions, handleSearch,
+    handleSelectSuggestion, handleSuggestions
+  } = FoodSearch({ type: 'alimentos' });
 
-    navigate(detallePath);
-  };
+  return (
+    <Dashboard>
+      <Search
+        value={query}
+        onChange={(value) => {
+          setQuery(value);
+          handleSuggestions(value);
+        }}
+        onSubmit={handleSearch}
+        suggestions={suggestions}
+        placeholder="Buscar alimentos..."
+        suggestionClick={handleSelectSuggestion}
+      />
 
-  const handleSelectSuggestion = (value) => {
-    if (onSelect) {
-      onSelect(value);
-      return;
-    }
-    setSuggestions([]);
-    setQuery('');
+      <Typography variant="h4" gutterBottom>Categor√≠as de Alimentos</Typography>
 
-    let detallePath = '';
-    if (type === 'recetas') {
-      detallePath = `/recetas/detalle_receta/${encodeURIComponent(value)}`;
-    } else if (type === 'ingestas') {
-      detallePath = `/planificacion_ingestas/ver_ingesta_detalle/${encodeURIComponent(value)}`;
-    } else {
-      detallePath = `/alimentos/detalle_alimento/${encodeURIComponent(value)}`;
-    }
-
-    navigate(detallePath);
-  };
-
-  const handleSuggestions = async (value) => {
-    if (!value) {
-      setSuggestions([]);
-      return;
-    }
-
-    // Definimos la ruta relativa (fetchWithAuth le pondr· el /api delante)
-    let endpoint = '';
-    if (type === 'recetas') {
-        endpoint = `/recetas/buscar_recetas/${encodeURIComponent(value)}?limit=20`;
-    } else if (type === 'ingestas') {
-        endpoint = `/planificacion_ingestas/buscar_ingestas/${encodeURIComponent(value)}`;
-    } else {
-        endpoint = `/alimentos/buscar_alimentos/${encodeURIComponent(value)}`;
-    }
-
-    try {
-      //  2. USAR fetchWithAuth EN LUGAR DE fetch
-      const response = await fetchWithAuth(endpoint);
-      
-      if (!response.ok) throw new Error("No encontrado");
-      
-      const data = await response.json();
-
-      const formattedSuggestions = Array.from(data).map(item => ({
-        label: item.nombre || item.titulo || item.intake_name,
-        value: item.nombre || item.titulo || item.intake_name
-      }));
-
-      setSuggestions(formattedSuggestions);
-    } catch (err) {
-      console.error("Error fetching suggestions:", err);
-      setSuggestions([]);
-    }
-  };
-
-  return {
-    query,
-    setQuery,
-    suggestions,
-    handleSearch,
-    setSuggestions,
-    handleSelectSuggestion,
-    handleSuggestions
-  };
+      {loading ? (
+        <CircularProgress />
+      ) : (
+        <>
+          {categories.length === 0 ? (
+            <Typography variant="h6" color="error">No se encontraron categor√≠as.</Typography>
+          ) : (
+            <FoodGrid categories={categories} basePath="alimentos" imageFolder="alimentos" shouldMap={true} />
+          )}
+        </>
+      )}
+    </Dashboard>
+  );
 }
