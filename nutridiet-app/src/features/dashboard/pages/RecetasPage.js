@@ -1,3 +1,4 @@
+// src/pages/RecetasPage.js
 import React, { useEffect, useState } from 'react';
 import Dashboard from '../Dashboard';
 import FoodGrid from '../components/FoodGrid';
@@ -6,26 +7,26 @@ import FoodSearch from '../components/FoodSearch';
 import { CircularProgress, Typography } from '@mui/material';
 import { fetchWithAuth } from '../components/api';
 
+/**
+ * Vista principal de catálogo de recetas.
+ * Mapea y normaliza las categorías devueltas por el backend para asegurar
+ * que coinciden con los assets estáticos (imágenes) disponibles en el frontend.
+ */
 export default function RecetasPage() {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Categorías base que SIEMPRE queremos mostrar y que tienen imagen
-  const RecetaCategories = [
-    'Sopas',
-    'Ensaladas',
-    'Arroz',
-    'Pasta',
-    'Guisos',
-    'Pescado',
-    'Carne',
-    'Fruta',
-    'Postres'
+  // Categorías con assets de imagen garantizados en el cliente
+  const baseCategories = [
+    'Sopas', 'Ensaladas', 'Arroz', 'Pasta', 'Guisos', 
+    'Pescado', 'Carne', 'Fruta', 'Postres'
   ];
 
   /**
-   * Mapea categorías de la API a nuestro set cerrado de categorías.
-   * Si no reconoce la categoría, devuelve null para filtrarla.
+   * Agrupa subcategorías de la API dentro de las categorías principales del frontend
+   * para evitar referencias a imágenes inexistentes (404).
+   * @param {string} cat - Categoría raw devuelta por el backend.
+   * @returns {string|null} Categoría normalizada o null si no se debe mostrar.
    */
   function normalizeCategory(cat) {
     if (!cat) return null;
@@ -41,75 +42,52 @@ export default function RecetasPage() {
     if (lower.includes('fruta')) return 'Fruta';
     if (lower.includes('postre') || lower.includes('dulce') || lower.includes('azucar') || lower.includes('chocolate')) return 'Postres';
 
-    return null; // Categoría no reconocida (evita errores 404 de imágenes)
+    return null; 
   }
 
   useEffect(() => {
     fetchWithAuth('/recetas/all_categories')
       .then(res => res.json())
       .then(data => {
-        // 1. Normalizamos las categorías de la API y filtramos los null
         const apiCategories = (data.categories || [])
           .map(normalizeCategory)
-          .filter(cat => cat !== null);
+          .filter(Boolean); // Filtra los null/undefined
 
-        // 2. Unificamos con las base y eliminamos duplicados
-        const uniqueCategories = Array.from(new Set([...RecetaCategories, ...apiCategories]));
-
+        // Unificar categorías base con las recibidas sin duplicados
+        const uniqueCategories = Array.from(new Set([...baseCategories, ...apiCategories]));
         setCategories(uniqueCategories);
       })
       .catch(err => {
-        console.error("Error al obtener categorías:", err);
-        setCategories(RecetaCategories);
+        console.error("[RecetasPage] Error al obtener categorías:", err);
+        setCategories(baseCategories); // Fallback de seguridad
       })
-      .finally(() => {
-        setLoading(false);
-      });
+      .finally(() => setLoading(false));
   }, []);
 
   const {
-    query,
-    setQuery,
-    suggestions,
-    handleSearch,
-    handleSelectSuggestion,
-    handleSuggestions
+    query, setQuery, suggestions, handleSearch,
+    handleSelectSuggestion, handleSuggestions
   } = FoodSearch({ type: 'recetas' });
 
   return (
     <Dashboard>
       <Search
         value={query}
-        onChange={(value) => {
-          setQuery(value);
-          handleSuggestions(value);
-        }}
+        onChange={(value) => { setQuery(value); handleSuggestions(value); }}
         onSubmit={handleSearch}
         suggestions={suggestions}
         placeholder="Buscar recetas..."
         suggestionClick={handleSelectSuggestion}
       />
 
-      <Typography variant="h4" gutterBottom sx={{ mt: 3 }}>
-        Categorías de Recetas
-      </Typography>
+      <Typography variant="h4" gutterBottom sx={{ mt: 3 }}>Categorías de Recetas</Typography>
 
       {loading ? (
         <CircularProgress />
+      ) : categories.length === 0 ? (
+        <Typography variant="h6" color="error">No se encontraron categorías.</Typography>
       ) : (
-        <>
-          {categories.length === 0 ? (
-            <Typography variant="h6" color="error">
-              No se encontraron categorías.
-            </Typography>
-          ) : (
-            <FoodGrid 
-              categories={categories} 
-              basePath="recetas" 
-              shouldMap={false} 
-            />
-          )}
-        </>
+        <FoodGrid categories={categories} basePath="recetas" shouldMap={false} />
       )}
     </Dashboard>
   );
