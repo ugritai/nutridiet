@@ -6,12 +6,13 @@ export default function AuthHandler() {
 
     useEffect(() => {
         const refreshAccessToken = async () => {
-            const token = localStorage.getItem('accessToken');
-            const refreshToken = localStorage.getItem('refreshToken');
+            // Buscar en ambos almacenamientos
+            const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
+            const refreshToken = localStorage.getItem('refreshToken') || sessionStorage.getItem('refreshToken');
 
             if (!token && refreshToken) {
                 try {
-                    const res = await fetch('/api/auth/refresh', { // <--- ASÍ
+                    const res = await fetch('/api/auth/refresh', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -20,12 +21,18 @@ export default function AuthHandler() {
                     });
                     if (res.ok) {
                         const data = await res.json();
-                        localStorage.setItem('accessToken', data.access_token);
+                        // Guardar el nuevo token donde estuviera el refresh token
+                        if (localStorage.getItem('refreshToken')) {
+                            localStorage.setItem('accessToken', data.access_token);
+                        } else {
+                            sessionStorage.setItem('accessToken', data.access_token);
+                        }
                     } else {
                         throw new Error('Refresh token inválido');
                     }
                 } catch {
                     localStorage.clear();
+                    sessionStorage.clear();
                     navigate('/sign-in');
                 }
             } else if (!token && !refreshToken) {
