@@ -1,148 +1,107 @@
-# Aplicación Nutridiet
+# 🥗 Aplicación NutriDiet
 
-El frontend de este sistema fue inicializado con [Create React App](https://github.com/facebook/create-react-app).
-
-A partir de esta base, se ha construido una interfaz personalizada utilizando [Material UI](https://mui.com/) y React Router, adaptada a las necesidades específicas del sistema de planificación dietética.
-
-Puedes ver una demo de uso de la aplicación [aquí](https://drive.google.com/file/d/10IC1oFVbOKyTe_VdsKLkdpSt9aNQeZIn/view?usp=sharing)
-
-## Requisitos
-Antes de comenzar, asegúrate de tener instalado lo siguiente:
-- [Node.js](https://nodejs.org/) (incluye npm)  
-  Se recomienda utilizar la versión **18 o superior**. Puedes verificar la versión instalada ejecutando:
-```bash
-    node -v
-    npm -v
-```
-
-## Instalación
-1. **Clona el repositorio**:
-   ```bash
-   git clone https://github.com/ugritai/nutridiet
-   ```
-
-2. **Navega al directorio del proyecto**:
-    ```bash
-   cd tu-repositorio
-   ```
-
-3. **Instala las dependencias**:
-    ```bash
-   npm install
-   ```
-
-## Ejecución
-
-1. **Inicia la aplicación**:
-    ```bash
-   npm start
-   ```
-   Esto iniciará el servidor de desarrollo y podrás ver la aplicación en tu navegador en [http://localhost:3000](http://localhost:3000).
-
-    La página se recargará automáticamente cuando realices cambios en el código.\
-    También podrás ver posibles errores de lint en la consola.
-
-## Aprende más
-
-Autor: Linqi Zhu 
-Universidad de Granada – Grado en Ingeniería Informática  
-Correo: zhulinqi@correo.ugr.es
-
-
-
-# 🚀  Guía de Despliegue
-
-Este repositorio contiene el ecosistema completo de NutriDiet: Backend (FastAPI), Frontend (React), Bases de Datos (MongoDB) y Proxy Inverso (Nginx).
-
-## 📋 Requisitos Previos
-
-* **Docker** y **Docker Compose** instalados.
-* Archivo `.env` en la raíz con las siguientes variables:
-```env
-PIXABAY_API_KEY= 
-UNSPLASH_ACCESS_KEY= 
-
-MONGO_URI_NUTRIDIET=mongodb://<user>:<user-pass>@nutridietdb:27017/nutridiet?authSource=admin
-MONGO_URI_FOODDB=mongodb://<user>:<user-pass>@fooddb:27017/fooddb?authSource=admin
-
-VITE_API_URL=/api
-
-
-MONGO_ROOT_USER=<root-user>
-MONGO_ROOT_PASS=<root-pass>
-MONGO_APP_USER=<user>
-MONGO_APP_PASS=<user-pass>
-
-```
-
-
+Sistema integral de gestión y planificación dietética desarrollado como TFG en la Universidad de Granada. Esta aplicación permite la gestión de alimentos, generación de recetas y visualización mediante una interfaz moderna.
 
 ---
 
-## 🛠️ Pasos de Instalación
+## 🏗️ Arquitectura del Sistema
 
-### 1. Clonar el repositorio
+El sistema está completamente dockerizado y se compone de 5 servicios principales que se comunican de la siguiente manera:
 
+
+
+* **Frontend:** React (Material UI) - Servido por Nginx.
+* **Backend:** FastAPI (Python 3.9+).
+* **Bases de Datos:** 2 instancias de MongoDB (NutridietDB y FoodDB).
+* **Proxy/Web Server:** Nginx (Gestiona el tráfico y sirve imágenes estáticas).
+
+---
+
+## 🚀 Guía de Despliegue Rápido
+
+### 1. Requisitos Previos
+Asegúrate de tener instalados:
+* **Docker** y **Docker Compose**.
+* Acceso a internet (para la descarga inicial de imágenes de Docker y APIs externas).
+
+### 2. Configuración de Variables de Entorno
+Crea un archivo `.env` en la raíz del proyecto. **No olvides solicitar las API Keys** de Pixabay y Unsplash para que los scripts de imágenes funcionen.
+
+```env
+# API Keys para imágenes
+PIXABAY_API_KEY=tu_key_aqui
+UNSPLASH_ACCESS_KEY=tu_key_aqui
+
+# Conexión MongoDB (Interna de Docker)
+MONGO_URI_NUTRIDIET=mongodb://user:pass@nutridietdb:27017/nutridiet?authSource=admin
+MONGO_URI_FOODDB=mongodb://user:pass@fooddb:27017/fooddb?authSource=admin
+
+# Backend Config
+VITE_API_URL=/api
+
+# Credenciales Root y App
+MONGO_ROOT_USER=admin
+MONGO_ROOT_PASS=password_seguro
+MONGO_APP_USER=user
+MONGO_APP_PASS=pass
+
+```
+
+### 3. Instalación y Puesta en Marcha
+
+1. **Clonar y acceder:**
 ```bash
-git clone -b release/1.0.0 https://github.com/ugritai/nutridiet.git
+git clone -b release/1.0.0 [https://github.com/ugritai/nutridiet.git](https://github.com/ugritai/nutridiet.git)
 cd nutridiet
 
 ```
-Para seguir desarrollando, se recomienda usar la rama de prueba hasta que haya una versión estable antes de unir con release.
 
-### 2. Desplegar los Contenedores
 
-Levantamos toda la infraestructura en segundo plano:
-
+2. **Levantar la infraestructura:**
 ```bash
 docker-compose up -d --build
 
 ```
 
-*Esto iniciará las dos bases de datos (nutridietdb y fooddb), el backend, el frontend y Nginx.*
 
-### 3. Restaurar Bases de Datos (Dumps)
-
-Si tienes backups previos de MongoDB, restáuralos ahora:
-
+3. **Restaurar Datos (Importante):**
+Si tienes un backup de la base de datos `fooddb` (datos de BEDCA), ejecútalo así:
 ```bash
-# Ejemplo para fooddb
 docker exec -i fooddb mongorestore --username admin --password password --archive < ruta/al/tu_dump.archive
 
 ```
-El nombre y contraseña se configuran y consulatan en el `.env` 
+El backup de los datos es fundamental para tener datos en la aplicación. 
+
+
 ---
 
-## 📸 Configuración de Imágenes y Datos (Scripts)
+## 📸 Scripts de Inicialización (Imágenes y Recetas)
 
-Una vez que los contenedores estén corriendo, debemos ejecutar los scripts de utilidad para descargar imágenes y generar recetas automáticas.
+Una vez los contenedores estén activos, debes poblar la base de datos con imágenes y procesar los ingredientes. Ejecuta estos comandos en orden:
 
-### A. Descarga de Imágenes por Categorías
+### Paso A: Imágenes de Categorías
 
-Este script descarga imágenes generales para las categorías de alimentos y recetas desde Pixabay.
+Descarga visuales generales para la interfaz.
 
 ```bash
-docker cp backend/utils/descarga_categorias.py nutridiet-backend:/app/utils/descarga_categorias.py
 docker exec -it nutridiet-backend python -m utils.descarga_categorias
 
 ```
 
-### B. Descarga Masiva de Alimentos
+### Paso B: Imágenes de Alimentos (Masivo)
 
-Para obtener imágenes específicas de cada ingrediente en la base de datos `fooddb`:
+Vincula imágenes de Unsplash/Pixabay a los ingredientes de la base de datos.
 
 ```bash
-docker cp backend/utils/descarga_masiva.py nutridiet-backend:/app/utils/descarga_masiva.py
 docker exec -it nutridiet-backend python -m utils.descarga_masiva
 
 ```
 
-### C. Generación de Recetas Automáticas (BEDCA)
+### Paso C: Generación de Recetas BEDCA
 
-Este script convierte los ingredientes individuales de BEDCA en "recetas" de un solo ingrediente para el frontend:
+Transforma los ingredientes básicos en entidades de "recetas" utilizables por el planificador.
 
 ```bash
-docker cp add_recetas.py nutridiet-backend:/app/add_recetas.py
 docker exec -it nutridiet-backend python /app/add_recetas.py
 
 ```
@@ -151,39 +110,39 @@ docker exec -it nutridiet-backend python /app/add_recetas.py
 
 ## 🌐 Puertos y Acceso
 
-| Servicio | Puerto Externo | URL de Acceso |
+| Servicio | URL Local | Descripción |
 | --- | --- | --- |
-| **App Web (Nginx)** | 80 | `http://localhost/` |
-| **API Backend** | 8000 (Interno) | `http://localhost/api/` |
-| **Imágenes Estáticas** | - | `http://localhost/img/` |
+| **Frontend (App)** | [http://localhost/](https://www.google.com/search?q=http://localhost/) | Interfaz de usuario final. |
+| **Documentación API** | [http://localhost/api/docs](https://www.google.com/search?q=http://localhost/api/docs) | Swagger UI del Backend. |
+| **Imágenes** | [http://localhost/img/](https://www.google.com/search?q=http://localhost/img/) | Directorio de recursos estáticos. |
 
-> **Nota sobre Seguridad:** Las bases de datos MongoDB no tienen puertos expuestos al exterior en el `docker-compose.yml`. Solo son accesibles por el servicio de Backend dentro de la red de Docker.
 
----
-
-## 📁 Estructura de Volúmenes de Imágenes
-
-Nginx sirve las imágenes directamente desde el sistema de archivos para mayor velocidad:
-
-* `/app/static/images/` -> Imágenes de alimentos.
-* `/app/static/images_recipies/` -> Imágenes de recetas.
-
-Estos directorios están persistidos en el host para evitar que se borren al reiniciar los contenedores.
+💡 Acceso Remoto: Si accedes desde fuera del servidor (ej. desde tu casa o la red de la facultad), sustituye localhost por la IP pública/privada del servidor o el dominio configurado.
 
 ---
 
-## 🛠️ Comandos de Mantenimiento
+## 🛠️ Mantenimiento y Troubleshooting
 
-**Resetear base de datos de imágenes:**
-
+* **Ver Logs en tiempo real:**
+`docker-compose logs -f backend`
+* **Limpiar caché de imágenes:**
+Si las imágenes no cargan, verifica los permisos de la carpeta `static` en el servidor o ejecuta el reset de la DB de imágenes:
 ```bash
-docker exec -it nutridiet-backend python -c "from database.connection import images_collection; images_collection.drop(); print('✅ Base de datos de imágenes reseteada')"
+docker exec -it nutridiet-backend python -c "from database.connection import images_collection; images_collection.drop();"
 
 ```
 
-**Ver logs del backend:**
 
-```bash
-docker logs -f nutridiet-backend
+* **Permisos en el Servidor Uni:**
+Si Docker da problemas de permisos al crear volúmenes, asegúrate de que tu usuario pertenece al grupo `docker`: `sudo usermod -aG docker $USER`.
 
-```
+---
+
+## 🎓 Créditos y Contacto
+
+**Autor:** Linqi Zhu
+
+* **Institución:** Universidad de Granada (ETSIIT)
+* **Titulación:** Grado en Ingeniería Informática
+* **Contacto:** [zhulinqi@correo.ugr.es]()
+
