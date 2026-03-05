@@ -131,7 +131,11 @@ Si las imágenes no cargan, verifica los permisos de la carpeta `static` en el s
 docker exec -it nutridiet-backend python -c "from database.connection import images_collection; images_collection.drop();"
 
 ```
-
+---
+## Fix y cosas que faltan:
+[] El modo oscuro tiene componentes que no se ven bien.
+[] Las recetas no tienen imágenes. Se pueden descargar o generar.
+---
 
 * **Permisos en el Servidor Uni:**
 Si Docker da problemas de permisos al crear volúmenes, asegúrate de que tu usuario pertenece al grupo `docker`: `sudo usermod -aG docker $USER`.
