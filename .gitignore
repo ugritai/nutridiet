@@ -1,16 +1,91 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
-# dependencies
-/node_modules
-/.pnp
+############################
+# Node.js
+############################
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnp/
 .pnp.js
 
-# testing
-/coverage
+############################
+# Python
+############################
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.venv/
+venv/
+env/
+.env
+.env.*
 
-# production
-/build
+############################
+# Build / dist
+############################
+dist/
+build/
+coverage/
 
-# misc
+############################
+# MongoDB (CRÍTICO)
+############################
+mongo/**/data/
+mongo/**/journal/
+mongo/**/db/
+*.wt
+WiredTiger*
+*.lock
+
+############################
+# Logs / runtime
+############################
+logs/
+*.log
+*.pid
+
+############################
+# OS
+############################
 .DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+############################
+# IDEs / Editors
+############################
+.vscode/
+.idea/
+.vs/
+*.swp
+*.swo
+
+############################
+# Git
+############################
+.git/
+.gitignore~
+
+############################
+# Misc
+############################
+*.tmp
+*.bak
+*.cache
+
+############################
+# Docs / TFG
+############################
 Memoria_TFG/.DS_Store
+
+# --- LÓGICA DE IMÁGENES ---
+# 1. Ignoramos todo el contenido de la carpeta images (archivos sueltos)
+backend/static/images/*
+
+# 2. Creamos excepciones para las carpetas que SÍ queremos subir
+!backend/static/images/alimentos/
+!backend/static/images/recetas/
+
+

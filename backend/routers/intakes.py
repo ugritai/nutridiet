@@ -10,9 +10,13 @@ router = APIRouter(tags=["Intakes"])
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/token")
 
-@router.post("/crear_ingesta/{pacienteN}")
+
+#cambios para que la url no ponga udefined
+from bson import ObjectId # <--- Asegúrate de tener esto arriba del todo
+
+@router.post("/crear_ingesta/{patient_id}") # 1. Cambiamos el nombre del parámetro en la URL
 async def crear_ingesta(
-    pacienteN: str = Path(..., description="Nombre del paciente"),
+    patient_id: str = Path(..., description="ID del paciente"), # 2. Recibimos ID, no nombre
     ingesta: IntakeCreate = None,
     token: str = Depends(oauth2_scheme)
 ):
@@ -28,14 +32,19 @@ async def crear_ingesta(
     if not nutricionista:
         raise HTTPException(status_code=404, detail="Nutricionista no encontrado")
 
-    paciente = pacient_collection.find_one({"name": pacienteN})
+    # 3. CORRECCIÓN CLAVE: Buscamos por _id usando ObjectId, no por "name"
+    try:
+        paciente = pacient_collection.find_one({"_id": ObjectId(patient_id)})
+    except:
+        raise HTTPException(status_code=400, detail="ID de paciente inválido")
+        
     if not paciente:
         raise HTTPException(status_code=404, detail="Paciente no encontrado")
 
     recipes_list = [receta.dict() for receta in ingesta.recipes]
 
     nuevo_documento = {
-        "patient_name": paciente["name"],
+        "patient_name": paciente["name"], # Aquí obtenemos el nombre real desde la BD
         "patient_id": str(paciente["_id"]),
         "intake_name": ingesta.intake_name,
         "intake_type": ingesta.intake_type,
@@ -189,12 +198,14 @@ async def buscar_ingestas(nombre: str, limit: int = 5):
     
 @router.get("/ver_ingesta_detalle/{nombre_ingesta}")
 async def ver_ingesta_detalle(nombre_ingesta: str):
+    # Usamos regex para buscar ignorando mayúsculas/minúsculas (case-insensitive)
+    # y aseguramos coincidencia completa con ^...$
     doc = intake_collection.find_one({
-        "intake_name": nombre_ingesta
+        "intake_name": {"$regex": f"^{nombre_ingesta}$", "$options": "i"}
     })
 
     if not doc:
-        raise HTTPException(status_code=404, detail="Ingesta no encontrada")
+        raise HTTPException(status_code=404, detail=f"Ingesta '{nombre_ingesta}' no encontrada")
 
     recetas = []
     for r in doc.get("recipes", []):
@@ -214,7 +225,6 @@ async def ver_ingesta_detalle(nombre_ingesta: str):
         "intake_universal": doc.get("intake_universal", False),
         "recipes": recetas
     }
-
 
 @router.delete("/eliminar_ingesta/{pacienteN}/{id_ingesta}")
 async def eliminar_ingesta_por_id(

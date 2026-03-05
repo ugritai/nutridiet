@@ -11,7 +11,10 @@ router = APIRouter(tags=["Authentication"])
 
 @router.post("/login")
 async def login(login_request: LoginRequest):
-    nutritionist = nutritionist_collection.find_one({"email": login_request.email})
+    # 1. Limpiamos el email antes de buscar
+    clean_email = login_request.email.lower().strip()
+    
+    nutritionist = nutritionist_collection.find_one({"email": clean_email})
     if not nutritionist:
         raise HTTPException(status_code=401, detail="Email o contraseña inválidos")
 
@@ -28,6 +31,33 @@ async def login(login_request: LoginRequest):
         "email": nutritionist["email"],
         "name": nutritionist["name"]
     }
+
+@router.post("/register_nutritionist", status_code=status.HTTP_201_CREATED)
+async def register_nutritionist(nutritionist: NutritionistCreate):
+    # 1. Limpiamos el email antes de buscar y guardar
+    clean_email = nutritionist.email.lower().strip()
+    
+    existing_nutritionist = nutritionist_collection.find_one({"email": clean_email})
+    if existing_nutritionist:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Correo electrónico ya registrado"
+        )
+
+    hashed_password = bcrypt.hashpw(nutritionist.password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
+    # 2. Reemplazamos el email original por el email limpio
+    nutritionist_data = {
+        **nutritionist.dict(exclude={"password", "email"}),
+        "email": clean_email,
+        "password": hashed_password
+    }
+
+    try:
+        nutritionist_collection.insert_one(nutritionist_data)
+        return {"message": "Nutricionista registrado con éxito"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al registrar nutricionista: {e}")
 
 @router.post("/refresh-token")
 async def refresh_token(refresh_token_data: dict):
@@ -55,28 +85,7 @@ async def refresh_token(refresh_token_data: dict):
         "message": "Token de acceso renovado exitosamente"
     })
 
-@router.post("/register_nutritionist", status_code=status.HTTP_201_CREATED)
-async def register_nutritionist(nutritionist: NutritionistCreate):
-    existing_nutritionist = nutritionist_collection.find_one({"email": nutritionist.email})
-    if existing_nutritionist:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Correo electrónico ya registrado"
-        )
-
-    hashed_password = bcrypt.hashpw(nutritionist.password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-
-    nutritionist_data = {
-        **nutritionist.dict(exclude={"password"}),
-        "password": hashed_password
-    }
-
-    try:
-        nutritionist_collection.insert_one(nutritionist_data)
-        return {"message": "Nutricionista registrado con éxito"}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error al registrar nutricionista: {e}")
-    
+  
     
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
@@ -100,4 +109,10 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
             detail="Usuario no encontrado"
         )
     
-    return {"email": user["email"], "name": user["name"]}  # return informacion usuario actual
+    # Mantenemos email y name EXACTAMENTE IGUAL para no romper el resto de tu app.
+    # Solo añadimos el "id" para la verificación de recetas.
+    return {
+        "id": str(user["_id"]),
+        "email": user["email"], 
+        "name": user["name"]
+    }

@@ -40,7 +40,7 @@ export default function CrearIngestaForm({ onClose = null, nombreIngesta: propNo
       : propTipo || location.state?.tipo || '';
   
 
-    const { pacienteN } = useParams();
+    const { patientId } = useParams();
     const navigate = useNavigate();
 
     const [enviando, setEnviando] = useState(false);
@@ -99,20 +99,22 @@ export default function CrearIngestaForm({ onClose = null, nombreIngesta: propNo
     useEffect(() => {
         const fetchInfoPaciente = async () => {
             try {
-                const res = await fetch(`http://localhost:8000/pacientes/paciente_info/${pacienteN}`);
+                const res = await fetchWithAuth(`/pacientes/paciente_info/${patientId}`);
                 if (!res.ok) throw new Error('No se pudo obtener la información del paciente');
                 setNutricion(await res.json());
             } catch (err) {
                 console.error(err);
             }
         };
-        fetchInfoPaciente();
-    }, [pacienteN]);
+        if (patientId) fetchInfoPaciente();
+    }, [patientId]);
 
     const handleSelectReceta = async (nombre) => {
         if (recetasBuscadas.some(r => r.nombre === nombre)) return;
         try {
-            const res = await fetch(`http://localhost:8000/recetas/${encodeURIComponent(nombre)}/nutricion`);
+            // CORREGIDO: Usar fetchWithAuth y ruta relativa /recetas
+            const res = await fetchWithAuth(`/recetas/${encodeURIComponent(nombre)}/nutricion`);
+            
             if (!res.ok) throw new Error('No se pudo obtener la nutrición de la receta');
             const data = await res.json();
             const raciones = data.raciones || 1;
@@ -154,7 +156,7 @@ export default function CrearIngestaForm({ onClose = null, nombreIngesta: propNo
         });
 
         return {
-            kcal: resultado.kcal.toFixed(2),
+            kcal: resultado.kcal.toFixed(22),
             pro: resultado.pro.toFixed(2),
             car: resultado.car.toFixed(2),
         };
@@ -169,16 +171,23 @@ export default function CrearIngestaForm({ onClose = null, nombreIngesta: propNo
         const fetchDatos = async () => {
             setLoading(true);
             try {
+                // CORREGIDO: Usar fetchWithAuth y rutas relativas
                 const [recetasRes, maximosRes] = await Promise.all([
-                    fetch(`http://localhost:8000/recetas/categoria/${encodeURIComponent(categoriaFiltro)}/nutricion_simplificada?por_porcion=true`),
-                    fetch(`http://localhost:8000/recetas/recetas/maximos_nutricionales?categoria=${encodeURIComponent(categoriaFiltro)}`)
+                    fetchWithAuth(`/recetas/categoria/${encodeURIComponent(categoriaFiltro)}/nutricion_simplificada?por_porcion=true`),
+                    fetchWithAuth(`/recetas/recetas/maximos_nutricionales?categoria=${encodeURIComponent(categoriaFiltro)}`)
                 ]);
 
                 if (!recetasRes.ok) throw new Error('Error al obtener recetas');
-                if (!maximosRes.ok) throw new Error('Error al obtener valores máximos');
+                // maximosRes puede fallar sin romper el flujo, pero lo comprobamos
+                if (!maximosRes.ok) console.warn('Error al obtener valores máximos');
 
                 const recetasData = await recetasRes.json();
-                const maximosData = await maximosRes.json();
+                
+                // Si maximos falla, usamos defaults, si no, parseamos
+                let maximosData = { kcal: 1000, pro: 100, car: 100 };
+                if (maximosRes.ok) {
+                    maximosData = await maximosRes.json();
+                }
 
                 const recetasConDatos = recetasData.resultados || [];
                 console.log(recetasConDatos);
@@ -335,8 +344,8 @@ export default function CrearIngestaForm({ onClose = null, nombreIngesta: propNo
             console.log(cuerpo)
 
             const url = modoEdicion
-                ? `/planificacion_ingestas/editar_ingesta/${pacienteN}/${encodeURIComponent(cuerpo.intake_name)}`
-                : `/planificacion_ingestas/crear_ingesta/${pacienteN}`;
+                ? `/planificacion_ingestas/editar_ingesta/${patientId}/${encodeURIComponent(cuerpo.intake_name)}`
+                : `/planificacion_ingestas/crear_ingesta/${patientId}`;
 
             const method = modoEdicion ? 'PUT' : 'POST';
 
@@ -354,7 +363,7 @@ export default function CrearIngestaForm({ onClose = null, nombreIngesta: propNo
             if (isDialogMode) {
                 onClose(); // cerrar diálogo si está en modo modal
             } else {
-                navigate(`/planificacion_dieta/${encodeURIComponent(pacienteN)}`);
+                navigate(`/planificacion_dieta/${encodeURIComponent(patientId)}`);
             }
 
         } catch (err) {
@@ -591,7 +600,7 @@ export default function CrearIngestaForm({ onClose = null, nombreIngesta: propNo
                                     if (modoEdicion) {
                                         navigate(-1);
                                     } else {
-                                        navigate(`/planificacion_dieta/${encodeURIComponent(pacienteN)}/crear_ingesta`);
+                                        navigate(`/planificacion_dieta/${encodeURIComponent(patientId)}/crear_ingesta`);
                                     }
                                 }}
                             >

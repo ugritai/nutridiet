@@ -7,50 +7,114 @@ import { dataDisplayCustomizations } from './customizations/dataDisplay.js';
 import { feedbackCustomizations } from './customizations/feedback.js';
 import { navigationCustomizations } from './customizations/navigation.js';
 import { surfacesCustomizations } from './customizations/surfaces.js';
-import { colorSchemes, typography, shadows, shape } from './themePrimitives.js';
+import { colorSchemes, typography, shadows, shape, brand } from './themePrimitives.js';
 
 function AppTheme(props) {
-  const { children, disableCustomTheme, themeComponents } = props;
-  const theme = React.useMemo(() => {
-    return disableCustomTheme
-      ? {}
-      : createTheme({
-          // For more details about CSS variables configuration, see https://mui.com/material-ui/customization/css-theme-variables/configuration/
-          cssVariables: {
-            colorSchemeSelector: 'data-mui-color-scheme',
-            cssVarPrefix: 'template',
-          },
-          colorSchemes, // Recently added in v6 for building light & dark mode app, see https://mui.com/material-ui/customization/palette/#color-schemes
-          typography,
-          shadows,
-          shape,
-          components: {
-            ...inputsCustomizations,
-            ...dataDisplayCustomizations,
-            ...feedbackCustomizations,
-            ...navigationCustomizations,
-            ...surfacesCustomizations,
-            ...themeComponents,
-          },
-        });
-  }, [disableCustomTheme, themeComponents]);
-  if (disableCustomTheme) {
-    return <React.Fragment>{children}</React.Fragment>;
-  }
-  return (
-    <ThemeProvider theme={theme} disableTransitionOnChange>
-      {children}
-    </ThemeProvider>
-  );
+    const { children, disableCustomTheme, themeComponents } = props;
+    const theme = React.useMemo(() => {
+        return disableCustomTheme
+            ? {}
+            : createTheme({
+                cssVariables: {
+                    colorSchemeSelector: 'data-mui-color-scheme',
+                    cssVarPrefix: 'template',
+                },
+                colorSchemes: {
+                    ...colorSchemes,
+                    light: {
+                        ...colorSchemes?.light,
+                        palette: {
+                            ...colorSchemes?.light?.palette,
+                            primary: {
+                                main: '#4CAF50',
+                                contrastText: '#ffffff',
+                            },
+                        },
+                    },
+                    dark: {
+                        ...colorSchemes?.dark,
+                        palette: {
+                            ...colorSchemes?.dark?.palette,
+                            primary: {
+                                main: '#66BB6A',
+                                contrastText: '#ffffff',
+                            },
+                        },
+                    },
+                },
+                typography,
+                shadows,
+                shape,
+                components: {
+                    ...inputsCustomizations,
+                    ...dataDisplayCustomizations,
+                    ...feedbackCustomizations,
+                    ...navigationCustomizations,
+                    ...surfacesCustomizations,
+                    ...themeComponents,
+                    MuiButton: {
+                        styleOverrides: {
+                            root: {
+                                borderRadius: 8,
+                            },
+                            containedPrimary: {
+                                backgroundColor: '#2E7D32',
+                                '&:hover': {
+                                    backgroundColor: '#1B5E20',
+                                },
+                                '&.Mui-disabled': {
+                                    color: brand[50], 
+                                    backgroundColor: '#A5D6A7',
+                                    opacity: 0.7, 
+                                },
+                            },
+                        },
+                    },
+                    // SOLUCIÓN PARA LABELS SUPERPUESTOS
+                    MuiInputLabel: {
+                        styleOverrides: {
+                            root: ({ theme }) => ({
+                                paddingLeft: '4px',
+                                paddingRight: '4px',
+                                marginLeft: '-4px',
+                                backgroundColor: 'white', // Fondo para tapar la línea
+                                ...theme.applyStyles('dark', {
+                                    backgroundColor: '#121212', // Fondo oscuro si aplica
+                                }),
+                                '&.MuiInputLabel-shrink': {
+                                    margin: '0',
+                                    zIndex: 1,
+                                },
+                            }),
+                        },
+                    },
+                    MuiOutlinedInput: {
+                        styleOverrides: {
+                            notchedOutline: {
+                                '& legend': {
+                                    fontSize: '0.85em', // Mantiene el espacio del corte
+                                },
+                            },
+                        },
+                    },
+                },
+            });
+    }, [disableCustomTheme, themeComponents]);
+
+    if (disableCustomTheme) {
+        return <React.Fragment>{children}</React.Fragment>;
+    }
+    return (
+        <ThemeProvider theme={theme} disableTransitionOnChange>
+            {children}
+        </ThemeProvider>
+    );
 }
 
 AppTheme.propTypes = {
-  children: PropTypes.node,
-  /**
-   * This is for the docs site. You can ignore it or remove it.
-   */
-  disableCustomTheme: PropTypes.bool,
-  themeComponents: PropTypes.object,
+    children: PropTypes.node,
+    disableCustomTheme: PropTypes.bool,
+    themeComponents: PropTypes.object,
 };
 
 export default AppTheme;

@@ -1,3 +1,4 @@
+// src/pages/PacientesPage.js
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Dashboard from '../Dashboard';
@@ -9,6 +10,10 @@ import { Box, Typography, Button, Stack } from '@mui/material';
 
 const PACIENTES_POR_PAGINA = 5;
 
+/**
+ * Vista de gestión de pacientes.
+ * Implementa un CRUD básico y paginación en el lado del cliente (client-side).
+ */
 export default function PacientesPage() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -17,10 +22,9 @@ export default function PacientesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Lógica de paginación local
   const [pagina, setPagina] = useState(1);
-
   const totalPaginas = Math.ceil(pacientes.length / PACIENTES_POR_PAGINA);
-
   const pacientesVisibles = pacientes.slice(
     (pagina - 1) * PACIENTES_POR_PAGINA,
     pagina * PACIENTES_POR_PAGINA
@@ -41,9 +45,7 @@ export default function PacientesPage() {
 
   const handlePacienteCreado = (paciente) => {
     if (pacienteEditar) {
-      setPacientes((prev) =>
-        prev.map((p) => (p.id === paciente.id ? paciente : p))
-      );
+      setPacientes((prev) => prev.map((p) => (p.id === paciente.id ? paciente : p)));
     } else {
       setPacientes((prev) => [...prev, paciente]);
     }
@@ -56,40 +58,32 @@ export default function PacientesPage() {
   };
 
   const handleDeletePaciente = async (paciente) => {
-    const confirmar = window.confirm(`¿Seguro que deseas eliminar a ${paciente.name}?`);
-    if (!confirmar) return;
+    if (!window.confirm(`¿Seguro que deseas eliminar a ${paciente.name}?`)) return;
   
     try {
-      const res = await fetchWithAuth(`/pacientes/delete/${paciente.id}`, {
-        method: 'DELETE',
-      });
+      const res = await fetchWithAuth(`/pacientes/delete/${paciente.id}`, { method: 'DELETE' });
   
       if (!res.ok) {
-        const error = await res.json();
-        alert(error.detail || 'Error al eliminar el paciente');
+        const errData = await res.json();
+        alert(errData.detail || 'Error al eliminar el paciente');
         return;
       }
   
       setPacientes((prev) => prev.filter((p) => p.id !== paciente.id));
-      alert('Paciente eliminado correctamente');
     } catch (err) {
-      console.error('Error al eliminar paciente:', err);
+      console.error('[PacientesPage] Error al eliminar paciente:', err);
       alert('No se pudo conectar al servidor');
     }
   };
-  
 
   useEffect(() => {
     const fetchPacientes = async () => {
       try {
         setLoading(true);
-        const res = await fetchWithAuth('/pacientes/mis_pacientes', {
-          method: 'GET',
-        });
-
-        if (!res.ok) throw new Error('Error al cargar pacientes');
+        const res = await fetchWithAuth('/pacientes/mis_pacientes');
+        if (!res.ok) throw new Error('Error al cargar la lista de pacientes.');
+        
         const data = await res.json();
-        console.log("pacientes:", data)
         setPacientes(data);
       } catch (err) {
         setError(err.message);
@@ -101,19 +95,9 @@ export default function PacientesPage() {
     fetchPacientes();
   }, []);
 
-  const handleSiguiente = () => {
-    if (pagina < totalPaginas) setPagina((prev) => prev + 1);
-  };
-
-  const handleAnterior = () => {
-    if (pagina > 1) setPagina((prev) => prev - 1);
-  };
-
   return (
     <Dashboard>
-      <Typography variant="h4" mb={2}>
-        Pacientes
-      </Typography>
+      <Typography variant="h4" mb={2}>Pacientes</Typography>
 
       <CrearPacienteForm
         open={openForm}
@@ -128,29 +112,16 @@ export default function PacientesPage() {
         {loading && <Typography>Cargando pacientes...</Typography>}
         {error && <Typography color="error">{error}</Typography>}
 
-        {!loading &&
-          !error &&
-          pacientesVisibles.map((paciente) => (
-            <PacienteCard
-              key={paciente.id}
-              paciente={paciente}
-              onEdit={handleEditPaciente}
-              onDelete={handleDeletePaciente}  
-            />
-          ))}
+        {!loading && !error && pacientesVisibles.map((paciente) => (
+            <PacienteCard key={paciente.id} paciente={paciente} onEdit={handleEditPaciente} onDelete={handleDeletePaciente} />
+        ))}
       </Box>
 
       {!loading && !error && pacientes.length > 0 && (
         <Stack direction="row" spacing={2} mt={4} alignItems="center">
-          <Button onClick={handleAnterior} disabled={pagina === 1}>
-            Anterior
-          </Button>
-          <Typography>
-            Página {pagina} de {totalPaginas}
-          </Typography>
-          <Button onClick={handleSiguiente} disabled={pagina === totalPaginas}>
-            Siguiente
-          </Button>
+          <Button onClick={() => setPagina(prev => prev - 1)} disabled={pagina === 1}>Anterior</Button>
+          <Typography>Página {pagina} de {totalPaginas}</Typography>
+          <Button onClick={() => setPagina(prev => prev + 1)} disabled={pagina === totalPaginas}>Siguiente</Button>
         </Stack>
       )}
     </Dashboard>

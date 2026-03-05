@@ -94,8 +94,17 @@ def quitar_tildes(texto):
     return texto_sin_tildes
 
 def sanitize_filename(name: str) -> str:
-    """生成安全的文件名，替换特殊字符为连字符"""
-    return re.sub(r"[^\w\-]", "-", name).lower()
+    """Genera un nombre de archivo seguro coincidiendo con el frontend de React"""
+    # 1. Pasar a minúsculas
+    name = name.lower()
+    # 2. Quitar tildes usando tu función existente
+    name = quitar_tildes(name)
+    # 3. Reemplazar cualquier cosa que no sea letra, número o guion por un guion
+    name = re.sub(r"[^\w\-]", "-", name)
+    # 4. Colapsar múltiples guiones juntos en uno solo (ej. "--" -> "-")
+    name = re.sub(r"-+", "-", name)
+    # 5. Quitar guiones al principio o al final
+    return name.strip("-")
 
 def save_image_to_db(name_esp: str, image_url: str):
     document = {
@@ -319,7 +328,7 @@ async def get_pixabay_image_api(name_esp: str) -> str:
         print(f"[Pixabay] Imagen descargada: {filename}")
 
     # Guardar en MongoDB
-    local_url = f"http://localhost:8000/static/images/{filename}"
+    local_url = f"/img/{filename}"
     save_image_to_db(name_esp, local_url)
 
     return image_url
@@ -342,7 +351,7 @@ async def actualizar_imagen_alimento(name_esp: str) -> str:
         raise HTTPException(status_code=500, detail="Error descargando la imagen")
 
     # Construir la URL local permanente (ajusta el host si es necesario)
-    local_url = f"http://localhost:8000/static/images/{filename}"
+    local_url = f"/img/{file_name}"
 
     # Actualizar la base de datos
     result = images_collection.update_one(

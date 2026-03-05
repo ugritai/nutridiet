@@ -1,22 +1,29 @@
 // src/App.js
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+
+// Auth & Layout
 import SignInSide from "../features/auth/SignInSide";
 import SignUp from "../features/auth/SignUp";
-import InicioPage from "../features/dashboard/pages/InicioPage";
 import ProtectedRoute from '../features/auth/ProtectedRoute';
+
+// Pages
+import InicioPage from "../features/dashboard/pages/InicioPage";
 import Alimentos from '../features/dashboard/pages/AlimentosPage';
 import DetalleAlimentoPage from '../features/dashboard/pages/DetalleAlimentoPage';
 import AlimentosPorCategoriaPage from '../features/dashboard/pages/AlimentosPorCategoriaPage';
 import Recetas from '../features/dashboard/pages/RecetasPage';
 import DetalleRecetasPage from '../features/dashboard/pages/DetalleRecetasPage';
 import RecetasPorCategoriaPage from '../features/dashboard/pages/RecetasPorCategoriaPage';
+import CrearRecetaPage from '../features/dashboard/pages/CrearRecetaPage';
 import PacientesPage from '../features/dashboard/pages/PacientesPage';
 import PlanificacionDietaPage from '../features/dashboard/pages/PlanificacionDietaPage';
+import PerfilPage from '../features/dashboard/pages/PerfilPage';
+
+// Components & Features
 import SeleccionPacientePage from '../features/dashboard/components/dietas/SeleccionPacientePage';
 import CrearIngestaForm from '../features/dashboard/components/dietas/CrearIngestaForm';
 import CrearDietaForm from '../features/dashboard/components/dietas/CrearDietaForm';
-import PerfilPage from '../features/dashboard/pages/PerfilPage';
 import DietaIngePacienteCard from "../features/dashboard/components/dietas/DietaIngePacienteCard";
 import IngestaNameForm from "../features/dashboard/components/dietas/IngestaNameForm";
 import DetalleDietaPage from "../features/dashboard/components/dietas/DetalleDietaPage";
@@ -24,172 +31,63 @@ import Configuracion from "../features/dashboard/Configuracion";
 import AcercaDe from "../features/dashboard/AcercaDe";
 import Comentarios from "../features/dashboard/Comentarios";
 
+/**
+ * Componente principal de enrutamiento de la aplicación.
+ * * Gestiona la navegación y envuelve las rutas privadas con <ProtectedRoute>
+ * para evitar accesos no autorizados. Si un usuario no autenticado intenta
+ * acceder a la raíz ("/"), es redirigido al login ("/sign-in").
+ * * @returns {JSX.Element} Árbol de rutas de la aplicación.
+ */
 function App() {
-  return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Navigate to="/sign-in" />} />
-        <Route path="/sign-in" element={<SignInSide />} />
-        <Route path="/sign-up" element={<SignUp />} />
+    return (
+        <Router>
+            <Routes>
+                {/* Rutas Públicas */}
+                <Route path="/" element={<Navigate to="/sign-in" />} />
+                <Route path="/sign-in" element={<SignInSide />} />
+                <Route path="/sign-up" element={<SignUp />} />
 
-        {/* Rutas protegidas*/}
-        <Route path="/inicio" element={
-          <ProtectedRoute>
-            < InicioPage />
-          </ProtectedRoute>}
-        />
+                {/* Rutas Privadas */}
+                <Route path="/inicio" element={<ProtectedRoute><InicioPage /></ProtectedRoute>} />
+                <Route path="/mi_cuenta" element={<ProtectedRoute><PerfilPage /></ProtectedRoute>} />
+                <Route path="/configuracion" element={<ProtectedRoute><Configuracion /></ProtectedRoute>} />
+                <Route path="/acerca_de" element={<ProtectedRoute><AcercaDe /></ProtectedRoute>} />
+                <Route path="/comentarios" element={<ProtectedRoute><Comentarios /></ProtectedRoute>} />
 
-        <Route path="/alimentos" element={
-          <ProtectedRoute>
-            <Alimentos />
-          </ProtectedRoute>}
-        />
+                {/* Módulo: Alimentos */}
+                <Route path="/alimentos" element={<ProtectedRoute><Alimentos /></ProtectedRoute>} />
+                <Route path="/alimentos/detalle_alimento/:nombre" element={<ProtectedRoute><DetalleAlimentoPage /></ProtectedRoute>} />
+                <Route path="/alimentos/categorias/:categoria" element={<ProtectedRoute><AlimentosPorCategoriaPage /></ProtectedRoute>} />
 
-        <Route path="/alimentos/detalle_alimento/:nombre" element={
-          <ProtectedRoute>
-            <DetalleAlimentoPage />
-          </ProtectedRoute>}
-        />
+                {/* Módulo: Recetas */}
+                <Route path="/recetas" element={<ProtectedRoute><Recetas /></ProtectedRoute>} />
+                <Route path="/recetas/crear" element={<ProtectedRoute><CrearRecetaPage /></ProtectedRoute>} />
+                <Route path="/recetas/categorias/:categoria" element={<ProtectedRoute><RecetasPorCategoriaPage /></ProtectedRoute>} />
+                <Route path="/recetas/detalle_receta/:nombre" element={<ProtectedRoute><DetalleRecetasPage /></ProtectedRoute>} />
 
-        <Route path="/alimentos/categorias/:categoria" element={
-          <ProtectedRoute>
-            <AlimentosPorCategoriaPage />
-          </ProtectedRoute>
+                {/* Módulo: Pacientes */}
+                <Route path="/pacientes" element={<ProtectedRoute><PacientesPage /></ProtectedRoute>} />
+                <Route path="/paciente/crear_paciente" element={<ProtectedRoute><PacientesPage /></ProtectedRoute>} />
 
-        } />
-
-        <Route path="/recetas" element={
-          <ProtectedRoute>
-            <Recetas />
-          </ProtectedRoute>
-
-        } />
-
-        <Route path="/recetas/categorias/:categoria" element={
-          <ProtectedRoute>
-            <RecetasPorCategoriaPage />
-          </ProtectedRoute>
-
-        } />
-
-        <Route path="/recetas/detalle_receta/:nombre" element={
-          <ProtectedRoute>
-            <DetalleRecetasPage />
-          </ProtectedRoute>}
-        />
-
-        <Route path="/pacientes" element={
-          <ProtectedRoute>
-            <PacientesPage />
-          </ProtectedRoute>
-
-        } />
-
-        <Route path="/paciente/crear_paciente" element={
-          <ProtectedRoute>
-            <PacientesPage />
-          </ProtectedRoute>
-        } />
-
-        <Route path="/planificacion_dieta" element={
-          <ProtectedRoute>
-            <PlanificacionDietaPage />
-          </ProtectedRoute>
-
-        } />
-
-        <Route path="/planificacion_dieta/:pacienteN" element={
-          <ProtectedRoute>
-            <DietaIngePacienteCard />
-          </ProtectedRoute>
-
-        } />
-
-        <Route path="/planificacion_dieta/crear_dieta" element={
-          <ProtectedRoute>
-            <SeleccionPacientePage tipo="dieta" />
-          </ProtectedRoute>
-        } />
-
-        <Route path="/planificacion_dieta/crear_ingesta" element={
-          <ProtectedRoute>
-            <SeleccionPacientePage tipo="ingesta" />
-          </ProtectedRoute>
-        } />
-
-        <Route path="/planificacion_dieta/:pacienteN/crear_ingesta" element={
-          <ProtectedRoute>
-            < IngestaNameForm />
-          </ProtectedRoute>
-        } />
-
-        <Route
-          path="/planificacion_dieta/:pacienteN/editar_ingesta"
-          element={
-            <ProtectedRoute>
-              <IngestaNameForm />
-            </ProtectedRoute>}
-        />
-
-
-        <Route path="/planificacion_dieta/:pacienteN/crear_ingesta/:nombreIngesta" element={
-          <ProtectedRoute>
-            < CrearIngestaForm />
-          </ProtectedRoute>
-        } />
-
-        <Route path="/planificacion_dieta/:pacienteN/editar_ingesta/:nombreIngesta" element={
-          <ProtectedRoute>
-            < CrearIngestaForm />
-          </ProtectedRoute>
-        } />
-
-        <Route path="/planificacion_dieta/:pacienteN/crear_dieta/" element={
-          <ProtectedRoute>
-            <CrearDietaForm />
-          </ProtectedRoute>
-        } />
-
-        <Route path="/planificacion_dieta/:pacienteN/editar_dieta/:nombreDieta" element={
-          <ProtectedRoute>
-            <CrearDietaForm />
-          </ProtectedRoute>
-        } />
-
-        <Route path="/detalle_dieta/:dietaN" element={
-          <ProtectedRoute>
-            <DetalleDietaPage />
-          </ProtectedRoute>
-        } />
-
-        <Route path="/mi_cuenta" element={
-          <ProtectedRoute>
-            <PerfilPage />
-          </ProtectedRoute>
-        } />
-
-        <Route path="/configuracion" element={
-          <ProtectedRoute>
-            <Configuracion />
-          </ProtectedRoute>
-        } />
-
-        <Route path="/acerca_de" element={
-          <ProtectedRoute>
-            <AcercaDe />
-          </ProtectedRoute>
-        } />
-        
-        <Route path="/comentarios" element={
-          <ProtectedRoute>
-            <Comentarios />
-          </ProtectedRoute>
-        } />
-
-      </Routes>
-    </Router>
-  );
+                {/* Módulo: Planificación de Dietas */}
+                <Route path="/planificacion_dieta" element={<ProtectedRoute><PlanificacionDietaPage /></ProtectedRoute>} />
+                <Route path="/planificacion_dieta/:patientId" element={<ProtectedRoute><DietaIngePacienteCard /></ProtectedRoute>} />
+                
+                <Route path="/planificacion_dieta/crear_dieta" element={<ProtectedRoute><SeleccionPacientePage tipo="dieta" /></ProtectedRoute>} />
+                <Route path="/planificacion_dieta/crear_ingesta" element={<ProtectedRoute><SeleccionPacientePage tipo="ingesta" /></ProtectedRoute>} />
+                
+                <Route path="/planificacion_dieta/:patientId/crear_ingesta" element={<ProtectedRoute><IngestaNameForm /></ProtectedRoute>} />
+                <Route path="/planificacion_dieta/:patientId/editar_ingesta" element={<ProtectedRoute><IngestaNameForm /></ProtectedRoute>} />
+                
+                <Route path="/planificacion_dieta/:patientId/crear_ingesta/:nombreIngesta" element={<ProtectedRoute><CrearIngestaForm /></ProtectedRoute>} />
+                <Route path="/planificacion_dieta/:patientId/editar_ingesta/:nombreIngesta" element={<ProtectedRoute><CrearIngestaForm /></ProtectedRoute>} />
+                
+                <Route path="/planificacion_dieta/:patientId/crear_dieta/" element={<ProtectedRoute><CrearDietaForm /></ProtectedRoute>} />
+                <Route path="/planificacion_dieta/:patientId/editar_dieta/:nombreDieta" element={<ProtectedRoute><CrearDietaForm /></ProtectedRoute>} />
+                <Route path="/detalle_dieta/:dietaN" element={<ProtectedRoute><DetalleDietaPage /></ProtectedRoute>} />
+            </Routes>
+        </Router>
+    );
 }
 
 export default App;
-

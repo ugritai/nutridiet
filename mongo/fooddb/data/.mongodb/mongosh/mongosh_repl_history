@@ -1,0 +1,49 @@
+exit
+show collections
+use fooddb
+use foodb
+show dbs
+ exit
+exit
+db.bedca_unified.findOne({}, {name_esp:1, category_esp:1})
+use fooddb
+db.bedca_unified.find({name_esp: /bacón/i})
+show collections
+db.bedca_unified.findOne({}, {name_esp:1, category_esp:1})
+show collections
+db.bedca_unified.insertMany(db.abuela_bedca.find().toArray())
+db.bedca_unified.insertMany(db.bedca_FB.find().toArray())
+db.bedca_unified.insertMany(db.all_ingredients.find().toArray())
+use fooddb
+show collections
+show collecetions
+use fooddb
+show dbs
+db.dropDatabase()
+use recetas_embeddings
+db.dropDatabase()
+use patient
+db.dropDatabase()
+use nutritionist
+db.dropDatabase()
+use intake
+db.dropDatabase()
+use ingredient_image
+db.dropDatabase()
+use GNHD_24_25
+db.dropDatabase()
+use food_portions
+db.dropDatabase()
+use emissions
+db.dropDatabase()
+use diet
+db.dropDatabase()
+use compounds
+db.dropDatabase()
+use bedca_embeddings
+db.dropDatabase()
+use bedca_FB
+db.dropDatabase()
+use all_ingredients
+db.dropDatabase()
+use abuela_bedca

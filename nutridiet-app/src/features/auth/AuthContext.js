@@ -8,7 +8,8 @@ export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem('accessToken');
+    // Buscar en localStorage primero, y si no está, en sessionStorage
+    const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
 
     if (!token) {
       setIsAuthenticated(false);
@@ -17,18 +18,20 @@ export const AuthProvider = ({ children }) => {
     }
 
     try {
-      const payload = JSON.parse(atob(token.split('.')[1])); // 解码 payload
+      const payload = JSON.parse(atob(token.split('.')[1])); 
       const currentTime = Date.now() / 1000;
 
       if (payload.exp < currentTime) {
-        localStorage.clear();
+        localStorage.removeItem('accessToken');
+        sessionStorage.removeItem('accessToken');
         setIsAuthenticated(false);
         navigate('/sign-in');
       } else {
         setIsAuthenticated(true);
       }
     } catch (err) {
-      localStorage.clear();
+      localStorage.removeItem('accessToken');
+      sessionStorage.removeItem('accessToken');
       setIsAuthenticated(false);
       navigate('/sign-in');
     }
@@ -42,4 +45,3 @@ export const AuthProvider = ({ children }) => {
 };
 
 export const useAuth = () => useContext(AuthContext);
-

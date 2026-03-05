@@ -4,13 +4,14 @@ import FoodGrid from '../components/FoodGrid';
 import Search from '../components/Search';
 import FoodSearch from '../components/FoodSearch';
 import { CircularProgress, Typography } from '@mui/material';
+import { fetchWithAuth } from '../components/api';
 
 export default function AlimentosPage() {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('http://localhost:8000/alimentos/all_categories')
+      fetchWithAuth('/alimentos/all_categories')
       .then(res => res.json())
       .then(data => {
         console.log('Data received:', data);
@@ -59,7 +60,7 @@ export default function AlimentosPage() {
             <Typography variant="h6" color="error">No se encontraron categorías.</Typography>
           ) : (
             <>
-              <FoodGrid categories={categories} basePath="alimentos" imageFolder="alimentos" />
+              <FoodGrid categories={categories} basePath="alimentos" imageFolder="alimentos" shouldMap={true}/>
             </>
           )}
         </>

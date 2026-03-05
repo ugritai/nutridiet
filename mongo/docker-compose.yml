@@ -1,0 +1,32 @@
+services:
+  nutridietdb:
+    image: mongo:6.0
+    container_name: nutridietdb
+    restart: unless-stopped
+    command: ["mongod", "--bind_ip_all"]
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: RootPass123
+      MONGO_INITDB_DATABASE: nutridiet
+    ports:
+      - "27019:27017"
+    volumes:
+      - ./nutridietdb/data:/data/db
+      - ./nutridietdb/initdb:/docker-entrypoint-initdb.d
+      - ./nutridietdb/dump:/dump
+
+  fooddb:
+    image: mongo:6.0
+    container_name: fooddb
+    restart: unless-stopped
+    command: ["mongod", "--bind_ip_all"]
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: RootPass123
+      MONGO_INITDB_DATABASE: fooddb
+    ports:
+      - "27018:27017"
+    volumes:
+      - ./fooddb/data:/data/db
+      - ./fooddb/initdb:/docker-entrypoint-initdb.d
+      - ./fooddb/dump:/dump

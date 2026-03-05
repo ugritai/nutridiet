@@ -16,6 +16,8 @@ import {
     useTheme,
 } from '@mui/material';
 import { LocalDining } from '@mui/icons-material';
+// ✅ IMPORTAR fetchWithAuth (Ajusta la ruta según tu estructura)
+import { fetchWithAuth } from './api'; 
 
 const OmsChip = ({ type, status }) => {
     const theme = useTheme();
@@ -27,7 +29,6 @@ const OmsChip = ({ type, status }) => {
         fat: 'Grasa'
     };
 
-    // añadir valor default 
     const getStatusColor = (status) => {
         const lightColors = {
             red: { bg: '#ffebee', text: '#ff5252', border: '#ff5252' },
@@ -109,7 +110,8 @@ export default function FoodDetailCard() {
 
     useEffect(() => {
         setLoading(true);
-        fetch(`http://localhost:8000/alimentos/detalle_alimento/${encodeURIComponent(nombre)}`)
+        // ✅ CORREGIDO: Usar fetchWithAuth y ruta relativa
+        fetchWithAuth(`/alimentos/detalle_alimento/${encodeURIComponent(nombre)}`)
             .then(res => {
                 if (!res.ok) throw new Error("No encontrado");
                 return res.json();
@@ -126,7 +128,8 @@ export default function FoodDetailCard() {
     useEffect(() => {
         if (!alimento?.name_esp) return;
 
-        fetch(`http://localhost:8000/alimentos/porcion_estandar/${encodeURIComponent(alimento.name_esp)}`)
+        // ✅ CORREGIDO: Usar fetchWithAuth y ruta relativa
+        fetchWithAuth(`/alimentos/porcion_estandar/${encodeURIComponent(alimento.name_esp)}`)
             .then(res => res.json())
             .then(data => {
                 setPorcionInfo(data);
@@ -145,7 +148,6 @@ export default function FoodDetailCard() {
     if (loading) return <CircularProgress sx={{ mt: 4 }} />;
 
     if (!alimento) {
-        // Si no hay alimento mostrar sugerencias 
         return (
             <Card sx={{
                 maxWidth: '100%',
@@ -196,11 +198,6 @@ export default function FoodDetailCard() {
 
     const porcionesTotales = [...porcionesStandard, ...porcionesUnits, ...porcionesHousehold];
 
-
-
-
-
-
     return (
         <Card sx={{
             maxWidth: '100%',
@@ -210,6 +207,7 @@ export default function FoodDetailCard() {
             borderRadius: 4
         }}>
             <CardContent>
+                {/* ... (El resto del renderizado es idéntico a tu código original) ... */}
                 {alimento && (
                     <>
                         {/* Encabezado */}
@@ -345,7 +343,7 @@ export default function FoodDetailCard() {
                                             ))}
                                         </TableRow>
 
-                                        {/* 数据行 */}
+                                        {/* Datos de filas */}
                                         {[
                                             {
                                                 category: 'Macronutrientes',
@@ -432,45 +430,6 @@ export default function FoodDetailCard() {
                                 </Table>
                             </Grid>
                         </Grid >
-
-                        {/* Alimentos relacionados */}
-                        {/*
-                            sugeridos.length > 0 && (
-                                <Box sx={{ mt: 3 }}>
-                                    <Divider sx={{ mb: 3 }} />
-                                    <Typography variant="h6" gutterBottom>
-                                        Alimentos relacionados
-                                    </Typography>
-                                    <Box sx={{
-                                        display: 'flex',
-                                        gap: 2,
-                                        flexWrap: 'wrap'
-                                    }}>
-                                        {sugeridos.map((item, index) => {
-                                            const nombreSugerido = typeof item === 'string' ? item : item.nombre;
-                                            return (
-                                                <Chip
-                                                    key={index}
-                                                    label={nombreSugerido}
-                                                    component={RouterLink}
-                                                    to={`/alimentos/detalle_alimento/${encodeURIComponent(nombreSugerido)}`}
-                                                    clickable
-                                                    sx={{
-                                                        borderRadius: 1,
-                                                        px: 2,
-                                                        transition: 'all 0.3s',
-                                                        '&:hover': {
-                                                            transform: 'translateY(-2px)',
-                                                            boxShadow: 2
-                                                        }
-                                                    }}
-                                                />
-                                            );
-                                        })}
-                                    </Box>
-                                </Box>
-                            )
-                        */}
                     </>
                 )
                 }

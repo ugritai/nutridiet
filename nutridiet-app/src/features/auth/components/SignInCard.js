@@ -87,7 +87,7 @@ export default function SignInCard() {
         };
 
         try {
-            const response = await fetch('http://localhost:8000/api/auth/login', {
+            const response = await fetch('/api/auth/login', { //esto está a medias, hay que cambiar todas si funciona
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

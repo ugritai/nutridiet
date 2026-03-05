@@ -10,22 +10,31 @@ import AppTheme from '../../assets/shared-theme/AppTheme';
 import AuthHandler from '../auth/AuthHandler';
 import { fetchWithAuth } from './components/api'; 
 
+/**
+ * Componente Layout principal (HOC - Higher Order Component).
+ * Envuelve las vistas protegidas proporcionando la estructura base de la UI
+ * (menú lateral, cabecera y tema) y valida silenciosamente la sesión del usuario al montar.
+ * * @param {Object} props.children - El contenido dinámico de la vista actual.
+ */
 export default function Dashboard({ children, ...props }) {
   const [userInfo, setUserInfo] = useState(null);
 
+  // Validación de sesión on-mount. 
+  // Nota para desarrollo: Actualmente solo guarda el userInfo en estado local, 
+  // considerar moverlo a un Contexto global si más componentes necesitan estos datos.
   useEffect(() => {
     const fetchProtectedData = async () => {
       try {
-        const response = await fetchWithAuth('/api/auth/me'); 
+        const response = await fetchWithAuth('/auth/me'); 
         if (response.ok) {
           const data = await response.json();
           setUserInfo(data); 
-          console.log('🔐 Token válido. Usuario:', data);
+          console.debug('[Dashboard] Token válido. Datos de usuario cargados.');
         } else {
-          console.warn('⛔ No autorizado');
+          console.warn('[Dashboard] Sesión no autorizada o expirada.');
         }
       } catch (error) {
-        console.error('❌ Error al obtener datos protegidos:', error);
+        console.error('[Dashboard] Error de red al validar sesión:', error);
       }
     };
 
@@ -38,6 +47,8 @@ export default function Dashboard({ children, ...props }) {
       <Box sx={{ display: 'flex' }}>
         <AuthHandler />
         <UserMenu />
+        
+        {/* Contenedor principal del contenido */}
         <Box
           component="main"
           sx={(theme) => ({

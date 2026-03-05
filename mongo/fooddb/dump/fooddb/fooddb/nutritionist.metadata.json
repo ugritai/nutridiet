@@ -1,0 +1,1 @@
+{"indexes":[{"v":{"$numberInt":"2"},"key":{"_id":{"$numberInt":"1"}},"name":"_id_"}],"uuid":"871ed7992f974ef28621e72f0cba1f5e","collectionName":"nutritionist","type":"collection"}

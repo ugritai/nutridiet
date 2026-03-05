@@ -18,7 +18,9 @@ const UniversalCard = ({
   buttonText = 'Más detalles',
   buttonColor = 'primary',
   onAction,
-  buttonLink
+  buttonLink,
+  onClick,
+  sx
 }) => {
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
@@ -66,20 +68,23 @@ const UniversalCard = ({
             />
           </div>
 
-          <Typography
-            variant="h5"
-            sx={{
-              color: 'text.primary',
-              fontWeight: 600,
-              fontSize: '1rem',
-              textAlign: 'left',
-              mx: 2,
-              mt: 1.5,
-              mb: description ? 0 : 1,
-            }}
-          >
-            {title}
-          </Typography>
+        <Typography
+          variant="subtitle1"
+          sx={{
+            fontWeight: 700,
+            fontSize: '1rem',
+            lineHeight: '1.4rem', // Altura de cada línea
+            height: '4.2rem',     // 1.4 * 3 líneas = 4.2rem fijo
+            display: '-webkit-box',
+            WebkitLineClamp: 3,    // Corta a la tercera línea
+            WebkitBoxOrient: 'vertical',
+            overflow: 'hidden',
+            textAlign: 'center',
+            mb: 1
+          }}
+        >
+          {title}
+        </Typography>
 
         </>
       ) : (

@@ -2,10 +2,21 @@ myenv/
 venv/
 __pycache__/
 */__pycache__/
-static/
-*/static/
+
+# Eliminamos o comentamos estas:
+# static/
+# */static/
+
+# --- LÓGICA DE IMÁGENES ---
+# 1. Ignoramos todo el contenido de la carpeta images (archivos sueltos)
+backend/static/images/*
+
+# 2. Creamos excepciones para las carpetas que SÍ queremos subir
+!backend/static/images/alimentos/
+!backend/static/images/recetas/
+
+# --- RESTO DE IGNORES ---
 imagenes_filtradas
-*.pt
 *.pt
 utils/*.json
 utils/*.xlsx

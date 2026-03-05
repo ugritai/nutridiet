@@ -54,8 +54,10 @@ async def crear_paciente(pacient: Pacient, token: str = Depends(oauth2_scheme)):
 
     result = pacient_collection.insert_one(paciente_dict)
 
+    # Return inserted id so frontend can navigate immediately using the new patientId
     return {
-        "mensaje": "Paciente creado exitosamente"
+        "mensaje": "Paciente creado exitosamente",
+        "id": str(result.inserted_id)
     }
 
 @router.get("/mis_pacientes", response_model=List[PacientOut])
@@ -115,13 +117,30 @@ async def listar_pacientes(token: str = Depends(oauth2_scheme)):
         logging.error(f"Error en listar_pacientes: {e}\n{traceback.format_exc()}")
         raise HTTPException(status_code=500, detail="Error interno del servidor")
     
-@router.get("/paciente_info/{name}")
-async def obtener_info_paciente(name: str):
-    paciente = pacient_collection.find_one({"name": name})
+@router.get("/paciente_info/{patient_id}")
+async def obtener_info_paciente(
+    patient_id: str,
+    token: str = Depends(oauth2_scheme)
+):
+    payload = decode_jwt_token(token)
+    if not payload:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token inválido o expirado")
+
+    email_nutri = payload.get("sub")
+    if not email_nutri:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token inválido")
+
+    try:
+        oid = ObjectId(patient_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="ID de paciente inválido")
+
+    paciente = pacient_collection.find_one({"_id": oid, "nutritionist_email": email_nutri})
     if not paciente:
-        raise HTTPException(status_code=404, detail="Paciente no encontrado")
+        raise HTTPException(status_code=404, detail="Paciente no encontrado o no autorizado")
 
     return {
+        "id": str(paciente["_id"]),
         "name": paciente["name"],
         "kcal": paciente.get("restrictionsKcal"),
         "pro": paciente.get("dailyProIntake"),
@@ -138,10 +157,22 @@ async def actualizar_paciente(
     if not payload:
         raise HTTPException(status_code=401, detail="Token inválido o expirado")
     
-    oid = ObjectId(paciente_id)
+    email_nutri = payload.get("sub")
+    if not email_nutri:
+        raise HTTPException(status_code=401, detail="Token inválido")
+    
+    try:
+        oid = ObjectId(paciente_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="ID de paciente inválido")
+    
     paciente = pacient_collection.find_one({"_id": oid})
     if not paciente:
         raise HTTPException(status_code=404, detail="Paciente no encontrado")
+
+    # Ownership check: only the nutritionist who owns the patient can update
+    if paciente.get("nutritionist_email") != email_nutri:
+        raise HTTPException(status_code=403, detail="No autorizado para modificar este paciente")
 
     # Primero calcula los valores necesarios
     # Para bornDate usa data.bornDate o paciente["bornDate"]
@@ -200,7 +231,20 @@ async def delete_patient(
     if not email:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized access")
 
-    result = pacient_collection.delete_one({"_id": ObjectId(patient_id)})
+    try:
+        oid = ObjectId(patient_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="ID de paciente inválido")
+
+    paciente = pacient_collection.find_one({"_id": oid})
+    if not paciente:
+        raise HTTPException(status_code=404, detail="Paciente no encontrado")
+
+    # Ownership check: only the nutritionist who owns the patient can delete
+    if paciente.get("nutritionist_email") != email:
+        raise HTTPException(status_code=403, detail="No autorizado para eliminar este paciente")
+
+    result = pacient_collection.delete_one({"_id": oid})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Paciente no encontrado")
 
