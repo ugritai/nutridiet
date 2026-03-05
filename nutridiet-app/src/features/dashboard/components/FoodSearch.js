@@ -1,61 +1,93 @@
-// src/pages/AlimentosPage.js
-import React, { useEffect, useState } from 'react';
-import Dashboard from '../Dashboard';
-import FoodGrid from '../components/FoodGrid';
-import Search from '../components/Search';
-import FoodSearch from '../components/FoodSearch';
-import { CircularProgress, Typography } from '@mui/material';
-import { fetchWithAuth } from '../components/api';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+//  1. IMPORTAR fetchWithAuth (Ajusta la ruta si 'api.js' está en otra carpeta)
+import { fetchWithAuth } from './api'; 
 
-/**
- * Vista principal del catálogo de alimentos.
- * Carga las categorías desde la API e integra el buscador global de alimentos.
- */
-export default function AlimentosPage() {
-  const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(true);
+export default function FoodSearch({ type = 'alimentos', onSelect }) {
+  const [query, setQuery] = useState('');
+  const [suggestions, setSuggestions] = useState([]);
+  const navigate = useNavigate();
 
-  useEffect(() => {
-      fetchWithAuth('/alimentos/all_categories')
-      .then(res => res.json())
-      .then(data => setCategories(data.categories))
-      .catch(err => console.error("[AlimentosPage] Error al obtener categorías:", err))
-      .finally(() => setLoading(false));
-  }, []);
+  const handleSearch = async () => {
+    if (!query.trim()) return;
+    setSuggestions([]);
 
-  // Hook personalizado para abstraer la lógica de autocompletado y búsqueda
-  const {
-    query, setQuery, suggestions, handleSearch,
-    handleSelectSuggestion, handleSuggestions
-  } = FoodSearch({ type: 'alimentos' });
+    let detallePath = '';
+    // Estas rutas son de React Router (Frontend), así que NO llevan /api. Están bien.
+    if (type === 'recetas') {
+      detallePath = `/recetas/detalle_receta/${encodeURIComponent(query)}`;
+    } else if (type === 'ingestas') {
+      detallePath = `/planificacion_ingestas/ver_ingesta_detalle/${encodeURIComponent(query)}`;
+    } else {
+      detallePath = `/alimentos/detalle_alimento/${encodeURIComponent(query)}`;
+    }
 
-  return (
-    <Dashboard>
-      <Search
-        value={query}
-        onChange={(value) => {
-          setQuery(value);
-          handleSuggestions(value);
-        }}
-        onSubmit={handleSearch}
-        suggestions={suggestions}
-        placeholder="Buscar alimentos..."
-        suggestionClick={handleSelectSuggestion}
-      />
+    navigate(detallePath);
+  };
 
-      <Typography variant="h4" gutterBottom>Categorías de Alimentos</Typography>
+  const handleSelectSuggestion = (value) => {
+    if (onSelect) {
+      onSelect(value);
+      return;
+    }
+    setSuggestions([]);
+    setQuery('');
 
-      {loading ? (
-        <CircularProgress />
-      ) : (
-        <>
-          {categories.length === 0 ? (
-            <Typography variant="h6" color="error">No se encontraron categorías.</Typography>
-          ) : (
-            <FoodGrid categories={categories} basePath="alimentos" imageFolder="alimentos" shouldMap={true} />
-          )}
-        </>
-      )}
-    </Dashboard>
-  );
+    let detallePath = '';
+    if (type === 'recetas') {
+      detallePath = `/recetas/detalle_receta/${encodeURIComponent(value)}`;
+    } else if (type === 'ingestas') {
+      detallePath = `/planificacion_ingestas/ver_ingesta_detalle/${encodeURIComponent(value)}`;
+    } else {
+      detallePath = `/alimentos/detalle_alimento/${encodeURIComponent(value)}`;
+    }
+
+    navigate(detallePath);
+  };
+
+  const handleSuggestions = async (value) => {
+    if (!value) {
+      setSuggestions([]);
+      return;
+    }
+
+    // Definimos la ruta relativa (fetchWithAuth le pondrá el /api delante)
+    let endpoint = '';
+    if (type === 'recetas') {
+        endpoint = `/recetas/buscar_recetas/${encodeURIComponent(value)}?limit=20`;
+    } else if (type === 'ingestas') {
+        endpoint = `/planificacion_ingestas/buscar_ingestas/${encodeURIComponent(value)}`;
+    } else {
+        endpoint = `/alimentos/buscar_alimentos/${encodeURIComponent(value)}`;
+    }
+
+    try {
+      //  2. USAR fetchWithAuth EN LUGAR DE fetch
+      const response = await fetchWithAuth(endpoint);
+      
+      if (!response.ok) throw new Error("No encontrado");
+      
+      const data = await response.json();
+
+      const formattedSuggestions = Array.from(data).map(item => ({
+        label: item.nombre || item.titulo || item.intake_name,
+        value: item.nombre || item.titulo || item.intake_name
+      }));
+
+      setSuggestions(formattedSuggestions);
+    } catch (err) {
+      console.error("Error fetching suggestions:", err);
+      setSuggestions([]);
+    }
+  };
+
+  return {
+    query,
+    setQuery,
+    suggestions,
+    handleSearch,
+    setSuggestions,
+    handleSelectSuggestion,
+    handleSuggestions
+  };
 }
